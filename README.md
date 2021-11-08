@@ -1,6 +1,8 @@
 # Gelbooru Overhaul Userscript
 Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 
+#### [Convenient Install Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
+
 # Features
 |    General   |      Post      |             Gallery            |
 |:------------:|:--------------:|:------------------------------:|
