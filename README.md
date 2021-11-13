@@ -7,8 +7,9 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 |    General   |      Post      |             Gallery            |
 |:------------:|:--------------:|:------------------------------:|
 | Amoled       | Fit Vertically | Remove Title                   |
-| Sexy Sidebar |                | Right Click Download           |
-|              |                | Enlarge Flexbox                |
+| Sexy Sidebar |                | Enlarge Flexbox                |
+|              |                | Advanced Blacklist             |
+|              |                | Right Click Download           |
 |              |                | Enlarge Thumbnails on Hover    |
 |              |                | Higher Res Thumbnails on Hover |
 
@@ -22,7 +23,7 @@ Some wishful thinking.
 - Theming
   - Material Design
 - Advanced Blacklisting
-  - AND Logic Operators
+  - ~~AND Logic Operators~~
   - Blocking Based on Tag Type (e.g. `tag=type-artist`)
   - Multiple Toggleable Blacklists
   - Display But Flag Suspicious Images (e.g. `tag_me`)
