@@ -1,0 +1,110 @@
+// This file is an example of what a typical blacklist configuration could look like.
+// =================
+// GENERAL BLACKLIST
+// =================
+// Humans
+photo
+photo_(medium)
+asian
+cosplay
+realistic
+// Stylistic Preference/Low Quality/Memes
+3d
+official_art
+mosaic_art
+what
+meme
+thirdparty_edit
+third-party_edit
+low_res
+sketch
+jpeg_artifacts
+comic
+screencap
+lowres
+scanlation
+sample
+oppai_loli
+how_to
+game_cg
+// Rape/Abuse/Torture
+blood
+guro
+rape
+amputee
+asphyxiation
+broken_rape_victim
+bruise
+injury
+public_use
+after_rape
+ugly_man
+old_man
+fat_man
+obese
+bald
+faceless
+torture
+netorare
+molestation
+immenent_rape
+execution
+death
+decapitation
+clitoris_torture
+nipple_torture
+// Extremely Niche Kinks
+egg_laying
+fart
+peeing
+bestiality
+pregnant
+muscular_female
+loli
+furry
+goblin
+shota
+extreme_muscles
+spanked
+fat
+gigantic_breasts
+vore
+giantess
+penis_in_urethra
+armpit_hair pubic_hair
+extra_breasts
+nipple_penetration 
+nose_hook
+long_nipples
+huge_anus
+large_labia
+faceswap
+body_horror
+leech
+contortion
+horror_(theme)
+conjoined
+polycephaly
+minigirl penis_hug
+minigirl large_insertion
+foot_licking
+foot_focus
+smell
+smelling
+urethral_insertion
+foot_worship licking
+ball_busting
+squeezing_testicles
+mature_male
+muscular_male
+// Shitty Artists
+shadman
+morrie
+yuyuki_nao
+munio_world
+// Shitty Characters
+omoi_(naruto)
+darui
+mineta_minoru
+a_(naruto)
+raikage
