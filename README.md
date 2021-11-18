@@ -3,6 +3,8 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 
 #### [Convenient Install Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
 
+*^ Be sure to have a [userscript manager](https://en.wikipedia.org/wiki/Userscript_manager) installed in your web browser first. Note that the `Right Click Download` feature uses GM_download which; AFAIK, is a [Tampermonkey](https://www.tampermonkey.net/)-only feature.*
+
 # Features
 |    General   |      Post      |             Gallery            |
 |:------------:|:--------------:|:------------------------------:|
@@ -14,7 +16,7 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 |              |                | Higher Res Thumbnails on Hover |
 
 # Jankiness
-The userscript is pretty stable, until you resize the window—so just don't; or, disable some settings, namely: `Enlarge Flexbox` & `Enlarge Thumbnails on Hover`.
+The userscript is pretty stable, until you resize the viewport—so just don't; or, disable some settings, namely: `Enlarge Flexbox` & `Enlarge Thumbnails on Hover`.
 
 # Feature Brainstorm
 Some wishful thinking.
