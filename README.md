@@ -3,9 +3,9 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 
 ![example a](https://enchoseon.com/assets/enhanced-demo.gif)
 
-#### [Convenient Install Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
+# [Convenient Install Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
 
-*^ Be sure to have a [userscript manager](https://en.wikipedia.org/wiki/Userscript_manager) installed in your web browser first. Note that the `Right Click Download` feature uses GM_download which; AFAIK, is a [Tampermonkey](https://www.tampermonkey.net/)-only feature.*
+Be sure to have a [userscript manager](https://en.wikipedia.org/wiki/Userscript_manager) installed in your web browser first. Note that the `Right Click Download` feature uses GM_download which; AFAIK, is a [Tampermonkey](https://www.tampermonkey.net/)-only feature.
 
 # Features
 |    General   |      Post      |             Gallery            |
