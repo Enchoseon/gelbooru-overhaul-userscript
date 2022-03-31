@@ -27,7 +27,7 @@
         gallery: {
             removeTitle: true, // Removes the title attribute from thumbnails
             rightClickDownload: true, // Makes it so that when you right-click thumbnails you'll download their highest-resolution counterpart
-            rightClickDownloadSaveAsPrompt: true, // Show the "Save As" File Explorer prompt when right-click downloading
+            rightClickDownloadSaveAsPrompt: false, // Show the "Save As" File Explorer prompt when right-click downloading
             enlargeFlexbox: true, // Make the thumbnails in the gallery slightly larger & reduce the number of columns
             enlargeThumbnailsOnHover: true, // Make the thumbnails in the gallery increase in scale when you hover over them (best paired with gallery.higherResThumbnailsOnHover)
             higherResThumbnailsOnHover: true, // Make the thumbnails in the gallery higher-resolution when you hover over them
@@ -107,7 +107,7 @@
     // =================================
     if (config.general.sexySidebar && window.location.search !== "") {
         document.addEventListener("DOMContentLoaded", function () {
-            var div = document.createElement('div');
+            var div = document.createElement("div");
             div.id = "sidebar";
             div.innerHTML = document.querySelectorAll(".aside")[0].innerHTML;
             document.body.appendChild(div);
@@ -322,16 +322,17 @@
         });
         return tagObj;
     }
-    // Generate hash from string (https://stackoverflow.com/a/7616484)
-    function hash(str) {
-        var hash = 0, i, char;
-        if (str.length === 0) return hash;
-        for (i = 0; i < str.length; i++) {
-            char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash |= 0; // Convert to 32bit integer
+    // Generate hash from string (https://stackoverflow.com/a/52171480)
+    function hash(str, seed = 0) {
+        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+        for (let i = 0, ch; i < str.length; i++) {
+            ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
         }
-        return Math.abs(hash);
+        h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+        return 4294967296 * (2097151 & h2) + (h1>>>0);
     };
     // Download image
     function downloadImage(imgElem, aElem) {
@@ -348,9 +349,12 @@
     function formatFilename(artist, index, extension) {
         if (artist === "") {
             artist = "_unknown-artist";
+        } else {
+            const illegalRegex = /[\/\?<>\\:\*\|":]/g;
+            artist = decodeURI(artist).replace(illegalRegex, "_") // Make filename-safe (https://stackoverflow.com/a/11101624)
+                .replace(/_{2,}/g, "_") // and remove consecutive underscores
+                .toLowerCase() + "_" + index + "." + extension;
         }
-        return artist.replace(/[^a-z0-9]/gi, '_') // Make filename-safe (https://stackoverflow.com/a/8485137)
-            .replace(/_{2,}/g, '_') // and remove consecutive underscores
-            .toLowerCase() + "_" + index + "." + extension;
+        return artist;
     }
 })();
