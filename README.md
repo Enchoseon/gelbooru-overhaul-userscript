@@ -8,14 +8,14 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 Be sure to have a [userscript manager](https://en.wikipedia.org/wiki/Userscript_manager) installed in your web browser first. Note that the `Right Click Download` feature uses GM_download which; AFAIK, is a [Tampermonkey](https://www.tampermonkey.net/)-only feature.
 
 # Features
-|    General   |      Post      |             Gallery            |
-|:------------:|:--------------:|:------------------------------:|
-| Amoled       | Fit Vertically | Remove Title                   |
-| Sexy Sidebar |                | Enlarge Flexbox                |
-|              |                | Advanced Blacklist             |
-|              |                | Right Click Download           |
-|              |                | Enlarge Thumbnails on Hover    |
-|              |                | Higher Res Thumbnails on Hover |
+|    General   |      Post      |             Gallery            |       Download       |
+|:------------:|:--------------:|:------------------------------:|:--------------------:|
+| Amoled       | Fit Vertically | Remove Title                   | Block Unknown Artist |
+| Sexy Sidebar |                | Enlarge Flexbox                | Missing Artist Text  |
+|              |                | Advanced Blacklist             |                      |
+|              |                | Right Click Download           |                      |
+|              |                | Enlarge Thumbnails on Hover    |                      |
+|              |                | Higher Res Thumbnails on Hover |                      |
 
 
 # Jankiness
@@ -31,7 +31,7 @@ Some wishful thinking.
   - ~~AND Logic Operators~~
   - Blocking Based on Tag Type (e.g. `tag=type-artist`)
   - Multiple Toggleable Blacklists
-  - Display But Flag Suspicious Images (e.g. `tag_me`)
+  - Display-But-Flag Suspicious Images (e.g. `tag_me`)
 - More Right-Click Context Menu Settings
   - Rev-Image Search in Imgops, SauceNao, IQDB, etc.
   - Migrate Sidebar Settings (namely: `Options`, `History`, & `Related Posts`) Here
