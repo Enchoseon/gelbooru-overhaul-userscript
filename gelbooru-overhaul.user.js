@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gelbooru Overhaul
 // @namespace   https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js
-// @version     0.7.1
+// @version     0.7.2
 // @description Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 // @author      Enchoseon
 // @include     *gelbooru.com*
@@ -43,6 +43,10 @@
                 shadman
                 morrie
             `, // ^ This arbitrary blacklist is purely for demo purposes. For a larger blacklist, see blacklist.txt in the GitHub repository
+        },
+        download: {
+            blockUnknownArtist: true, // Block the download of files without a tagged artist
+            missingArtistText: "_unknown-artist", // Text that replaces where the artist name would usually be in images missing artist tags
         },
     };
     var css = "";
@@ -339,22 +343,25 @@
         var gelDB = GM_getValue("gelDB", {});
         var index = hash(aElem.href);
         var extension = imgElem.src.split(".").at(-1);
+        var artist = gelDB[index].tags.artist.join(" ");
+        if (config.download.blockUnknownArtist && artist === "") { // Don't download if blockUnknownArtist is enabled and artist tag is missing
+            return;
+        }
         GM_download({
             url: imgElem.src,
-            name: formatFilename(gelDB[index].tags.artist.join(" "), index, extension),
+            name: formatFilename(artist, index, extension),
             saveAs: config.gallery.rightClickDownloadSaveAsPrompt,
         })
     }
     // Create the filename from the artist's name
     function formatFilename(artist, index, extension) {
         if (artist === "") {
-            artist = "_unknown-artist";
-        } else {
-            const illegalRegex = /[\/\?<>\\:\*\|":]/g;
-            artist = decodeURI(artist).replace(illegalRegex, "_") // Make filename-safe (https://stackoverflow.com/a/11101624)
-                .replace(/_{2,}/g, "_") // and remove consecutive underscores
-                .toLowerCase() + "_" + index + "." + extension;
+            artist = config.download.missingArtistText;
         }
+        const illegalRegex = /[\/\?<>\\:\*\|":]/g;
+        artist = decodeURI(artist).replace(illegalRegex, "_") // Make filename-safe (https://stackoverflow.com/a/11101624)
+            .replace(/_{2,}/g, "_") // and remove consecutive underscores
+            .toLowerCase() + "_" + index + "." + extension;
         return artist;
     }
 })();
