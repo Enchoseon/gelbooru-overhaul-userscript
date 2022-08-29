@@ -19,6 +19,10 @@
     const config = {
         general: {
             amoled: true, // A very lazy Amoled theme
+			autoDarkMode: true, // Apply Amoled theme if system in Dark mode, higher priority than 'amoled'
+            autoDarkModeForceTime: false, // Ignore system theme and check time for dark mode
+            autoDarkModeStartHour: 19, // Start and End time if ForceTime is enabled or system does not supports dark mode
+            autoDarkModeEndHour: 7,
             sexySidebar: true, // Move the leftmost sidebar to the top-left of the screen next to the Gelbooru logo
         },
         post: {
@@ -142,7 +146,7 @@
               height: 100%;
               padding-top: 0px;
               overflow-y: scroll;
-              background: black;
+              background: ${isDarkMode() ? 'black' : 'white'};
               opacity: 0.9;
           }
       `;
@@ -206,7 +210,7 @@
     // ===========================
     // Extremely Lazy Amoled Theme
     // ===========================
-    if (config.general.amoled) {
+    if (isDarkMode()) {
         css += `
           body, #tags-search {
               color: white;
@@ -363,5 +367,45 @@
             .replace(/_{2,}/g, "_") // and remove consecutive underscores
             .toLowerCase() + "_" + index + "." + extension;
         return artist;
+    }
+	// Check if dark mode should be applied
+    function isDarkMode() {
+        //if auto enabled
+        if(config.general.autoDarkMode)
+        {
+            let hasMediaColorScheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme)').media !== 'not all');
+
+            if(config.general.autoDarkModeForceTime || !hasMediaColorScheme)
+            {
+                let hours = new Date().getHours();
+                if(hours >= config.general.autoDarkModeStartHour || hours <= config.general.autoDarkModeEndHour)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            //system in dark mode
+            if(window.matchMedia('(prefers-color-scheme: dark)').matches)
+            {
+                return true;
+            }
+            //system in light mode
+            else
+            {
+                return false;
+            }
+        }
+        //if permanent dark mode enabled
+        else if(config.general.amoled)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 })();
