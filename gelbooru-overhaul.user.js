@@ -108,6 +108,51 @@
                     }
                 }
             });
+            Object.values(document.querySelector(".mainBodyPadding").querySelectorAll("div")).reverse()[1].querySelectorAll("a").forEach((aElem) => {
+                var imgElem = aElem.querySelector("img");
+                if (config.gallery.higherResThumbnailsOnHover) { // Higher-Resolution Preview When Hovering Over Thumbnails
+                    imgElem.addEventListener("mouseenter", function() {
+                        convertThumbnail(imgElem, aElem, false);
+                    }, false);
+                }
+                if (config.gallery.rightClickDownload) { // Download Images in Gallery on Right-Click
+                    imgElem.addEventListener("contextmenu", (event) => {
+                        event.preventDefault();
+                        convertThumbnail(imgElem, aElem, true).then(function() {
+                            downloadImage(imgElem, aElem);
+                        });
+                    })
+                }
+                if (config.gallery.removeTitle) { // Remove Title from Thumbnails
+                    imgElem.title = "";
+                }
+                if (config.gallery.advancedBlacklist) { // Advanced Blacklist
+                    config.gallery.advancedBlacklistConfig.forEach((blacklistLine) => {
+                        if (blacklistLine.includes("&&")) { // AND statements
+                            var remove = true;
+                            blacklistLine = blacklistLine.split("&&");
+                            blacklistLine.forEach((andArg) => {
+                                if (!tagFound(andArg)) {
+                                    remove = false;
+                                }
+                            });
+                            if (remove) {
+                                elem.remove();
+                            }
+                        } else if (tagFound(blacklistLine)) { // Simple & straightforward blacklisting
+                            elem.remove();
+                        }
+                    });
+                    function tagFound(query) { // Check if a tag is present in the imgElem
+                        var tags = imgElem.alt.split(",");
+                        tags = tags.map(tag => tag.trim())
+                        if (tags.includes(query)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            });
         });
     }
     // =================================
@@ -176,6 +221,17 @@
               transition-delay: 142ms;
           }
           .thumbnail-preview:hover {
+              position: relative;
+              z-index: 690;
+          }
+          .mainBodyPadding div a img {
+              max-height: 10vw !important;
+              transform: scale(1);
+              transition: transform 169ms;
+          }
+          .mainBodyPadding div a img:hover {
+              transform: scale(2.42);
+              transition-delay: 142ms;
               position: relative;
               z-index: 690;
           }
