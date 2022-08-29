@@ -129,9 +129,9 @@
               grid-template-columns: 0px auto;
           }
           #sidebar {
-              position: absolute;
-              width: 10px;
-              height: 0.13em;
+              position: fixed;
+              width: 4px;
+              height: 100%;
               padding-top: 60px;
               overflow: hidden;
               background: red;
