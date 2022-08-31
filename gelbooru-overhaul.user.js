@@ -27,6 +27,7 @@
         },
         post: {
             fitVertically: true, // Scale media to fit vertically in the screen
+            center: true, // Center media
         },
         gallery: {
             removeTitle: true, // Removes the title attribute from thumbnails
@@ -202,8 +203,33 @@
     if (config.post.fitVertically) {
         css += `
           #image, #gelcomVideoPlayer {
-              height: 75vh !important;
+              height: 90vh !important;
               width: auto !important;
+          }
+      `;
+      // resize to fit horizontally on 'Click here to expand image.'
+        document.addEventListener("DOMContentLoaded", function () {
+            let resizeLink = document.querySelector("#resize-link").querySelector("a");
+            let oldOnClick = resizeLink.onclick;
+            resizeLink.onclick = function(event) {
+                oldOnClick(event);
+                Object.values(document.querySelectorAll("#image, #gelcomVideoPlayer")).forEach((elem) => {
+                    elem.style.cssText += `
+                        height: auto !important;
+                        width: 95vw !important;
+                    `;
+                });
+            };
+        });
+    }
+    // ============
+    // Center Media
+    // ============
+    if (config.post.center) {
+        css += `
+          .image-container {
+              display: flex !important;
+              justify-content: center;
           }
       `;
     }
