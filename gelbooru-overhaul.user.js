@@ -19,10 +19,15 @@
     const config = {
         general: {
             amoled: true, // A very lazy Amoled theme
+			autoDarkMode: true, // Apply Amoled theme if system in Dark mode, higher priority than 'amoled'
+            autoDarkModeForceTime: false, // Ignore system theme and check time for dark mode
+            autoDarkModeStartHour: 19, // Start and End time if ForceTime is enabled or system does not supports dark mode
+            autoDarkModeEndHour: 7,
             sexySidebar: true, // Move the leftmost sidebar to the top-left of the screen next to the Gelbooru logo
         },
         post: {
             fitVertically: true, // Scale media to fit vertically in the screen
+            center: true, // Center media
         },
         gallery: {
             removeTitle: true, // Removes the title attribute from thumbnails
@@ -104,6 +109,51 @@
                     }
                 }
             });
+            Object.values(document.querySelector(".mainBodyPadding").querySelectorAll("div")).reverse()[1].querySelectorAll("a").forEach((aElem) => {
+                var imgElem = aElem.querySelector("img");
+                if (config.gallery.higherResThumbnailsOnHover) { // Higher-Resolution Preview When Hovering Over Thumbnails
+                    imgElem.addEventListener("mouseenter", function() {
+                        convertThumbnail(imgElem, aElem, false);
+                    }, false);
+                }
+                if (config.gallery.rightClickDownload) { // Download Images in Gallery on Right-Click
+                    imgElem.addEventListener("contextmenu", (event) => {
+                        event.preventDefault();
+                        convertThumbnail(imgElem, aElem, true).then(function() {
+                            downloadImage(imgElem, aElem);
+                        });
+                    })
+                }
+                if (config.gallery.removeTitle) { // Remove Title from Thumbnails
+                    imgElem.title = "";
+                }
+                if (config.gallery.advancedBlacklist) { // Advanced Blacklist
+                    config.gallery.advancedBlacklistConfig.forEach((blacklistLine) => {
+                        if (blacklistLine.includes("&&")) { // AND statements
+                            var remove = true;
+                            blacklistLine = blacklistLine.split("&&");
+                            blacklistLine.forEach((andArg) => {
+                                if (!tagFound(andArg)) {
+                                    remove = false;
+                                }
+                            });
+                            if (remove) {
+                                elem.remove();
+                            }
+                        } else if (tagFound(blacklistLine)) { // Simple & straightforward blacklisting
+                            elem.remove();
+                        }
+                    });
+                    function tagFound(query) { // Check if a tag is present in the imgElem
+                        var tags = imgElem.alt.split(",");
+                        tags = tags.map(tag => tag.trim())
+                        if (tags.includes(query)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            });
         });
     }
     // =================================
@@ -125,9 +175,9 @@
               grid-template-columns: 0px auto;
           }
           #sidebar {
-              position: absolute;
-              width: 10px;
-              height: 0.13em;
+              position: fixed;
+              width: 4px;
+              height: 100%;
               padding-top: 60px;
               overflow: hidden;
               background: red;
@@ -142,7 +192,7 @@
               height: 100%;
               padding-top: 0px;
               overflow-y: scroll;
-              background: black;
+              background: ${isDarkMode() ? 'black' : 'white'};
               opacity: 0.9;
           }
       `;
@@ -153,8 +203,33 @@
     if (config.post.fitVertically) {
         css += `
           #image, #gelcomVideoPlayer {
-              height: 75vh !important;
+              height: 90vh !important;
               width: auto !important;
+          }
+      `;
+      // resize to fit horizontally on 'Click here to expand image.'
+        document.addEventListener("DOMContentLoaded", function () {
+            let resizeLink = document.querySelector("#resize-link").querySelector("a");
+            let oldOnClick = resizeLink.onclick;
+            resizeLink.onclick = function(event) {
+                oldOnClick(event);
+                Object.values(document.querySelectorAll("#image, #gelcomVideoPlayer")).forEach((elem) => {
+                    elem.style.cssText += `
+                        height: auto !important;
+                        width: 95vw !important;
+                    `;
+                });
+            };
+        });
+    }
+    // ============
+    // Center Media
+    // ============
+    if (config.post.center) {
+        css += `
+          .image-container {
+              display: flex !important;
+              justify-content: center;
           }
       `;
     }
@@ -172,6 +247,17 @@
               transition-delay: 142ms;
           }
           .thumbnail-preview:hover {
+              position: relative;
+              z-index: 690;
+          }
+          .mainBodyPadding div a img {
+              max-height: 10vw !important;
+              transform: scale(1);
+              transition: transform 169ms;
+          }
+          .mainBodyPadding div a img:hover {
+              transform: scale(2.42);
+              transition-delay: 142ms;
               position: relative;
               z-index: 690;
           }
@@ -206,7 +292,7 @@
     // ===========================
     // Extremely Lazy Amoled Theme
     // ===========================
-    if (config.general.amoled) {
+    if (isDarkMode()) {
         css += `
           body, #tags-search {
               color: white;
@@ -363,5 +449,45 @@
             .replace(/_{2,}/g, "_") // and remove consecutive underscores
             .toLowerCase() + "_" + index + "." + extension;
         return artist;
+    }
+	// Check if dark mode should be applied
+    function isDarkMode() {
+        //if auto enabled
+        if(config.general.autoDarkMode)
+        {
+            let hasMediaColorScheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme)').media !== 'not all');
+
+            if(config.general.autoDarkModeForceTime || !hasMediaColorScheme)
+            {
+                let hours = new Date().getHours();
+                if(hours >= config.general.autoDarkModeStartHour || hours <= config.general.autoDarkModeEndHour)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            //system in dark mode
+            if(window.matchMedia('(prefers-color-scheme: dark)').matches)
+            {
+                return true;
+            }
+            //system in light mode
+            else
+            {
+                return false;
+            }
+        }
+        //if permanent dark mode enabled
+        else if(config.general.amoled)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 })();
