@@ -23,8 +23,11 @@
             if(cfg == undefined){
                 this.config = this.getDefaultConfig();
             }
-            else if(this.currConfigVersion > cfg.configVersion){
+            else if(this.currConfigVersion > cfg.configVersion) {
                 cfg = this.migrateConfig(cfg);
+                this.config = cfg;
+            }
+            else {
                 this.config = cfg;
             }
         }
@@ -37,6 +40,7 @@
         getDefaultConfig = function(){
             return {
                 configVersion: 1,
+                debug: false,
                 darkMode: {
                     amoledDark: false,
                     autoDarkMode: true,
@@ -53,21 +57,18 @@
         if(migratingConfig.configVersion == 0){
             // changes for next config version
             let migrationObject = {
-                darkMode: {
-                    amoledDark: false,
-                    autoDarkMode: true,
-                    forceDarkMode: false,
-                    timeDarkModeForce: false,
-                    timeDarkModeStartHour: 18,
-                    timeDarkModeEndHour: 6,
-                }
+                newProp: defaultValue,
+                newNestedObj: {
+                    newNestedProp: defaultValue,
+                },
             };
             // migrate to keep old config
             migratingConfig = _.merge(migrationObject, migratingConfig);
-            // update properties and NECESSARILY configVersion
+            // migrate property values and NECESSARILY configVersion
             migratingConfig.configVersion = 1;
+            migratingConfig.newProp = migratingConfig.outdatedProp;
             // remove no longer needed properties
-            delete migratingConfig.darkMode.outdatedProp;
+            delete migratingConfig.outdatedProp;
         }
         // next migrate step here...
         if(migratingConfig.configVersion == 1){}
@@ -79,10 +80,66 @@
         }
     }
     
-    
+    const PageTypes = Object.freeze({GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined"});
     
     let configManager = new ConfigManager();
     configManager.loadConfig();
-    console.log(configManager.config);
-    configManager.saveConfig();
+    debugLog(configManager.config);
+    
+    // Any page tweaks
+    debugLog("Current page type is " + detectPageType());
+    
+    // Page specific tweaks
+    switch (detectPageType()){
+        case PageTypes.GALLERY:
+        
+        break;
+        case PageTypes.POST:
+        
+        break;
+        case PageTypes.WIKI_VIEW:
+        
+        break;
+        case PageTypes.POOL_VIEW:
+        
+        break;
+        case PageTypes.UNDEFINED:
+        
+        break;
+    }
+    
+    
+    // Functions
+    function detectPageType(){
+        let params = new URLSearchParams(document.URL.split('?')[1]);
+        
+        if(!params.has("page"))
+            return PageTypes.UNDEFINED;
+        
+        if(params.get("page") == "post" && params.get("s") == "list")
+            return PageTypes.GALLERY;
+        
+        if(params.get("page") == "post" && params.get("s") == "view")
+            return PageTypes.POST;
+        
+        if(params.get("page") == "wiki" && params.get("s") == "view")
+            return PageTypes.WIKI_VIEW;
+        
+        if(params.get("page") == "pool" && params.get("s") == "show")
+            return PageTypes.POOL_VIEW;
+        
+        return PageTypes.UNDEFINED;
+    }
+    
+    function debugLog(value){
+        // Notice no debug until configManager loades and migrates config
+        // Probably im should add force debug while migrating config...
+        if(configManager.config.debug == true) {
+            if(typeof(value) == "string")
+                console.log("[GELO]: " + value);
+            else {
+                console.log(value);
+            }
+        }
+    }
 })();
