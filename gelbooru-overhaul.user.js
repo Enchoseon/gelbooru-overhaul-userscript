@@ -95,8 +95,7 @@
 
     let configManager = new ConfigManager();
 
-    debugLog("Loaded config");
-    debugLog(configManager.config);
+    debugLog("Loaded config", configManager.config);
 
     // Any page tweaks
     debugLog("Current page type is " + detectPageType());
@@ -250,15 +249,14 @@
         }
     }
 
-    function debugLog(value){
+    function debugLog(message, value){
         // Notice no debug until configManager loades and migrates config
         // Probably im should add force debug while migrating config...
         if(configManager.config.debug == true) {
-            if(typeof(value) == "string")
-                console.log("[GELO]: " + value);
-            else {
-                console.log(value);
-            }
+            if(!value)
+                console.log("[GELO]: " + message);
+            else
+                console.log("[GELO]: " + message, value);
         }
     }
 })();
