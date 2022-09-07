@@ -10,7 +10,9 @@
 // @grant       GM_setValue
 // @grant       GM_download
 // @grant       GM_addStyle
+// @grant       GM_getResourceText
 // @require     https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
+// @resource    external_css https://raw.githubusercontent.com/PetrK39/gelbooru-overhaul-userscript/refactoring/gelbooru-overhaul-styles.css
 // ==/UserScript==
 
 (function() {
@@ -95,7 +97,8 @@
 
     let configManager = new ConfigManager();
 
-    debugLog("Loaded config", configManager.config);
+    debugLog("Loaded config");
+    debugLog(configManager.config);
 
     // Any page tweaks
     debugLog("Current page type is " + detectPageType());
@@ -130,64 +133,65 @@
     // Register styles
     function registerStyles(){
         // applyTweakCollapseSidebar
-        GM_addStyle(`
-              .go-collapse-sidebar {
-                  position: fixed;
-                  width: ${configManager.config.collapseSidebar.collapsedWidth};
-                  height: 100%;
-                  margin: 0px;
-                  overflow: hidden;
-                  background: ${configManager.config.collapseSidebar.collapsedColor};
-                  transition: 142ms;
-                  font-size: 1em;
-                  z-index: 420690;
-              }
-              .go-collapse-sidebar:hover {
-                  position: fixed;
-                  width: min-content;
-                  height: 100%;
-                  padding-right: 12px;
-                  overflow-y: scroll;
-                  background: black;
-                  opacity: ${configManager.config.collapseSidebar.expandedOpacity};
-              }
+        // GM_addStyle(`
+              // .go-collapse-sidebar {
+                  // position: fixed;
+                  // width: ${configManager.config.collapseSidebar.collapsedWidth};
+                  // height: 100%;
+                  // margin: 0px;
+                  // overflow: hidden;
+                  // background: ${configManager.config.collapseSidebar.collapsedColor};
+                  // transition: 142ms;
+                  // font-size: 1em;
+                  // z-index: 420690;
+              // }
+              // .go-collapse-sidebar:hover {
+                  // position: fixed;
+                  // width: min-content;
+                  // height: 100%;
+                  // padding-right: 12px;
+                  // overflow-y: scroll;
+                  // background: black;
+                  // opacity: ${configManager.config.collapseSidebar.expandedOpacity};
+              // }
 
-              /* add some top/bottom paddings */
-              #tag-list.go-tag-list-top-bottom-padding {
-                  padding-top: 12px;
-                  padding-bottom: 12px;
-              }
+              // /* add some top/bottom paddings */
+              // #tag-list.go-tag-list-top-bottom-padding {
+                  // padding-top: 12px;
+                  // padding-bottom: 12px;
+              // }
 
-              /* fix post list grid */
-              #container.go-collapse-sidebar-container-tweak {
-                  grid-template-columns: 0px auto;
-              }
-              @media only screen and (max-width: 850px) {
-                  #container.go-collapse-sidebar-container-tweak {
-                      grid-template-columns: auto;
-                  }
-              }
+              // /* fix post list grid */
+              // #container.go-collapse-sidebar-container-tweak {
+                  // grid-template-columns: 0px auto;
+              // }
+              // @media only screen and (max-width: 850px) {
+                  // #container.go-collapse-sidebar-container-tweak {
+                      // grid-template-columns: auto;
+                  // }
+              // }
 
-              /* fix tag count wrap */
-              #tag-list li.go-collapse-sidebar-tags-list-tweak {
-                  width: max-content !important;
-                  display: block;
-              }
+              // /* fix tag count wrap */
+              // #tag-list li.go-collapse-sidebar-tags-list-tweak {
+                  // width: max-content !important;
+                  // display: block;
+              // }
 
-              /* fix tag category hiding*/
-              @media only screen and (max-width: 850px) {
-                  .sm-hidden.go-sm-unhidden {
-                      display: contents;
-                  }
-              }
+              // /* fix tag category hiding*/
+              // @media only screen and (max-width: 850px) {
+                  // .sm-hidden.go-sm-unhidden {
+                      // display: contents;
+                  // }
+              // }
 
-              /* fix mobile spacing */
-              .go-mobile-unspacing {
-                  margin-right: 0;
-              }
-        `);
-
-
+              // /* fix mobile spacing */
+              // .go-mobile-unspacing {
+                  // margin-right: 0;
+              // }
+        // `);
+        let evalstyles = eval("`"+GM_getResourceText("external_css")+"`");
+        GM_addStyle(evalstyles);
+        debugLog("Loading external styles", evalstyles);
     }
 
     // Apply Tweak
@@ -249,14 +253,15 @@
         }
     }
 
-    function debugLog(message, value){
+    function debugLog(value){
         // Notice no debug until configManager loades and migrates config
         // Probably im should add force debug while migrating config...
         if(configManager.config.debug == true) {
-            if(!value)
-                console.log("[GELO]: " + message);
-            else
-                console.log("[GELO]: " + message, value);
+            if(typeof(value) == "string")
+                console.log("[GELO]: " + value);
+            else {
+                console.log(value);
+            }
         }
     }
 })();
