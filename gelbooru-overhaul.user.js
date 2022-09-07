@@ -60,7 +60,14 @@
                     collapsedWidth: "5px",
                     collapsedColor: "red",
                     expandedOpacity: "90%",
-                }
+                },
+                post: {
+                    autoScroll: true,
+                    center: true,
+                    fitVertically: true,
+                    fitHorizontallyOnExpand: true,
+                    fitHorizontallyOnNarrow: true,
+                },
             };
         }
         migrateConfig = function(migratingConfig) {
@@ -116,6 +123,16 @@
                 applyTweakCollapseSidebar();
                 applyFixCollapseSidebarPost();
             }
+            if(configManager.config.post.center)
+                applyTweakPostCenter();
+            if(configManager.config.post.fitVertically)
+                applyTweakPostFitH();
+            if(configManager.config.post.fitHorizontallyOnNarrow)
+                applyTweakPostOnNarrow();
+            if(configManager.config.post.autoScroll)
+                applyTweakPostAutoScroll();
+            if(configManager.config.post.fitHorizontallyOnExpand)
+                applyTweakPostOnExpand();
             break;
         case PageTypes.WIKI_VIEW:
 
@@ -186,6 +203,38 @@
                   margin-right: 0;
               }
         `);
+        
+        // applyTweakPost
+        GM_addStyle(`
+            .go-fit-height {
+                max-height: 95vh;
+                max-width: auto;
+                width: auto;
+                height: auto;
+            }
+            .go-fit-width {
+                max-height: auto;
+                max-width: 95vh;
+                height: auto;
+                width: auto;
+            }
+            .go-center {
+                display: block;
+                margin: 0 auto;
+            }
+            .note-container.go-center {
+                display: table;
+                margin: 0 auto;
+            }
+            @media only screen and (max-width: 850px) {
+                .go-fit-width-on-narrow {
+                    max-width: 95vh;
+                    max-height: none;
+                    height: auto;
+                    width: auto;
+                }
+            }
+        `);
 
 
     }
@@ -216,7 +265,109 @@
             document.querySelectorAll("#tag-list > li > .sm-hidden").forEach((i)=>{i.classList.add("go-sm-unhidden")});
         });
     }
-
+    
+    function applyTweakPostFitH(){
+        debugLog("Applying PostFitH");
+        onDOMReady(()=>{
+            let noteContainer = document.querySelector(".image-container.note-container");
+            
+            // there is no note container on video pages
+            if(noteContainer) {
+                noteContainer.classList.add("go-fit-height");
+                
+                let image = document.querySelector("#image");
+                image.classList.add("go-fit-height");
+                image.classList.remove("fit-width");
+            } else {
+                let video = document.querySelector("#gelcomVideoPlayer");
+                video.classList.add("go-fit-height");
+                video.classList.remove("fit-width");
+            }
+        });
+    }
+    function applyTweakPostCenter(){
+        debugLog("Applying PostCenter");
+        onDOMReady(()=>{
+            let noteContainer = document.querySelector(".image-container.note-container");
+            
+            // there is no note container on video pages
+            if(noteContainer) {
+                noteContainer.classList.add("go-center");
+                
+                let image = document.querySelector("#image");
+                image.classList.add("go-center");
+            } else {
+                let video = document.querySelector("#gelcomVideoPlayer");
+                video.classList.add("go-center");
+            }
+        });
+    }
+    function applyTweakPostOnNarrow() {
+        debugLog("Applying PostOnNarrow");
+        onDOMReady(()=>{
+            let noteContainer = document.querySelector(".image-container.note-container");
+            
+            // there is no note container on video pages
+            if(noteContainer) {
+                noteContainer.classList.add("go-fit-width-on-narrow");
+                
+                let image = document.querySelector("#image");
+                image.classList.add("go-fit-width-on-narrow");
+            } else {
+                let video = document.querySelector("#gelcomVideoPlayer");
+                video.classList.add("go-fit-width-on-narrow");
+            }
+        });
+    }
+    function applyTweakPostAutoScroll() {
+        debugLog("Applying PostAutoScroll");
+        
+        onDOMReady(()=>{
+            let image = document.querySelector("#image");
+            
+            if(image) {
+                // only if image fit window
+                debugLog(`Height is w${window.innerHeight} vs i${image.height}`);
+                debugLog(`Width is w${window.innerWidth} vs i${image.width}`);
+                
+                if(window.innerHeight > image.height && window.innerWidth > image.width) {
+                    debugLog("Scrolling");
+                    image.scrollIntoView({block: "center", inline: "center"});
+                    history.scrollRestoration = 'manual';                
+                } else {
+                    history.scrollRestoration = 'auto';
+                }
+            }
+            // not works for video
+        });
+    }
+    function applyTweakPostOnExpand() {
+        debugLog("Applying PostOnExpand");
+        onDOMReady(()=>{
+            let resizeLink = document.querySelector("#resize-link");
+            
+            // only if resize link is present, otherwise you dont want to expand low res image
+            if(resizeLink) {
+                resizeLink.addEventListener("click", (e) => {
+                    // TODO: do this using revert tweak
+                    let noteContainer = document.querySelector(".image-container.note-container");
+            
+                    // there is no note container on video pages
+                    if(noteContainer) {
+                        noteContainer.classList.remove("go-fit-height");
+                
+                        let image = document.querySelector("#image");
+                        image.classList.remove("go-fit-height");
+                        image.classList.add("fit-width");
+                    } else {
+                        let video = document.querySelector("#gelcomVideoPlayer");
+                        video.classList.remove("go-fit-height");
+                        video.classList.add("fit-width");
+                    }
+                });
+            }
+        });
+    }
     // Functions
     function detectPageType(){
         let params = new URLSearchParams(document.URL.split('?')[1]);
