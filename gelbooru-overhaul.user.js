@@ -322,7 +322,7 @@
     function applyTweakPostAutoScroll() {
         debugLog("Applying PostAutoScroll");
         
-        onDOMReady(()=>{
+        document.onreadystatechange = () => {
             let image = document.querySelector("#image");
             
             if(image) {
@@ -339,7 +339,7 @@
                 }
             }
             // not works for video
-        });
+        };
     }
     function applyTweakPostOnExpand() {
         debugLog("Applying PostOnExpand");
