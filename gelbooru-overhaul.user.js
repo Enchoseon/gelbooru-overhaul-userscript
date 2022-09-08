@@ -68,6 +68,13 @@
                     fitHorizontallyOnExpand: true,
                     fitHorizontallyOnNarrow: true,
                 },
+                gallery: {
+                    roundCorners: true,
+                    enlargeOnHover: true,
+                    enlargeOnHoverScale: 2,
+                    preventEnlargeOffScreen: true,
+                    applyForMoreLikeThis: true,
+                },
             };
         }
         migrateConfig = function(migratingConfig) {
@@ -117,22 +124,23 @@
                 applyTweakCollapseSidebar();
                 applyFixCollapseSidebarGallery();
             }
+            if(configManager.config.gallery.enlargeOnHover) applyTweakGalleryEnlargeOnHover();
+            if(configManager.config.gallery.roundCorners)   applyTweakGalleryRoundCorners();
             break;
         case PageTypes.POST:
             if(configManager.config.collapseSidebar.enabled) {
                 applyTweakCollapseSidebar();
                 applyFixCollapseSidebarPost();
             }
-            if(configManager.config.post.center)
-                applyTweakPostCenter();
-            if(configManager.config.post.fitVertically)
-                applyTweakPostFitH();
-            if(configManager.config.post.fitHorizontallyOnNarrow)
-                applyTweakPostOnNarrow();
-            if(configManager.config.post.autoScroll)
-                applyTweakPostAutoScroll();
-            if(configManager.config.post.fitHorizontallyOnExpand)
-                applyTweakPostOnExpand();
+            if(configManager.config.post.center)                    applyTweakPostCenter();
+            if(configManager.config.post.fitVertically)             applyTweakPostFitH();
+            if(configManager.config.post.fitHorizontallyOnNarrow)   applyTweakPostOnNarrow();
+            if(configManager.config.post.autoScroll)                applyTweakPostAutoScroll();
+            if(configManager.config.post.fitHorizontallyOnExpand)   applyTweakPostOnExpand();
+            if(configManager.config.gallery.applyForMoreLikeThis) {
+                if(configManager.config.gallery.enlargeOnHover) applyTweakPostEnlargeOnHover();
+                if(configManager.config.gallery.roundCorners)   applyTweakPostRoundCorners();
+            }
             break;
         case PageTypes.WIKI_VIEW:
 
@@ -236,7 +244,35 @@
             }
         `);
 
-
+        // applyTweakGallery
+        GM_addStyle(`
+            .thumbnail-preview a img.go-thumbnail-enlarge {
+                transform: scale(1);
+                transition: transform 169ms;
+            }
+            .thumbnail-preview a img.go-thumbnail-enlarge:hover {
+                transform: scale(${configManager.config.gallery.enlargeOnHoverScale});
+                transition-delay: 142ms;
+            }
+            .thumbnail-preview:hover {
+                z-index: 690;
+            }
+            
+            .go-thumbnail-corners {
+                border-radius: 3%;
+            }
+            
+            a img.go-thumbnail-enlarge-post {
+                transform: scale(1);
+                transition: transform 169ms;
+            }
+            a img.go-thumbnail-enlarge-post:hover {
+                transform: scale(${configManager.config.gallery.enlargeOnHoverScale});
+                transition-delay: 142ms;
+                z-index: 690;
+                position: relative;
+            }
+        `);
     }
 
     // Apply Tweak
@@ -366,6 +402,71 @@
                     }
                 });
             }
+        });
+    }
+    function applyTweakPostEnlargeOnHover() {
+        debugLog("Applying PostEnlargeOnHover");
+        onDOMReady(()=>{
+            let divs = document.querySelectorAll(".mainBodyPadding > div");
+            divs[divs.length - 1].querySelectorAll("a > img").forEach((i)=> {
+                i.classList.add("go-thumbnail-enlarge-post");
+                if(configManager.config.gallery.preventEnlargeOffScreen) {
+                    i.onmouseenter = (e) => {
+                        let elem = e.srcElement;
+                        let rect = elem.getBoundingClientRect();
+                        let xOrigin = rect.x + (rect.width/2);
+                        
+                        if(xOrigin - (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) <= 0) {
+                            elem.style.transformOrigin = 'left';
+                        } else if (xOrigin + (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) >= window.innerWidth) {
+                            elem.style.transformOrigin = 'right';
+                        } else {
+                            elem.style.transformOrigin = '';
+                        }
+                    };
+                }
+            });
+        });
+    }
+    function applyTweakPostRoundCorners() {
+        debugLog("Applying PostRoundCorners");
+        onDOMReady(()=>{
+            let divs = document.querySelectorAll(".mainBodyPadding > div");
+            divs[divs.length - 1].querySelectorAll("a > img").forEach((i)=> {
+                i.classList.add("go-thumbnail-corners");
+            });
+        });
+    }
+    
+    function applyTweakGalleryEnlargeOnHover() {
+        debugLog("Applying GalleryEnlargeOnHover");
+        onDOMReady(()=>{
+            document.querySelectorAll(".thumbnail-preview > a > img").forEach((i)=> {
+                i.classList.add("go-thumbnail-enlarge");
+                if(configManager.config.gallery.preventEnlargeOffScreen) {
+                    i.onmouseenter = (e) => {
+                        let elem = e.srcElement;
+                        let rect = elem.getBoundingClientRect();
+                        let xOrigin = rect.x + (rect.width/2);
+                        
+                        if(xOrigin - (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) <= 0) {
+                            elem.style.transformOrigin = 'left';
+                        } else if (xOrigin + (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) >= window.innerWidth) {
+                            elem.style.transformOrigin = 'right';
+                        } else {
+                            elem.style.transformOrigin = '';
+                        }
+                    };
+                }
+            });
+        });
+    }
+    function applyTweakGalleryRoundCorners() {
+        debugLog("Applying GalleryRoundCorners");
+        onDOMReady(()=>{
+            document.querySelectorAll(".thumbnail-preview > a > img").forEach((i)=> {
+                i.classList.add("go-thumbnail-corners");
+            });
         });
     }
     // Functions
