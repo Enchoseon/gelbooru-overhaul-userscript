@@ -47,7 +47,7 @@
             return {
                 configVersion: 1,
                 debug: false,
-                darkMode: {
+                darkMode: { // WIP
                     amoledDark: false,
                     autoDarkMode: true,
                     forceDarkMode: false,
@@ -68,13 +68,23 @@
                     fitHorizontallyOnExpand: true,
                     fitHorizontallyOnNarrow: true,
                 },
-                gallery: {
+                thumbnails: {
                     roundCorners: true,
                     enlargeOnHover: true,
-                    enlargeOnHoverScale: 2,
+                    enlargeOnHoverScale: 3,
+                    enlargeOnHoverHighRes: true,
+                    enlargeOnHoverHighResMaxCacheItems: 420,
                     preventEnlargeOffScreen: true,
-                    applyForMoreLikeThis: true,
+                    removeTitle: true,
                 },
+                fastDL: { // RMB downloading / RMB + Alt to open context menu(does no work for some reason)   loading takes time and does not appear until the end
+                    enabled: true, //   for thumbnails
+                    enabledForPost: true, // for posts
+                    saveAs: false, // does not works for me
+                    alsoSaveTags: true, // as a text file with the same name
+                    fileNamePattern: "%postId% - %artist%", // %md5% %postId% %artist% %character% %copyright%     arrays are joined with ", "
+                    
+                }
             };
         }
         migrateConfig = function(migratingConfig) {
@@ -110,37 +120,31 @@
     let configManager = new ConfigManager();
 
     debugLog("Loaded config", configManager.config);
-
-    // Any page tweaks
     debugLog("Current page type is " + detectPageType());
-
+    
     debugLog("Registering styles");
     registerStyles();
 
     // Page specific tweaks
     switch (detectPageType()){
         case PageTypes.GALLERY:
-            if(configManager.config.collapseSidebar.enabled) {
-                applyTweakCollapseSidebar();
-                applyFixCollapseSidebarGallery();
-            }
-            if(configManager.config.gallery.enlargeOnHover) applyTweakGalleryEnlargeOnHover();
-            if(configManager.config.gallery.roundCorners)   applyTweakGalleryRoundCorners();
+            if(configManager.config.collapseSidebar.enabled)   applyTweakGalleryCollapseSidebar();
+            if(configManager.config.thumbnails.enlargeOnHover) applyTweakGalleryEnlargeOnHover();
+            if(configManager.config.thumbnails.roundCorners)   applyTweakGalleryRoundCorners();
+            if(configManager.config.thumbnails.removeTitle)    applyTweakGalleryRemoveTitle();
+            if(configManager.config.fastDL.enabled)            applyTweakGalleryFastDL();
             break;
         case PageTypes.POST:
-            if(configManager.config.collapseSidebar.enabled) {
-                applyTweakCollapseSidebar();
-                applyFixCollapseSidebarPost();
-            }
+            if(configManager.config.collapseSidebar.enabled)        applyTweakPostCollapseSidebar();
             if(configManager.config.post.center)                    applyTweakPostCenter();
             if(configManager.config.post.fitVertically)             applyTweakPostFitH();
             if(configManager.config.post.fitHorizontallyOnNarrow)   applyTweakPostOnNarrow();
             if(configManager.config.post.autoScroll)                applyTweakPostAutoScroll();
             if(configManager.config.post.fitHorizontallyOnExpand)   applyTweakPostOnExpand();
-            if(configManager.config.gallery.applyForMoreLikeThis) {
-                if(configManager.config.gallery.enlargeOnHover) applyTweakPostEnlargeOnHover();
-                if(configManager.config.gallery.roundCorners)   applyTweakPostRoundCorners();
-            }
+            if(configManager.config.thumbnails.enlargeOnHover)      applyTweakPostEnlargeOnHover();
+            if(configManager.config.thumbnails.roundCorners)        applyTweakPostRoundCorners();
+            if(configManager.config.fastDL.enabled)                 applyTweakPostFastDL();
+            if(configManager.config.fastDL.enabledForPost)          applyTweakPostFastDLPost();
             break;
         case PageTypes.WIKI_VIEW:
 
@@ -251,7 +255,7 @@
                 transition: transform 169ms;
             }
             .thumbnail-preview a img.go-thumbnail-enlarge:hover {
-                transform: scale(${configManager.config.gallery.enlargeOnHoverScale});
+                transform: scale(${configManager.config.thumbnails.enlargeOnHoverScale});
                 transition-delay: 142ms;
             }
             .thumbnail-preview:hover {
@@ -267,7 +271,7 @@
                 transition: transform 169ms;
             }
             a img.go-thumbnail-enlarge-post:hover {
-                transform: scale(${configManager.config.gallery.enlargeOnHoverScale});
+                transform: scale(${configManager.config.thumbnails.enlargeOnHoverScale});
                 transition-delay: 142ms;
                 z-index: 690;
                 position: relative;
@@ -276,32 +280,18 @@
     }
 
     // Apply Tweak
-    function applyTweakCollapseSidebar(){
+    function applyTweakPostCollapseSidebar(){
         debugLog("Applying TweakCollapseSidebar");
         onDOMReady(()=>{
             document.querySelector("#container > section").classList.add("go-collapse-sidebar");
             document.querySelector("#tag-list").classList.add("go-tag-list-top-bottom-padding");
-        });
-    }
-    function applyFixCollapseSidebarGallery(){
-        debugLog("Applying FixCollapseSidebarGallery");
-        onDOMReady(()=>{
-            document.querySelectorAll("#tag-list > li").forEach((i) => {i.classList.add("go-collapse-sidebar-tags-list-tweak");});
-            document.querySelector("#container").classList.add("go-collapse-sidebar-container-tweak");
-            document.querySelectorAll("#tag-list > li > a.mobile-spacing").forEach((i)=>{i.classList.add("go-mobile-unspacing")});
-            document.querySelectorAll(".aside > .sm-hidden").forEach((i)=>{i.classList.add("go-sm-unhidden")});
-        });
-    }
-    function applyFixCollapseSidebarPost(){
-        debugLog("Applying FixCollapseSidebarPost");
-        onDOMReady(()=>{
+            
             document.querySelectorAll("#tag-list > li[class*='tag-type']").forEach((i) => {i.classList.add("go-collapse-sidebar-tags-list-tweak");});
             document.querySelector("#container").classList.add("go-collapse-sidebar-container-tweak");
             document.querySelectorAll("#tag-list > .sm-hidden").forEach((i)=>{i.classList.add("go-sm-unhidden")});
             document.querySelectorAll("#tag-list > li > .sm-hidden").forEach((i)=>{i.classList.add("go-sm-unhidden")});
         });
     }
-    
     function applyTweakPostFitH(){
         debugLog("Applying PostFitH");
         onDOMReady(()=>{
@@ -358,7 +348,7 @@
     function applyTweakPostAutoScroll() {
         debugLog("Applying PostAutoScroll");
         
-        document.onreadystatechange = () => {
+        document.addEventListener("readystatechange", () => {
             let image = document.querySelector("#image");
             
             if(image) {
@@ -375,7 +365,7 @@
                 }
             }
             // not works for video
-        };
+        });
     }
     function applyTweakPostOnExpand() {
         debugLog("Applying PostOnExpand");
@@ -410,20 +400,27 @@
             let divs = document.querySelectorAll(".mainBodyPadding > div");
             divs[divs.length - 1].querySelectorAll("a > img").forEach((i)=> {
                 i.classList.add("go-thumbnail-enlarge-post");
-                if(configManager.config.gallery.preventEnlargeOffScreen) {
-                    i.onmouseenter = (e) => {
+                if(configManager.config.thumbnails.preventEnlargeOffScreen) {
+                    i.addEventListener("mouseenter", (e) => {
                         let elem = e.srcElement;
                         let rect = elem.getBoundingClientRect();
                         let xOrigin = rect.x + (rect.width/2);
                         
-                        if(xOrigin - (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) <= 0) {
+                        if(xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= 0) {
                             elem.style.transformOrigin = 'left';
-                        } else if (xOrigin + (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) >= window.innerWidth) {
+                        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth) {
                             elem.style.transformOrigin = 'right';
                         } else {
                             elem.style.transformOrigin = '';
                         }
-                    };
+                        if(configManager.config.thumbnails.enlargeOnHoverHighRes) {
+                            if(elem.src.includes("thumbnails")) {
+                                loadPostItem(/id=([0-9]+)/.exec(i.parentElement.href)[1])
+                                .then((post) => elem.src = post.highResThumb)
+                                .catch((error)=> debugLog("Failed to load highres image for following element with following error:", {elem, error}));
+                        }
+                }
+                    });
                 }
             });
         });
@@ -437,27 +434,75 @@
             });
         });
     }
+    function applyTweakPostFastDL() {
+        debugLog("Applying PostFastDL");
+        onDOMReady(()=>{
+            let divs = document.querySelectorAll(".mainBodyPadding > div");
+            divs[divs.length - 1].querySelectorAll("a > img").forEach((i)=> {
+                i.addEventListener("contextmenu", (e) => {
+                    if(e.altKey)
+                        return false;
+                    
+                    e.preventDefault();
+                    downloadPost(/id=([0-9]+)/.exec(i.parentElement.href)[1])
+                    .catch(error => debugLog("Failed to download following post with following error", {post:i, error}));;
+                });
+            });
+        });
+    }
+    function applyTweakPostFastDLPost() {
+        debugLog("Applying PostFastDLPost");
+        onDOMReady(()=>{
+            document.querySelector("#gelcomVideoPlayer, #image").addEventListener("contextmenu", (e) => {
+                if(e.altKey)
+                    return false;
+                    
+                e.preventDefault();
+                downloadPost(/id=([0-9]+)/.exec(document.location.href)[1])
+                .catch((error)=> debugLog("Failed to download current post with following error:", error));
+            });
+        });
+    }
     
+    function applyTweakGalleryCollapseSidebar() {
+        debugLog("Applying TweakCollapseSidebar");
+        onDOMReady(()=>{
+            document.querySelector("#container > section").classList.add("go-collapse-sidebar");
+            document.querySelector("#tag-list").classList.add("go-tag-list-top-bottom-padding");
+            
+            document.querySelectorAll("#tag-list > li").forEach((i) => {i.classList.add("go-collapse-sidebar-tags-list-tweak");});
+            document.querySelector("#container").classList.add("go-collapse-sidebar-container-tweak");
+            document.querySelectorAll("#tag-list > li > a.mobile-spacing").forEach((i)=>{i.classList.add("go-mobile-unspacing")});
+            document.querySelectorAll(".aside > .sm-hidden").forEach((i)=>{i.classList.add("go-sm-unhidden")});
+        });
+    }
     function applyTweakGalleryEnlargeOnHover() {
         debugLog("Applying GalleryEnlargeOnHover");
         onDOMReady(()=>{
             document.querySelectorAll(".thumbnail-preview > a > img").forEach((i)=> {
                 i.classList.add("go-thumbnail-enlarge");
-                if(configManager.config.gallery.preventEnlargeOffScreen) {
-                    i.onmouseenter = (e) => {
-                        let elem = e.srcElement;
+                i.addEventListener("mouseenter", (e) => {
+                    let elem = e.srcElement;
+                    if(configManager.config.thumbnails.preventEnlargeOffScreen) {
                         let rect = elem.getBoundingClientRect();
                         let xOrigin = rect.x + (rect.width/2);
                         
-                        if(xOrigin - (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) <= 0) {
+                        if(xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= 0) {
                             elem.style.transformOrigin = 'left';
-                        } else if (xOrigin + (rect.width * configManager.config.gallery.enlargeOnHoverScale / 2) >= window.innerWidth) {
+                        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth) {
                             elem.style.transformOrigin = 'right';
                         } else {
                             elem.style.transformOrigin = '';
                         }
-                    };
-                }
+                    }
+                    if(configManager.config.thumbnails.enlargeOnHoverHighRes) {
+                        if(elem.src.includes("thumbnails")) {
+                            loadPostItem(elem.parentElement.id.substring(1))
+                            .then((post) => elem.src = post.highResThumb)
+                            .catch((error)=> debugLog("Failed to load highres image for following element with following error:", {elem, error}));
+                        }
+                    }
+                });
             });
         });
     }
@@ -466,6 +511,31 @@
         onDOMReady(()=>{
             document.querySelectorAll(".thumbnail-preview > a > img").forEach((i)=> {
                 i.classList.add("go-thumbnail-corners");
+            });
+        });
+    }
+    function applyTweakGalleryRemoveTitle() {
+        debugLog("Applying GalleryRemoveTitle");
+        onDOMReady(()=>{
+            document.querySelectorAll(".thumbnail-preview > a > img").forEach((i)=> {
+                i.setAttribute("data-title", i.title);
+                i.removeAttribute("title");
+            });
+        });
+    }
+    function applyTweakGalleryFastDL() {
+        debugLog("Applying GalleryFastDL");
+        onDOMReady(()=>{
+            document.querySelectorAll(".thumbnail-preview > a > img").forEach((i)=> {
+                i.addEventListener("contextmenu", (e) => {
+                    debugLog(e.altKey);
+                    if(e.altKey)
+                        return false; // WHY THE CONTEXT MENU IS NOT DISPLAYING HERE???
+                    
+                    e.preventDefault();
+                    downloadPost(i.parentElement.id.substring(1))
+                    .catch(error => debugLog("Failed to download following post with following error", {post:i, error}));
+                });
             });
         });
     }
@@ -510,5 +580,89 @@
             else
                 console.log("[GELO]: " + message, value);
         }
+    }
+    function loadPostItem(postId, isDownloading) {
+        return new Promise((resolve, reject)=> {
+            let postCache = GM_getValue("postCache", {});
+            
+            // just clear postCache if exceeded limit
+            if(Object.keys(postCache).length > configManager.config.thumbnails.enlargeOnHoverHighResMaxCacheItems)
+                postCache = {};
+        
+            if(!postCache[postId]) {
+                fetch("https://gelbooru.com/index.php?page=post&s=view&id=" + postId)
+                    .then(response => response.text())
+                    .then(text => {
+                        let parser = new DOMParser();
+                        let htmlDocument = parser.parseFromString(text, "text/html");
+                        
+                        let fileLink   = htmlDocument.querySelector("meta[property='og:image']").content;
+                        let highResThumb = htmlDocument.querySelector("video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
+                        let md5        = htmlDocument.querySelector("video") ? "0".repeat(32) : htmlDocument.querySelector("section.image-container").getAttribute("data-md5");
+                        // video have highRes thumbnail but does not have md5
+                        
+                        let tags = {
+                            artist:    [...htmlDocument.querySelectorAll(".tag-type-artist    > a")].map(i=>i.text),
+                            character: [...htmlDocument.querySelectorAll(".tag-type-character > a")].map(i=>i.text),
+                            copyright: [...htmlDocument.querySelectorAll(".tag-type-copyright > a")].map(i=>i.text),
+                            metadata:  [...htmlDocument.querySelectorAll(".tag-type-metadata  > a")].map(i=>i.text),
+                            general:   [...htmlDocument.querySelectorAll(".tag-type-general   > a")].map(i=>i.text),
+                        };
+                        
+                        postCache[postId] = {
+                            highResThumb: highResThumb, 
+                            download: fileLink, 
+                            tags: tags, 
+                            md5: md5
+                        };
+                        
+                        GM_setValue("postCache", postCache);
+                        resolve(postCache[postId])
+                    })
+                    .catch(error => reject(error));
+            } else {
+                resolve(postCache[postId]); 
+            }
+            });
+    }
+    function downloadPost(postId) {
+        return new Promise((resolve, reject)=> {
+            loadPostItem(postId, true)
+            .then((post) => {
+            //build filename
+                let filename = configManager.config.fastDL.fileNamePattern;
+            
+                filename = filename.replace("%md5%"   , post.md5);
+                filename = filename.replace("%postId%", postId);
+                filename = filename.replace("%artist%"   , post.tags.artist.length    ? post.tags.artist.join(", ")    : "unknown_artist");
+                filename = filename.replace("%character%", post.tags.character.length ? post.tags.character.join(", ") : "unknown_character");
+                filename = filename.replace("%copyright%", post.tags.copyright.length ? post.tags.copyright.join(", ") : "unknown_copyright");
+            
+                filename = filename.replace(/[<>:"/\|?*]/g, "_"); // illegal chars
+            
+                GM_download({
+                    url: post.download,
+                    name: filename + "." + post.download.split(".").at(-1),
+                    saveAs: configManager.config.fastDL.saveAs,
+                });
+            
+                if(configManager.config.fastDL.alsoSaveTags){
+                    let text = post.tags.artist.map(i => "artist:"    + i).join("\n") + "\n" + 
+                            post.tags.character.map(i => "character:" + i).join("\n") + "\n" +
+                            post.tags.copyright.map(i => "series:"    + i).join("\n") + "\n" +
+                            post.tags.metadata.map(i  => "meta:"      + i).join("\n") + "\n" +
+                            post.tags.general.join("\n") + "\n";
+                    
+                    text = text.replaceAll("\n\n", "\n");
+                    
+                    let elem = document.createElement("a");
+                    elem.href = "data:text," + text;
+                    elem.download = filename + ".txt";
+                    elem.click();
+                }
+                debugLog("Downloading started", {url:post.download, filename});
+            })
+            .catch((error) => reject(error));
+        });
     }
 })();
