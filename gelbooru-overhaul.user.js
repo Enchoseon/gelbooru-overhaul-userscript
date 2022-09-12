@@ -721,9 +721,9 @@
         let rect = elem.getBoundingClientRect();
         let xOrigin = rect.x + (rect.width / 2);
 
-        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= 0) {
+        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= window.innerWidth * 0.01) {
             elem.style.transformOrigin = 'left';
-        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth) {
+        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth * 0.99) {
             elem.style.transformOrigin = 'right';
         } else {
             elem.style.transformOrigin = '';
