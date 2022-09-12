@@ -77,7 +77,7 @@
                     preventEnlargeOffScreen: true,
                     removeTitle: true,
                 },
-                fastDL: { // RMB downloading / RMB + Alt to open context menu(does no work for some reason)   loading takes time and does not appear until the end
+                fastDL: { // RMB downloading / RMB + Shift to open context menu(does no work for some reason)   loading takes time and does not appear until the end
                     enabled: true, //   for thumbnails
                     enabledForPost: true, // for posts
                     saveAs: false, // does not works for me
@@ -227,12 +227,6 @@
                 width: auto;
                 height: auto;
             }
-            .go-fit-width {
-                max-height: auto;
-                max-width: 95vh;
-                height: auto;
-                width: auto;
-            }
             .go-center {
                 display: block;
                 margin: 0 auto;
@@ -371,24 +365,7 @@
     function applyTweakPostAutoScroll() {
         debugLog("Applying PostAutoScroll");
 
-        document.addEventListener("readystatechange", () => {
-            let image = document.querySelector("#image");
-
-            if (image) {
-                // only if image fit window
-                debugLog(`Height is w${window.innerHeight} vs i${image.height}`);
-                debugLog(`Width is w${window.innerWidth} vs i${image.width}`);
-
-                if (window.innerHeight > image.height && window.innerWidth > image.width) {
-                    debugLog("Scrolling");
-                    image.scrollIntoView({ block: "center", inline: "center" });
-                    history.scrollRestoration = 'manual';
-                } else {
-                    history.scrollRestoration = 'auto';
-                }
-            }
-            // not works for video
-        });
+        document.addEventListener("readystatechange", autoScroll);
     }
     function applyTweakPostOnExpand() {
         debugLog("Applying PostOnExpand");
@@ -397,23 +374,7 @@
 
             // only if resize link is present, otherwise you dont want to expand low res image
             if (resizeLink) {
-                resizeLink.addEventListener("click", (e) => {
-                    // TODO: do this using revert tweak
-                    let noteContainer = document.querySelector(".image-container.note-container");
-
-                    // there is no note container on video pages
-                    if (noteContainer) {
-                        noteContainer.classList.remove("go-fit-height");
-
-                        let image = document.querySelector("#image");
-                        image.classList.remove("go-fit-height");
-                        image.classList.add("fit-width");
-                    } else {
-                        let video = document.querySelector("#gelcomVideoPlayer");
-                        video.classList.remove("go-fit-height");
-                        video.classList.add("fit-width");
-                    }
-                });
+                resizeLink.addEventListener("click", toggleFitMode);
             }
         });
     }
@@ -423,27 +384,13 @@
             let divs = document.querySelectorAll(".mainBodyPadding > div");
             divs[divs.length - 1].querySelectorAll("a > img").forEach((i) => {
                 i.classList.add("go-thumbnail-enlarge-post");
+                if (configManager.config.thumbnails.enlargeOnHoverHighRes) {
+                    i.setAttribute("data-thumb-src", i.src);
+                    i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
+                    i.addEventListener("mouseleave", (e) => setImageLowResSource(e.target));
+                }
                 if (configManager.config.thumbnails.preventEnlargeOffScreen) {
-                    i.addEventListener("mouseenter", (e) => {
-                        let elem = e.srcElement;
-                        let rect = elem.getBoundingClientRect();
-                        let xOrigin = rect.x + (rect.width / 2);
-
-                        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= 0) {
-                            elem.style.transformOrigin = 'left';
-                        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth) {
-                            elem.style.transformOrigin = 'right';
-                        } else {
-                            elem.style.transformOrigin = '';
-                        }
-                        if (configManager.config.thumbnails.enlargeOnHoverHighRes) {
-                            if (elem.src.includes("thumbnails")) {
-                                loadPostItem(/id=([0-9]+)/.exec(i.parentElement.href)[1])
-                                    .then((post) => elem.src = post.highResThumb)
-                                    .catch((error) => debugLog("Failed to load highres image for following element with following error:", { elem, error }));
-                            }
-                        }
-                    });
+                    i.addEventListener("mouseenter", updateTransformOrigin);
                 }
             });
         });
@@ -462,14 +409,7 @@
         onDOMReady(() => {
             let divs = document.querySelectorAll(".mainBodyPadding > div");
             divs[divs.length - 1].querySelectorAll("a > img").forEach((i) => {
-                i.addEventListener("contextmenu", (e) => {
-                    if (e.altKey)
-                        return false;
-
-                    e.preventDefault();
-                    downloadPost(/id=([0-9]+)/.exec(i.parentElement.href)[1])
-                        .catch(error => debugLog("Failed to download following post with following error", { post: i, error }));;
-                });
+                i.addEventListener("contextmenu", e => downloadPostById(e, /id=([0-9]+)/.exec(i.parentElement.href)[1]));
             });
         });
     }
@@ -504,28 +444,13 @@
         onDOMReady(() => {
             document.querySelectorAll(".thumbnail-preview > a > img").forEach((i) => {
                 i.classList.add("go-thumbnail-enlarge");
-                i.addEventListener("mouseenter", (e) => {
-                    let elem = e.srcElement;
-                    if (configManager.config.thumbnails.preventEnlargeOffScreen) {
-                        let rect = elem.getBoundingClientRect();
-                        let xOrigin = rect.x + (rect.width / 2);
-
-                        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= 0) {
-                            elem.style.transformOrigin = 'left';
-                        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth) {
-                            elem.style.transformOrigin = 'right';
-                        } else {
-                            elem.style.transformOrigin = '';
-                        }
-                    }
-                    if (configManager.config.thumbnails.enlargeOnHoverHighRes) {
-                        if (elem.src.includes("thumbnails")) {
-                            loadPostItem(elem.parentElement.id.substring(1))
-                                .then((post) => elem.src = post.highResThumb)
-                                .catch((error) => debugLog("Failed to load highres image for following element with following error:", { elem, error }));
-                        }
-                    }
-                });
+                if (configManager.config.thumbnails.enlargeOnHoverHighRes) {
+                    i.setAttribute("data-thumb-src", i.src);
+                    i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
+                    i.addEventListener("mouseleave", (e) => setImageLowResSource(e.target));
+                }
+                if (configManager.config.thumbnails.preventEnlargeOffScreen)
+                    i.addEventListener("mouseenter", updateTransformOrigin);
             });
         });
     }
@@ -550,15 +475,7 @@
         debugLog("Applying GalleryFastDL");
         onDOMReady(() => {
             document.querySelectorAll(".thumbnail-preview > a > img").forEach((i) => {
-                i.addEventListener("contextmenu", (e) => {
-                    debugLog(e.altKey);
-                    if (e.altKey)
-                        return false; // WHY THE CONTEXT MENU IS NOT DISPLAYING HERE???
-
-                    e.preventDefault();
-                    downloadPost(i.parentElement.id.substring(1))
-                        .catch(error => debugLog("Failed to download following post with following error", { post: i, error }));
-                });
+                i.addEventListener("contextmenu", e => downloadPostById(e, i.parentElement.id.substring(1)));
             });
         });
     }
@@ -569,7 +486,6 @@
         mainDiv.classList = "go-config-window go-config-window-hidden";
         mainDiv.id = "goConfigWindow";
         mainDiv.innerHTML = `
-        <div class="go-config-window" id="goConfigWindow">
             <header>Gelbooru Overhaul</header>
             <ul>
                 <li>
@@ -603,7 +519,6 @@
                     </ul>
                 </li>
             </ul>
-        </div>
     `;
 
         document.querySelector("#container").appendChild(mainDiv);
@@ -679,7 +594,10 @@
 
             if (!postCache[postId]) {
                 fetch("https://gelbooru.com/index.php?page=post&s=view&id=" + postId)
-                    .then(response => response.text())
+                    .then(response => {
+                        if (!response.ok) throw Error(response.statusText);
+                        return response.text();
+                    })
                     .then(text => {
                         let parser = new DOMParser();
                         let htmlDocument = parser.parseFromString(text, "text/html");
@@ -690,12 +608,14 @@
                         // video have highRes thumbnail but does not have md5
 
                         let tags = {
-                            artist:    [...htmlDocument.querySelectorAll(".tag-type-artist    > a")].map(i => i.text),
+                            artist: [...htmlDocument.querySelectorAll(".tag-type-artist    > a")].map(i => i.text),
                             character: [...htmlDocument.querySelectorAll(".tag-type-character > a")].map(i => i.text),
                             copyright: [...htmlDocument.querySelectorAll(".tag-type-copyright > a")].map(i => i.text),
-                            metadata:  [...htmlDocument.querySelectorAll(".tag-type-metadata  > a")].map(i => i.text),
-                            general:   [...htmlDocument.querySelectorAll(".tag-type-general   > a")].map(i => i.text),
+                            metadata: [...htmlDocument.querySelectorAll(".tag-type-metadata  > a")].map(i => i.text),
+                            general: [...htmlDocument.querySelectorAll(".tag-type-general   > a")].map(i => i.text),
                         };
+
+                        if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
 
                         postCache[postId] = {
                             highResThumb: highResThumb,
@@ -720,9 +640,9 @@
                     //build filename
                     let filename = configManager.config.fastDL.fileNamePattern;
 
-                    filename = filename.replace("%md5%",    post.md5);
+                    filename = filename.replace("%md5%", post.md5);
                     filename = filename.replace("%postId%", postId);
-                    filename = filename.replace("%artist%",    post.tags.artist.length ? post.tags.artist.join(", ")       : "unknown_artist");
+                    filename = filename.replace("%artist%", post.tags.artist.length ? post.tags.artist.join(", ") : "unknown_artist");
                     filename = filename.replace("%character%", post.tags.character.length ? post.tags.character.join(", ") : "unknown_character");
                     filename = filename.replace("%copyright%", post.tags.copyright.length ? post.tags.copyright.join(", ") : "unknown_copyright");
 
@@ -735,11 +655,11 @@
                     });
 
                     if (configManager.config.fastDL.alsoSaveTags) {
-                        let text = post.tags.artist.map(i => "artist:"    + i).join("\n") + "\n" +
-                                post.tags.character.map(i => "character:" + i).join("\n") + "\n" +
-                                post.tags.copyright.map(i => "series:"    + i).join("\n") + "\n" +
-                                post.tags.metadata .map(i => "meta:"      + i).join("\n") + "\n" +
-                                post.tags.general.join("\n") + "\n";
+                        let text = post.tags.artist.map(i => "artist:" + i).join("\n") + "\n" +
+                            post.tags.character.map(i => "character:" + i).join("\n") + "\n" +
+                            post.tags.copyright.map(i => "series:" + i).join("\n") + "\n" +
+                            post.tags.metadata.map(i => "meta:" + i).join("\n") + "\n" +
+                            post.tags.general.join("\n") + "\n";
 
                         text = text.replaceAll("\n\n", "\n");
 
@@ -752,5 +672,72 @@
                 })
                 .catch((error) => reject(error));
         });
+    }
+    function setImageHighResSource(img) {
+        loadPostItem(/id=([0-9]+)/.exec(img.parentElement.href)[1])
+            .then((post) => img.src = post.highResThumb)
+            .catch((error) => debugLog("Failed to load highres image for following element with following error:", { img, error }));
+
+    }
+    function setImageLowResSource(img) {
+        img.src = img.getAttribute("data-thumb-src");
+    }
+    function autoScroll() {
+        let image = document.querySelector("#image");
+
+        if (image) {
+            // only if image fit window
+            debugLog(`Height is ${window.innerHeight} vs ${image.height}`);
+            debugLog(`Width  is ${window.innerWidth} vs ${image.width}`);
+
+            if (window.innerHeight > image.height && window.innerWidth > image.width) {
+                debugLog("Scrolling");
+                image.scrollIntoView({ block: "center", inline: "center" });
+                history.scrollRestoration = 'manual';
+            } else {
+                history.scrollRestoration = 'auto';
+            }
+        }
+        // not works for video
+    }
+    function toggleFitMode() {
+        debugLog("Toggling fit mode");
+
+        let noteContainer = document.querySelector(".note-container");
+        noteContainer.classList.toggle("go-fit-height");
+
+        let image = noteContainer.querySelector("#image");
+        image.classList.toggle("go-fit-height");
+
+        image.style.width = "";
+        image.style.height = "";
+        image.removeAttribute("width");
+        image.removeAttribute("height");
+
+        document.querySelector("#resize-link").style.display = "";
+    }
+    function updateTransformOrigin(e) {
+        let elem = e.target;
+        let rect = elem.getBoundingClientRect();
+        let xOrigin = rect.x + (rect.width / 2);
+
+        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= 0) {
+            elem.style.transformOrigin = 'left';
+        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth) {
+            elem.style.transformOrigin = 'right';
+        } else {
+            elem.style.transformOrigin = '';
+        }
+    }
+    function downloadPostById(e, postId) {
+        {
+            if (e.shiftKey) {
+                return true;
+            }
+
+            e.preventDefault();
+            downloadPost(postId)
+                .catch(error => debugLog("Failed to download following post with following error", { post: i, error }));;
+        }
     }
 })();
