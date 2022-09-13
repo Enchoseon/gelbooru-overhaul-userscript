@@ -77,13 +77,14 @@
                     preventEnlargeOffScreen: true,
                     removeTitle: true,
                 },
-                fastDL: { // RMB downloading / RMB + Shift to open context menu(does no work for some reason)   loading takes time and does not appear until the end
+                fastDL: { // RMB downloading / RMB + Shift to open context menu  loading takes time and does not appear until the end
                     enabled: true, //   for thumbnails
                     enabledForPost: true, // for posts
                     saveAs: false, // does not works for me
                     alsoSaveTags: true, // as a text file with the same name
-                    fileNamePattern: "%postId% - %artist%", // %md5% %postId% %artist% %character% %copyright%     arrays are joined with ", "
-
+                    fileNamePattern: "%postId% - %artist%", // %md5% %postId% %artist% %character% %copyright%
+                    fileNameArraySeparator: ", ",
+                    // set "Download Mode" to "Browser API" in advanced config to see downloading progress
                 }
             };
         }
@@ -276,13 +277,25 @@
         `);
 
         // config window
+        // get body color
+        let bodyColor = window.getComputedStyle(document.body, null).backgroundColor;
         GM_addStyle(`
+            /* MAIN */
             .go-config-window {
-                background: inherit;
+                background: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
+                font-size: 1.2em;
+                display:flex;
+                flex-direction: column;
+                overflow:hidden;
+
+                box-shadow: 0 0 0.2rem 1px;
+                min-width: 45%;
+                min-height: 30%;
+                max-width: 80%;
+                max-height: 70%;
+
                 position: fixed;
                 visibility: visible;
-                min-width: 30%;
-                min-height: 30%;
                 left: 50%;
                 top: 50%;
                 transform: translate(-50%, -50%);
@@ -291,8 +304,76 @@
             .go-config-window-hidden {
                 visibility: hidden;
             }
-            #container {
-                background: inherit;
+
+            /* HEADER */
+            .go-config-window header {
+                font-weight: bold;
+                padding: 20px 12px;
+                overflow: visible;
+            }
+            .go-config-window header a {
+                padding: 0;
+                font-size: 1.4em;
+            }
+            /* FOOTER */
+            .go-config-window footer {
+                padding: 14px;
+            }
+            .go-config-window footer input {
+                border: 1px solid;
+            }
+
+            /* PREFERENCES */
+            .go-config-window dl {
+                padding: 18px;
+                overflow-y: scroll;
+            }
+
+            /* PREFERENCE CATEGORY NAME */
+            .go-config-window dt {
+                border-bottom: 1px solid;
+                margin-bottom: 12px;
+                padding-bottom: 6px;
+            }
+            /* PREFERENCE CATEGORY ITEMS */
+            .go-config-window dd {
+                margin-left: 16px;
+                margin-bottom: 14px;
+            }
+
+            /* PREFERENCE CATEGORY ITEM */
+            .go-config-window li
+            {
+                list-style-type: none;
+                margin-bottom: 12px;
+            }
+            /* PREFERENCE ITEM NAME */
+            .go-config-window label
+            {
+                font-weight: bold;
+            }
+            /* PREFERENCE ITEM DESCRIPTION */
+            .go-config-window p
+            {
+                font-size: 0.9em;
+                opacity: 0.9;
+            }
+            
+            /* INPUT TYPE SPECIFIC */
+            .go-config-window .text-input label {
+                display: inline-block;
+                margin-bottom: 8px;
+            }
+            .go-config-window .text-input input {
+                display: block;
+                margin-left: 4px;
+                margin-bottom: 6px;
+                padding: 0 6px;
+                width: -webkit-fill-available;
+                height: 1.5em;
+            }
+            .go-config-window .checkbox-input p {
+                margin-left: 18px;
             }
         `);
     }
@@ -481,69 +562,131 @@
     }
     // Functions
     function registerConfigWindow() {
+        class PreferenceCategory {
+            name;
+            preferences;
+            constructor (name, preferences) {
+                this.name = name;
+                this.preferences = preferences;
+            }
+        }
+        class PreferenceItem {
+            name;
+            description;
+            valuePath;
+            constructor (name, description, valuePath) {
+                this.name = name;
+                this.description = description;
+                this.valuePath = valuePath;
+            }
+        }
         // config modal window
-        let mainDiv = document.createElement("div");
-        mainDiv.classList = "go-config-window go-config-window-hidden";
-        mainDiv.id = "goConfigWindow";
-        mainDiv.innerHTML = `
-            <header>Gelbooru Overhaul</header>
-            <ul>
-                <li>
-                    <h2>Preference category 1</h2>
-                    <ul>
-                        <li>
-                            <input type="checkbox"></input>
-                            <label class="block">Preference item 1</label>
-                            <p>Preference info 1</p>
-                        </li>
-                        <li>
-                            <input type="range"></input>
-                            <labe class="block"l>Preference item 2</label>
-                            <p>Preference info 2</p>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <h2>Preference category 2</h2>
-                    <ul>
-                      <li>
-                        <input type="checkbox"></input>
-                        <label class="block">Preference item 3</label>
-                        <p>Preference info 3</p>
-                      </li>
-                      <li>
-                        <input type="range"></input>
-                        <label class="block">Preference item 4</label>
-                        <p>Preference info 4</p>
-                      </li>
-                    </ul>
-                </li>
-            </ul>
-    `;
+        let sDiv = buildSettingsWindow([
+                new PreferenceCategory("General", [
+                    new PreferenceItem("Debug", "Enable debugging information in the console", "debug")
+                ]),
+                new PreferenceCategory("Collapsible Sidebar", [
+                    new PreferenceItem("Enable", "", "collapseSidebar.enabled"),
+                    new PreferenceItem("Width" , "Width of collapsed sidebar", "collapseSidebar.collapsedWidth")
+                ]),
+                new PreferenceCategory("Collapsible Sidebar", [
+                    new PreferenceItem("Enable", "", "collapseSidebar.enabled"),
+                    new PreferenceItem("Width" , "Width of collapsed sidebar", "collapseSidebar.collapsedWidth")
+                ]),
+                new PreferenceCategory("Collapsible Sidebar", [
+                    new PreferenceItem("Enable", "", "collapseSidebar.enabled"),
+                    new PreferenceItem("Width" , "Width of collapsed sidebar", "collapseSidebar.collapsedWidth")
+                ]),
+                new PreferenceCategory("Collapsible Sidebar", [
+                    new PreferenceItem("Enable", "", "collapseSidebar.enabled"),
+                    new PreferenceItem("Width" , "Width of collapsed sidebar", "collapseSidebar.collapsedWidth")
+                ])
+        ]);
 
-        document.querySelector("#container").appendChild(mainDiv);
+        document.querySelector("#container").appendChild(sDiv);
 
         // button to open window
-        let settingsButton = document.createElement("a");
-        settingsButton.text = "Overhaul";
-        settingsButton.style = "cursor: pointer;";
-
-        settingsButton.addEventListener("click", (e) => {
-            mainDiv.classList.toggle("go-config-window-hidden");
-        });
-        let observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === "class" && mutation.target.classList.contains("go-config-window-hidden")) {
-                    settingsButton.classList.remove("active");
-                } else {
-                    settingsButton.classList.add("active");
-                }
-            });
-        });
-        observer.observe(mainDiv, { attributes: true });
-
+        let settingsButton = buildSettingsButton(sDiv);
         let topnav = document.querySelector("#myTopnav");
         topnav.insertBefore(settingsButton, topnav.querySelectorAll("a")[1]);
+
+        function buildSettingsButton(settingsElem) {
+            let settingsButton = document.createElement("a");
+            settingsButton.text = "Overhaul";
+            settingsButton.style = "cursor: pointer;";
+
+            settingsButton.addEventListener("click", (e) => {
+                settingsElem.classList.toggle("go-config-window-hidden");
+            });
+            let observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === "class" && mutation.target.classList.contains("go-config-window-hidden")) {
+                        settingsButton.classList.remove("active");
+                    } else {
+                        settingsButton.classList.add("active");
+                    }
+                });
+            });
+            observer.observe(settingsElem, { attributes: true });
+            return settingsButton;
+        }
+        function buildSettingsWindow(content) {
+            
+            let sDiv = document.createElement("div");
+            sDiv.classList = "go-config-window go-config-window-hidden";
+            sDiv.id = "goConfigWindow";
+
+            sDiv.innerHTML = buildSettingsTemplate(content);
+            sDiv.querySelector("input[value='Close']").addEventListener("click", () => sDiv.classList.toggle("go-config-window-hidden") );
+
+            return sDiv;
+        }
+        function buildSettingsTemplate(content){
+            return `
+            <header class="topnav"><a>Gelbooru Overhaul</a></header>
+            <dl>
+                ${content.map(buildPrefCatTemplate).join("\n")}
+            </dl>
+            <footer>
+                <input type="submit" value="Close" class="searchList">
+            </footer>
+            `;
+        }
+        function buildPrefCatTemplate(prefCat) {
+            return `
+            <dt>
+                <h3>${prefCat.name}</h3>
+            </dt>
+            <dd>
+                <ul>
+                    ${prefCat.preferences.map(buildPrefItemTemplate).join("\n")}
+                </ul>
+            </dd>
+            `;
+        }
+        function buildPrefItemTemplate(pref){
+            let type = typeof(resolve(pref.valuePath, configManager.config));
+            switch (type) {
+                case "boolean":
+                    return `
+                        <li class="checkbox-input">
+                            <input type="checkbox" id="${pref.valuePath}" name="${pref.valuePath}"/>
+                            <label for="${pref.valuePath}">${pref.name}</label>
+                            <p>${pref.description}</p>
+                        </li>
+                    `;
+                case "string":
+                    return `
+                        <li class="text-input">
+                        <label>${pref.name}</label>
+                        <input type="text"/>
+                        <p>${pref.description}</p>    
+                        </li>
+                    `;
+                default:
+                    throw new TypeError(`Unknown type ${type} of config.${pref.valuePath}`);
+            }
+        }
     }
     function detectPageType() {
         let params = new URLSearchParams(document.URL.split('?')[1]);
@@ -639,14 +782,15 @@
                 .then((post) => {
                     //build filename
                     let filename = configManager.config.fastDL.fileNamePattern;
+                    let spr = configManager.config.fastDL.fileNameArraySeparator;
 
                     filename = filename.replace("%md5%", post.md5);
                     filename = filename.replace("%postId%", postId);
-                    filename = filename.replace("%artist%", post.tags.artist.length ? post.tags.artist.join(", ") : "unknown_artist");
-                    filename = filename.replace("%character%", post.tags.character.length ? post.tags.character.join(", ") : "unknown_character");
-                    filename = filename.replace("%copyright%", post.tags.copyright.length ? post.tags.copyright.join(", ") : "unknown_copyright");
+                    filename = filename.replace("%artist%", post.tags.artist.length ? post.tags.artist.join(spr) : "unknown_artist");
+                    filename = filename.replace("%character%", post.tags.character.length ? post.tags.character.join(spr) : "unknown_character");
+                    filename = filename.replace("%copyright%", post.tags.copyright.length ? post.tags.copyright.join(spr) : "unknown_copyright");
 
-                    filename = filename.replace(/[<>:"/\|?*]/g, "_"); // illegal chars
+                    filename = filename.replace(/[<>:"/\|?*]/, "_"); // illegal chars
 
                     GM_download({
                         url: post.download,
@@ -739,5 +883,9 @@
             downloadPost(postId)
                 .catch(error => debugLog("Failed to download following post with following error", { post: i, error }));;
         }
+    }
+    function resolve(path, obj=self, separator='.') {
+        var properties = Array.isArray(path) ? path : path.split(separator)
+        return properties.reduce((prev, curr) => prev?.[curr], obj)
     }
 })();
