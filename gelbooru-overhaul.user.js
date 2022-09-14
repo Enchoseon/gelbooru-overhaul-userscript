@@ -10,7 +10,6 @@
 // @grant       GM_setValue
 // @grant       GM_download
 // @grant       GM_addStyle
-// @require     https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 // ==/UserScript==
 
 (function() {
@@ -100,7 +99,7 @@
                 },
             };
             // migrate to keep old config
-            migratingConfig = _.merge(migrationObject, migratingConfig);
+            migratingConfig = MergeRecursive(migrationObject, migratingConfig);
             // migrate property values and NECESSARILY configVersion
             migratingConfig.configVersion = 1;
             migratingConfig.newProp = migratingConfig.outdatedProp;
@@ -113,7 +112,32 @@
 
             // return updated config
             return migratingConfig;
+
+            // https://stackoverflow.com/a/383245/19972602
+            function MergeRecursive(obj1, obj2) {
+
+                for (var p in obj2) {
+                  try {
+                    // Property in destination object set; update its value.
+                    if ( obj2[p].constructor==Object ) {
+                      obj1[p] = MergeRecursive(obj1[p], obj2[p]);
+              
+                    } else {
+                      obj1[p] = obj2[p];
+              
+                    }
+              
+                  } catch(e) {
+                    // Property in destination object not set; create it and set its value.
+                    obj1[p] = obj2[p];
+              
+                  }
+                }
+              
+                return obj1;
+              }
         }
+
     }
 
     const PageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
