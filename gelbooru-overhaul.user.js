@@ -656,12 +656,14 @@
                 ])
         ]);
 
-        document.querySelector("#container").appendChild(sDiv);
-
         // button to open window
         let settingsButton = buildSettingsButton(sDiv);
-        let topnav = document.querySelector("#myTopnav");
-        topnav.insertBefore(settingsButton, topnav.querySelectorAll("a")[1]);
+
+        onDOMReady(() => {
+            let topnav = document.querySelector("#myTopnav");
+            topnav.insertBefore(settingsButton, topnav.querySelectorAll("a")[1]);
+            document.querySelector("#container").appendChild(sDiv);
+        });
 
         function buildSettingsButton(settingsElem) {
             let settingsButton = document.createElement("a");
