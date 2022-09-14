@@ -277,12 +277,9 @@
         `);
 
         // config window
-        // get body color
-        let bodyColor = window.getComputedStyle(document.body, null).backgroundColor;
         GM_addStyle(`
             /* MAIN */
             .go-config-window {
-                background: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
                 font-size: 1.2em;
                 display:flex;
                 flex-direction: column;
@@ -376,6 +373,15 @@
                 margin-left: 18px;
             }
         `);
+        // better backhround color detection
+        onDOMReady(()=> {
+            let bodyColor = window.getComputedStyle(document.body, null).backgroundColor;
+            GM_addStyle(`
+                .go-config-window {
+                    background: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
+                }
+            `);
+        });
     }
     // Apply Tweak
     function applyTweakPostCollapseSidebar() {
