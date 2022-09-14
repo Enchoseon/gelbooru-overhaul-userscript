@@ -273,11 +273,11 @@
 
         // applyTweakGallery
         GM_addStyle(`
-            .thumbnail-preview a img.go-thumbnail-enlarge {
+            .thumbnail-preview .go-thumbnail-enlarge {
                 transform: scale(1);
                 transition: transform 169ms;
             }
-            .thumbnail-preview a img.go-thumbnail-enlarge:hover {
+            .thumbnail-preview .go-thumbnail-enlarge:hover {
                 transform: scale(${configManager.config.thumbnails.enlargeScale});
                 transition-delay: 142ms;
             }
@@ -289,11 +289,12 @@
                 border-radius: 3%;
             }
             
-            a img.go-thumbnail-enlarge-post {
+            .go-thumbnail-enlarge-post {
                 transform: scale(1);
                 transition: transform 169ms;
+                display: inline-block;
             }
-            a img.go-thumbnail-enlarge-post:hover {
+            .go-thumbnail-enlarge-post:hover {
                 transform: scale(${configManager.config.thumbnails.enlargeScale});
                 transition-delay: 142ms;
                 z-index: 690;
@@ -513,14 +514,14 @@
         onDOMReady(() => {
             let divs = document.querySelectorAll(".mainBodyPadding > div");
             divs[divs.length - 1].querySelectorAll("a > img").forEach((i) => {
-                i.classList.add("go-thumbnail-enlarge-post");
+                i.parentElement.classList.add("go-thumbnail-enlarge-post");
                 if (configManager.config.thumbnails.enlargeHighRes) {
                     i.setAttribute("data-thumb-src", i.src);
                     i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
                     i.addEventListener("mouseleave", (e) => setImageLowResSource(e.target));
                 }
                 if (configManager.config.thumbnails.preventOffscreen)
-                    i.addEventListener("mouseenter", updateTransformOrigin);
+                    i.parentElement.addEventListener("mouseenter", updateTransformOrigin);
                 if (configManager.config.thumbnails.loadingIndicator)
                     i.addEventListener("mouseenter", addLoadingIndicator);
             });
@@ -574,14 +575,14 @@
         debugLog("Applying GalleryEnlargeOnHover");
         onDOMReady(() => {
             document.querySelectorAll(".thumbnail-preview > a > img").forEach((i) => {
-                i.classList.add("go-thumbnail-enlarge");
+                i.parentElement.classList.add("go-thumbnail-enlarge");
                 if (configManager.config.thumbnails.enlargeHighRes) {
                     i.setAttribute("data-thumb-src", i.src);
                     i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
                     i.addEventListener("mouseleave", (e) => setImageLowResSource(e.target));
                 }
                 if (configManager.config.thumbnails.preventOffscreen)
-                    i.addEventListener("mouseenter", updateTransformOrigin);
+                    i.parentElement.addEventListener("mouseenter", updateTransformOrigin);
                 if (configManager.config.thumbnails.loadingIndicator)
                     i.addEventListener("mouseenter", addLoadingIndicator);
             });
