@@ -70,10 +70,11 @@
                 thumbnails: {
                     roundCorners: true,
                     enlargeOnHover: true,
-                    enlargeOnHoverScale: 3,
-                    enlargeOnHoverHighRes: true,
-                    enlargeOnHoverHighResMaxCacheItems: 420,
-                    preventEnlargeOffScreen: true,
+                    enlargeScale: 3,
+                    enlargeHighRes: true,
+                    loadingIndicator: true,
+                    maxCacheItems: 420,
+                    preventOffscreen: true,
                     removeTitle: true,
                 },
                 fastDL: { // RMB downloading / RMB + Shift to open context menu  loading takes time and does not appear until the end
@@ -277,7 +278,7 @@
                 transition: transform 169ms;
             }
             .thumbnail-preview a img.go-thumbnail-enlarge:hover {
-                transform: scale(${configManager.config.thumbnails.enlargeOnHoverScale});
+                transform: scale(${configManager.config.thumbnails.enlargeScale});
                 transition-delay: 142ms;
             }
             .thumbnail-preview:hover {
@@ -293,11 +294,28 @@
                 transition: transform 169ms;
             }
             a img.go-thumbnail-enlarge-post:hover {
-                transform: scale(${configManager.config.thumbnails.enlargeOnHoverScale});
+                transform: scale(${configManager.config.thumbnails.enlargeScale});
                 transition-delay: 142ms;
                 z-index: 690;
                 position: relative;
             }
+        `);
+
+        // loader
+        GM_addStyle(`
+            .go-loader {
+                position: relative;
+            }
+            .go-loader:before {
+                content: "loading";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 9999;
+                background: yellow;
+                color: red;
+                pointer-events: none;
         `);
 
         // config window
@@ -335,6 +353,7 @@
             .go-config-window header a {
                 padding: 0;
                 font-size: 1.4em;
+                pointer-events: none;
             }
             /* FOOTER */
             .go-config-window footer {
@@ -495,14 +514,15 @@
             let divs = document.querySelectorAll(".mainBodyPadding > div");
             divs[divs.length - 1].querySelectorAll("a > img").forEach((i) => {
                 i.classList.add("go-thumbnail-enlarge-post");
-                if (configManager.config.thumbnails.enlargeOnHoverHighRes) {
+                if (configManager.config.thumbnails.enlargeHighRes) {
                     i.setAttribute("data-thumb-src", i.src);
                     i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
                     i.addEventListener("mouseleave", (e) => setImageLowResSource(e.target));
                 }
-                if (configManager.config.thumbnails.preventEnlargeOffScreen) {
+                if (configManager.config.thumbnails.preventOffscreen)
                     i.addEventListener("mouseenter", updateTransformOrigin);
-                }
+                if (configManager.config.thumbnails.loadingIndicator)
+                    i.addEventListener("mouseenter", addLoadingIndicator);
             });
         });
     }
@@ -555,13 +575,15 @@
         onDOMReady(() => {
             document.querySelectorAll(".thumbnail-preview > a > img").forEach((i) => {
                 i.classList.add("go-thumbnail-enlarge");
-                if (configManager.config.thumbnails.enlargeOnHoverHighRes) {
+                if (configManager.config.thumbnails.enlargeHighRes) {
                     i.setAttribute("data-thumb-src", i.src);
                     i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
                     i.addEventListener("mouseleave", (e) => setImageLowResSource(e.target));
                 }
-                if (configManager.config.thumbnails.preventEnlargeOffScreen)
+                if (configManager.config.thumbnails.preventOffscreen)
                     i.addEventListener("mouseenter", updateTransformOrigin);
+                if (configManager.config.thumbnails.loadingIndicator)
+                    i.addEventListener("mouseenter", addLoadingIndicator);
             });
         });
     }
@@ -762,7 +784,7 @@
             let postCache = GM_getValue("postCache", {});
 
             // just clear postCache if exceeded limit
-            if (Object.keys(postCache).length > configManager.config.thumbnails.enlargeOnHoverHighResMaxCacheItems)
+            if (Object.keys(postCache).length > configManager.config.thumbnails.maxCacheItems)
                 postCache = {};
 
             if (!postCache[postId]) {
@@ -854,7 +876,11 @@
 
     }
     function setImageLowResSource(img) {
-        img.src = img.getAttribute("data-thumb-src");
+        if (img.complete)
+            img.src = img.getAttribute("data-thumb-src");
+        else 
+            img.addEventListener("load", () => img.src = img.getAttribute("data-thumb-src"), {once: true});
+        
     }
     function autoScroll() {
         let image = document.querySelector("#image");
@@ -895,16 +921,15 @@
         let rect = elem.getBoundingClientRect();
         let xOrigin = rect.x + (rect.width / 2);
 
-        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) <= window.innerWidth * 0.01) {
+        if (xOrigin - (rect.width * configManager.config.thumbnails.enlargeScale / 2) <= window.innerWidth * 0.01) {
             elem.style.transformOrigin = 'left';
-        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeOnHoverScale / 2) >= window.innerWidth * 0.99) {
+        } else if (xOrigin + (rect.width * configManager.config.thumbnails.enlargeScale / 2) >= window.innerWidth * 0.99) {
             elem.style.transformOrigin = 'right';
         } else {
             elem.style.transformOrigin = '';
         }
     }
     function downloadPostById(e, postId) {
-        {
             if (e.shiftKey) {
                 return true;
             }
@@ -912,7 +937,12 @@
             e.preventDefault();
             downloadPost(postId)
                 .catch(error => debugLog("Failed to download following post with following error", { post: i, error }));;
-        }
+    }
+    function addLoadingIndicator(e) {
+        e.target.parentElement.classList.add("go-loader");
+        e.target.addEventListener("load", ee => {
+            ee.target.parentElement.classList.remove("go-loader");
+        }, {once: true});
     }
     function resolve(path, obj=self, separator='.') {
         var properties = Array.isArray(path) ? path : path.split(separator)
