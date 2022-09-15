@@ -1,0 +1,242 @@
+/* COLLAPSE SIDEBAR */
+/* MAIN */
+.go-collapse-sidebar {
+    position: fixed;
+    width: var(--collapsed-width, 5px);
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--collapsed-color, red);
+    transition: 142ms;
+    font-size: 1em;
+    z-index: 420690;
+}
+.go-collapse-sidebar:hover {
+    position: fixed;
+    width: min-content;
+    height: 100%;
+    padding-right: 12px;
+    overflow-y: scroll;
+    background: black;
+    opacity: var(--expanded-opacity, 1);
+}
+
+/* COLLAPSE SIDEBAR */
+/* TAG LIST BOTTOM PADDING */
+#container.go-tag-list-top-bottom-padding {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+/* COLLAPSE SIDEBAR */
+/* FIX CONTAINER GRID */
+#container.go-collapse-sidebar-container-tweak {
+    grid-template-columns: 0 auto;
+}
+@media only screen and (max-width: 850px) {
+    #container.go-collapse-sidebar-container-tweak {
+        grid-template-columns: auto;
+    }
+}
+/* COLLAPSE SIDEBAR */
+/* FIX TAG COUNT WRAPING */
+ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
+    width: max-content !important; /* fuck !important */
+}
+/* COLLAPSE SIDEBAR */
+/* FIX TAG CATEGORY HIDING ON NARROW */
+@media only screen and (max-width: 850px) {
+    .go-sm-unhidden {
+        display: contents;
+    }
+}
+/* COLLAPSE SIDEBAR */
+/* FIX SPACING ON NARROW */
+.go-mobile-unspacing {
+    margin-right: 0;
+}
+
+
+
+/* POST FIT TWEAKS */
+/* FIT VERTICALLY */
+.go-fit-height {
+    max-height: 95vh;
+    max-width: auto;
+    width: auto;
+    height: auto;
+}
+/* POST FIT TWEAKS */
+/* CENTER POST*/
+.go-center {
+    display: block;
+    margin: 0 auto;
+}
+/* POST FIT TWEAKS */
+/* CENTER NOTE CONTAINER */
+.note-container.go-center {
+    display: table;
+    margin: 0 auto;
+}
+/* POST FIT TWEAKS */
+/* FIT HORIZONTALLY ON NARROW */
+@media only screen and (max-width: 850px) {
+    .go-fit-width-on-narrow {
+        max-width: 95vh;
+        max-height: none;
+        height: auto;
+        width: auto;
+    }
+}
+
+
+
+/* THUMBNAIL ENLARGE*/
+/* MAIN */
+.go-thumbnail-enlarge {
+    transform: scale(1);
+    transition: transform 169ms;
+    display: inline-block;
+}
+/* THUMBNAIL ENLARGE*/
+/* MAIN HOVER */
+.go-thumbnail-enlarge:hover {
+    transform: scale(var(--enlarge-scale, 2));
+    transition-delay: 142ms;
+    z-index: 420;
+    position: relative;
+}
+/* THUMBNAIL ENLARGE*/
+/* CORNER RADIUS FOR THUMBNAILS */
+.go-thumbnail-corners {
+    border-radius: 3%;
+}
+
+/* THUMBNAIL ENLARGE*/
+/* LOADER CONTAINER */
+.go-loader {
+    position: relative;
+}
+/* THUMBNAIL ENLARGE*/
+/* LOADER MAIN */
+.go-loader:before {
+    content: "loading";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: yellow;
+    color: red;
+    pointer-events: none;
+}
+
+
+
+/* CONFIG WINDOW */
+/* APPEARANCE */
+.go-config-window {
+    background: var(--background-color, white);
+    font-size: 1.2em;
+    box-shadow: 0 0 0.2rem 1px;
+}
+/* CONFIG WINDOW */
+/* LAYOUT */
+.go-config-window {
+    min-width: 45%;
+    min-height: 30%;
+    max-width: 80%;
+    max-height: 70%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+/* CONFIG WINDOW */
+/* POSITION */
+.go-config-window {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3901;
+}
+/* CONFIG WINDOW */
+/* HIDING */
+.go-config-window-hidden {
+    visibility: hidden;
+}
+
+/* CONFIG WINDOW */
+/* HEADER */
+.go-config-window header a {
+    font-weight: bold;
+    font-size: 1.4em;
+    pointer-events: none;
+}
+/* CONFIG WINDOW */
+/* HEADER OVERFLOW FIX */
+.go-config-window header {
+    overflow: visible;
+}
+/* CONFIG WINDOW */
+/* FOOTER BUTTONS */
+.go-config-window footer input {
+    border: 1px solid;
+}
+
+/* CONFIG WINDOW */
+/* PREFERENCES */
+.go-config-window dl {
+    padding: 18px;
+    overflow-y: scroll;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE CATEGORY NAME */
+.go-config-window dt {
+    border-bottom: 1px solid;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE CATEGORY ITEMS */
+.go-config-window dd {
+    margin-left: 16px;
+    margin-bottom: 14px;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE CATEGORY ITEM */
+.go-config-window li {
+    list-style-type: none;
+    margin-bottom: 12px;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE ITEM NAME */
+.go-config-window label {
+    font-weight: bold;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE ITEM DESCRIPTION */
+.go-config-window p {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.text-input label {
+    display: inline-block;
+    margin-bottom: 8px;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.text-input input {
+    display: block;
+    margin-left: 4px;
+    margin-bottom: 6px;
+    padding: 0 6px;
+    width: -webkit-fill-available;
+    height: 1.5em;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.checkbox-input p {
+    margin-left: 18px;
+}

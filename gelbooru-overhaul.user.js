@@ -10,6 +10,8 @@
 // @grant       GM_setValue
 // @grant       GM_download
 // @grant       GM_addStyle
+// @grant       GM_getResourceText
+// @resource    css 	https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.user.css
 // ==/UserScript==
 
 (function() {
@@ -149,7 +151,8 @@
     debugLog("Current page type is " + detectPageType());
 
     debugLog("Registering styles");
-    registerStyles();
+    GM_addStyle(GM_getResourceText("css"));
+    registerStyleVars();
 
     debugLog("Registering config window");
     registerConfigWindow();
@@ -186,243 +189,27 @@
             break;
     }
     // Register styles
-    function registerStyles() {
-        // applyTweakCollapseSidebar
+    function registerStyleVars() {
+        // scope: .go-collapse-sidebar
         GM_addStyle(`
-              .go-collapse-sidebar {
-                  position: fixed;
-                  width: ${configManager.config.collapseSidebar.collapsedWidth};
-                  height: 100%;
-                  margin: 0px;
-                  overflow: hidden;
-                  background: ${configManager.config.collapseSidebar.collapsedColor};
-                  transition: 142ms;
-                  font-size: 1em;
-                  z-index: 420690;
-              }
-              .go-collapse-sidebar:hover {
-                  position: fixed;
-                  width: min-content;
-                  height: 100%;
-                  padding-right: 12px;
-                  overflow-y: scroll;
-                  background: black;
-                  opacity: ${configManager.config.collapseSidebar.expandedOpacity};
-              }
-
-              /* add some top/bottom paddings */
-              #tag-list.go-tag-list-top-bottom-padding {
-                  padding-top: 12px;
-                  padding-bottom: 12px;
-              }
-
-              /* fix post list grid */
-              #container.go-collapse-sidebar-container-tweak {
-                  grid-template-columns: 0px auto;
-              }
-              @media only screen and (max-width: 850px) {
-                  #container.go-collapse-sidebar-container-tweak {
-                      grid-template-columns: auto;
-                  }
-              }
-
-              /* fix tag count wrap */
-              #tag-list li.go-collapse-sidebar-tags-list-tweak {
-                  width: max-content !important;
-                  display: block;
-              }
-
-              /* fix tag category hiding*/
-              @media only screen and (max-width: 850px) {
-                  .sm-hidden.go-sm-unhidden {
-                      display: contents;
-                  }
-              }
-
-              /* fix mobile spacing */
-              .go-mobile-unspacing {
-                  margin-right: 0;
-              }
-        `);
-
-        // applyTweakPost
-        GM_addStyle(`
-            .go-fit-height {
-                max-height: 95vh;
-                max-width: auto;
-                width: auto;
-                height: auto;
-            }
-            .go-center {
-                display: block;
-                margin: 0 auto;
-            }
-            .note-container.go-center {
-                display: table;
-                margin: 0 auto;
-            }
-            @media only screen and (max-width: 850px) {
-                .go-fit-width-on-narrow {
-                    max-width: 95vh;
-                    max-height: none;
-                    height: auto;
-                    width: auto;
-                }
+            .go-collapse-sidebar {
+                --collapsed-width: ${configManager.config.collapseSidebar.collapsedWidth};
+                --collapsed-color: ${configManager.config.collapseSidebar.collapsedColor};
+                --expanded-opacity: ${configManager.config.collapseSidebar.expandedOpacity};
             }
         `);
-
-        // applyTweakGallery
+        // scope: .go-thumbnail-enlarge
         GM_addStyle(`
-            .thumbnail-preview .go-thumbnail-enlarge {
-                transform: scale(1);
-                transition: transform 169ms;
-            }
-            .thumbnail-preview .go-thumbnail-enlarge:hover {
-                transform: scale(${configManager.config.thumbnails.enlargeScale});
-                transition-delay: 142ms;
-            }
-            .thumbnail-preview:hover {
-                z-index: 690;
-            }
-            
-            .go-thumbnail-corners {
-                border-radius: 3%;
-            }
-            
-            .go-thumbnail-enlarge-post {
-                transform: scale(1);
-                transition: transform 169ms;
-                display: inline-block;
-            }
-            .go-thumbnail-enlarge-post:hover {
-                transform: scale(${configManager.config.thumbnails.enlargeScale});
-                transition-delay: 142ms;
-                z-index: 690;
-                position: relative;
+            .go-thumbnail-enlarge {
+                --enlarge-scale: ${configManager.config.thumbnails.enlargeScale};
             }
         `);
-
-        // loader
-        GM_addStyle(`
-            .go-loader {
-                position: relative;
-            }
-            .go-loader:before {
-                content: "loading";
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 9999;
-                background: yellow;
-                color: red;
-                pointer-events: none;
-        `);
-
-        // config window
-        GM_addStyle(`
-            /* MAIN */
-            .go-config-window {
-                font-size: 1.2em;
-                display:flex;
-                flex-direction: column;
-                overflow:hidden;
-
-                box-shadow: 0 0 0.2rem 1px;
-                min-width: 45%;
-                min-height: 30%;
-                max-width: 80%;
-                max-height: 70%;
-
-                position: fixed;
-                visibility: visible;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 3901;
-            }
-            .go-config-window-hidden {
-                visibility: hidden;
-            }
-
-            /* HEADER */
-            .go-config-window header {
-                font-weight: bold;
-                padding: 20px 12px;
-                overflow: visible;
-            }
-            .go-config-window header a {
-                padding: 0;
-                font-size: 1.4em;
-                pointer-events: none;
-            }
-            /* FOOTER */
-            .go-config-window footer {
-                padding: 14px;
-            }
-            .go-config-window footer input {
-                border: 1px solid;
-            }
-
-            /* PREFERENCES */
-            .go-config-window dl {
-                padding: 18px;
-                overflow-y: scroll;
-            }
-
-            /* PREFERENCE CATEGORY NAME */
-            .go-config-window dt {
-                border-bottom: 1px solid;
-                margin-bottom: 12px;
-                padding-bottom: 6px;
-            }
-            /* PREFERENCE CATEGORY ITEMS */
-            .go-config-window dd {
-                margin-left: 16px;
-                margin-bottom: 14px;
-            }
-
-            /* PREFERENCE CATEGORY ITEM */
-            .go-config-window li
-            {
-                list-style-type: none;
-                margin-bottom: 12px;
-            }
-            /* PREFERENCE ITEM NAME */
-            .go-config-window label
-            {
-                font-weight: bold;
-            }
-            /* PREFERENCE ITEM DESCRIPTION */
-            .go-config-window p
-            {
-                font-size: 0.9em;
-                opacity: 0.9;
-            }
-            
-            /* INPUT TYPE SPECIFIC */
-            .go-config-window .text-input label {
-                display: inline-block;
-                margin-bottom: 8px;
-            }
-            .go-config-window .text-input input {
-                display: block;
-                margin-left: 4px;
-                margin-bottom: 6px;
-                padding: 0 6px;
-                width: -webkit-fill-available;
-                height: 1.5em;
-            }
-            .go-config-window .checkbox-input p {
-                margin-left: 18px;
-            }
-        `);
-        // better backhround color detection
+        // scope: .go-config-window
         onDOMReady(()=> {
-            let bodyColor = window.getComputedStyle(document.body, null).backgroundColor;
+            let bodyColor = window.getComputedStyle(document.body).backgroundColor;
             GM_addStyle(`
                 .go-config-window {
-                    background: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
+                    --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
                 }
             `);
         });
@@ -514,7 +301,7 @@
         onDOMReady(() => {
             let divs = document.querySelectorAll(".mainBodyPadding > div");
             divs[divs.length - 1].querySelectorAll("a > img").forEach((i) => {
-                i.parentElement.classList.add("go-thumbnail-enlarge-post");
+                i.parentElement.classList.add("go-thumbnail-enlarge");
                 if (configManager.config.thumbnails.enlargeHighRes) {
                     i.setAttribute("data-thumb-src", i.src);
                     i.addEventListener("mouseenter", (e) => setImageHighResSource(e.target));
