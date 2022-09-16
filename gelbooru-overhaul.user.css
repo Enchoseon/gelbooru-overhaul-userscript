@@ -41,12 +41,13 @@
 /* FIX TAG COUNT WRAPING */
 ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
     width: max-content !important; /* fuck !important */
+    display: block;
 }
 /* COLLAPSE SIDEBAR */
 /* FIX TAG CATEGORY HIDING ON NARROW */
 @media only screen and (max-width: 850px) {
     .go-sm-unhidden {
-        display: contents;
+        display: inline;
     }
 }
 /* COLLAPSE SIDEBAR */
@@ -61,9 +62,15 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* FIT VERTICALLY */
 .go-fit-height {
     max-height: 95vh;
-    max-width: auto;
+    max-width: none;
     width: auto;
     height: auto;
+}
+.go-fit-width {
+    max-width: 95vw;
+    max-height: none;
+    height: auto;
+    width: auto;
 }
 /* POST FIT TWEAKS */
 /* CENTER POST*/
@@ -75,17 +82,24 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* CENTER NOTE CONTAINER */
 .note-container.go-center {
     display: table;
-    margin: 0 auto;
 }
 /* POST FIT TWEAKS */
 /* FIT HORIZONTALLY ON NARROW */
 @media only screen and (max-width: 850px) {
     .go-fit-width-on-narrow {
-        max-width: 95vh;
+        max-width: 95vw;
         max-height: none;
         height: auto;
         width: auto;
     }
+}
+/* POST FIT TWEAKS */
+/* ZOOM CURSORS */
+.go-cursor-zoom-in {
+    cursor: zoom-in;
+}
+.go-cursor-zoom-out {
+    cursor: zoom-out;
 }
 
 

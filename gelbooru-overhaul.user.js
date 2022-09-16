@@ -68,6 +68,7 @@
                     fitVertically: true,
                     fitHorizontallyOnExpand: true,
                     fitHorizontallyOnNarrow: true,
+                    switchFitOnClick: true,
                 },
                 thumbnails: {
                     roundCorners: true,
@@ -118,27 +119,21 @@
 
             // https://stackoverflow.com/a/383245/19972602
             function MergeRecursive(obj1, obj2) {
-
                 for (var p in obj2) {
                   try {
                     // Property in destination object set; update its value.
                     if ( obj2[p].constructor==Object ) {
                       obj1[p] = MergeRecursive(obj1[p], obj2[p]);
-              
                     } else {
                       obj1[p] = obj2[p];
-              
                     }
-              
                   } catch(e) {
                     // Property in destination object not set; create it and set its value.
                     obj1[p] = obj2[p];
-              
                   }
                 }
-              
                 return obj1;
-              }
+            }
         }
 
     }
@@ -177,6 +172,7 @@
             if(configManager.config.thumbnails.roundCorners)        applyTweakPostRoundCorners();
             if(configManager.config.fastDL.enabled)                 applyTweakPostFastDL();
             if(configManager.config.fastDL.enabledForPost)          applyTweakPostFastDLPost();
+            if(configManager.config.post.switchFitOnClick)          applyTweakPostSwitchFit();
             break;
         case PageTypes.WIKI_VIEW:
 
@@ -288,7 +284,7 @@
     function applyTweakPostOnExpand() {
         debugLog("Applying PostOnExpand");
         onDOMReady(() => {
-            let resizeLink = document.querySelector("#resize-link");
+            let resizeLink = document.querySelector("#resize-link > a");
 
             // only if resize link is present, otherwise you dont want to expand low res image
             if (resizeLink) {
@@ -344,6 +340,26 @@
                     .catch((error) => debugLog("Failed to download current post with following error:", error));
             });
         });
+    }
+    function applyTweakPostSwitchFit() {
+        onDOMReady(() => {
+            let img = document.querySelector("#image");
+            let resizeLink = document.querySelector("#resize-link > a");
+            
+            if(!img || !resizeLink)
+                return;
+
+            img.classList.add("go-cursor-zoom-in");
+
+            img.addEventListener("click", e => toggleFitModeWithCursors(e, resizeLink));
+        });
+
+        function toggleFitModeWithCursors(e, resizeLink) {
+            resizeLink.click();
+
+            e.target.classList.toggle("go-cursor-zoom-in");
+            e.target.classList.toggle("go-cursor-zoom-out");
+        }
     }
 
     function applyTweakGalleryCollapseSidebar() {
@@ -695,9 +711,11 @@
 
         let noteContainer = document.querySelector(".note-container");
         noteContainer.classList.toggle("go-fit-height");
+        noteContainer.classList.toggle("go-fit-width");
 
         let image = noteContainer.querySelector("#image");
         image.classList.toggle("go-fit-height");
+        image.classList.toggle("go-fit-width");
 
         image.style.width = "";
         image.style.height = "";
