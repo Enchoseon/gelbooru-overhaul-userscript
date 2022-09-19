@@ -9,7 +9,7 @@
     background: var(--collapsed-color, red);
     transition: 142ms;
     font-size: 1em;
-    z-index: 420690;
+    z-index: 690420;
 }
 .go-collapse-sidebar:hover {
     position: fixed;
@@ -62,7 +62,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* FIT VERTICALLY */
 .go-fit-height {
     max-height: 95vh;
-    max-width: none;
+    max-width: 95vw;
     width: auto;
     height: auto;
 }
@@ -87,7 +87,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* FIT HORIZONTALLY ON NARROW */
 @media only screen and (max-width: 850px) {
     .go-fit-width-on-narrow {
-        max-width: 95vw;
+        max-width: 90vw;
         max-height: none;
         height: auto;
         width: auto;
@@ -116,7 +116,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 .go-thumbnail-enlarge:hover {
     transform: scale(var(--enlarge-scale, 2));
     transition-delay: 142ms;
-    z-index: 420;
+    z-index: 420690;
     position: relative;
 }
 /* THUMBNAIL ENLARGE*/
@@ -171,7 +171,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    z-index: 3901;
+    z-index: 39013901;
 }
 /* CONFIG WINDOW */
 /* HIDING */
