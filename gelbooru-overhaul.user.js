@@ -455,7 +455,7 @@
         onDOMReady(() => {
             let bodyColor = window.getComputedStyle(document.body).backgroundColor;
             style.innerHTML = `
-                .go-config-window {
+                :root {
                     --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
                 }
             `;

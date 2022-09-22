@@ -17,13 +17,13 @@
     height: 100%;
     padding-right: 12px;
     overflow-y: scroll;
-    background: black;
+    background: var(--background-color, white);
     opacity: var(--expanded-opacity, 1);
 }
 
 /* COLLAPSE SIDEBAR */
 /* TAG LIST BOTTOM PADDING */
-#container.go-tag-list-top-bottom-padding {
+#tag-list.go-tag-list-top-bottom-padding {
     padding-top: 12px;
     padding-bottom: 12px;
 }
