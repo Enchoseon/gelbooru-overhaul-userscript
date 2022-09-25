@@ -804,15 +804,16 @@
         debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
         onDOMReady(() => {
-            if(value)
-        {
-            /** @type {HTMLElement} */
-            let topPagination = document.querySelector(".pagination").cloneNode(true); 
-            topPagination.classList.add("top-pagination");
-            document.querySelector("main").insertBefore(topPagination, document.querySelector(".thumbnail-container"));
-        } else {
-            document.querySelector(".top-pagination").remove();
-        }
+            if(value) {
+                if(document.querySelector(".top-pagination")) return;
+
+                /** @type {HTMLElement} */
+                let topPagination = document.querySelector(".pagination").cloneNode(true); 
+                topPagination.classList.add("top-pagination");
+                document.querySelector("main").insertBefore(topPagination, document.querySelector(".thumbnail-container"));
+            } else {
+                document.querySelector(".top-pagination").remove();
+            }
         });
     }
     /**
