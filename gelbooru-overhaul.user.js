@@ -317,6 +317,34 @@
                             description: "Saves additional text file with all tags with same name"
                         }
                     }
+                },
+                infiniteScroll: {
+                    name: "Infinite Scroll",
+                    items: {
+                        enable: {
+                            value: true,
+                            name: "Enable",
+                            description: "Enable infinite scroll for gallery page. Refresh to clean page. History works wierd",
+                            update: applyTweakInfiniteScroll
+                        },
+                        threshold: {
+                            value: 500,
+                            name: "Infinite Scroll Threshold",
+                            description: "How early to start loading the next page in pixels from the bottom of the page. Depends on your internet and scroll speed"
+                        },
+                        paginatorOnTop: {
+                            value: true,
+                            name: "Copy paginator on top of gallery",
+                            description: "Place a copy of paginator on top of gallery to make navigation easier (or just possible with Infinite Scroll)",
+                            update: applyTweakPaginatorOnTop
+                        },
+                        goToTop: {
+                            value: true,
+                            name: "Go to top button",
+                            description: "Display floating 'Go to top' button",
+                            update: applyTweakGoToTop
+                        }
+                    }
                 }
             };
         }
@@ -400,6 +428,13 @@
     debugLog("Registering config window");
     registerConfigWindow();
     applyCssVariableGoConfigWindow();
+
+    // lazy fix for the back button, don't want to deal with HTML5 stuff
+    window.onpopstate = function(event) {    
+        if(event && event.state) {
+            location.reload(); 
+        }
+    }
 
     // Apply CSS Variables
     /** @type {PreferenceUpdateCallback} */
@@ -740,6 +775,70 @@
                 post.addEventListener("contextmenu", downloadPostWithRMB);
             } else {
                 post.removeEventListener("contextmenu", downloadPostWithRMB);
+            }
+        });
+    }
+    //      Infinite Scroll
+    /**
+     * @type {PreferenceUpdateCallback}
+     * @param {boolean} value
+     */
+    function applyTweakInfiniteScroll(value) {
+        if (currentPageType != PageTypes.GALLERY) return;
+
+        debugLog(`Applying InfiniteScroll state: ${String(value)}`);
+        onDOMReady(() => {
+            if (value)
+            document.addEventListener("scroll", checkApplyInfiniteScroll);
+        else
+            document.removeEventListener("scroll", checkApplyInfiniteScroll);
+        });
+    }
+    /**
+     * @type {PreferenceUpdateCallback}
+     * @param {boolean} value
+     */
+    function applyTweakPaginatorOnTop(value) {
+        if (currentPageType != PageTypes.GALLERY) return;
+
+        debugLog(`Applying InfiniteScroll state: ${String(value)}`);
+
+        onDOMReady(() => {
+            if(value)
+        {
+            /** @type {HTMLElement} */
+            let topPagination = document.querySelector(".pagination").cloneNode(true); 
+            topPagination.classList.add("top-pagination");
+            document.querySelector("main").insertBefore(topPagination, document.querySelector(".thumbnail-container"));
+        } else {
+            document.querySelector(".top-pagination").remove();
+        }
+        });
+    }
+    /**
+     * @type {PreferenceUpdateCallback}
+     * @param {boolean} value
+     */
+    function applyTweakGoToTop(value) {
+        if (currentPageType != PageTypes.GALLERY) return;
+
+        debugLog(`Applying InfiniteScroll state: ${String(value)}`);
+
+        onDOMReady(() => {
+            if(value) {
+                let goTopDiv = document.createElement("div");
+                let goTopA = document.createElement("a");
+
+                goTopDiv.className = "alert alert-info";
+                goTopDiv.id = "go-top";
+                goTopDiv.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }))
+
+                goTopA.textContent = "Go Top";
+
+                goTopDiv.appendChild(goTopA);
+                document.body.appendChild(goTopDiv);
+            } else {
+                document.querySelector("#go-top").remove();
             }
         });
     }
@@ -1279,6 +1378,76 @@
         e.target.classList.toggle("go-cursor-zoom-in");
         e.target.classList.toggle("go-cursor-zoom-out");
     }
+    /**
+     * Infinite scroll event listener
+     * @param {Event} e 
+     */
+    function checkApplyInfiniteScroll(e){
+        const threshold = Number(configManager.config.infiniteScroll.items.threshold.value);
+        if (document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
+            if(!this.throttledScroll) this.throttledScroll = debounceFirst(applyInfiniteScroll, 1000);
+            this.throttledScroll();
+        }
+    }
+    /**
+     * Main InfiniteScroll function
+     */
+    let isInfiniteScrollHitLastPage = false;
+    function applyInfiniteScroll() {
+            if(isInfiniteScrollHitLastPage) return;
+
+            let params = new URLSearchParams(document.URL.split('?')[1]);
+            params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
+            let nextPage = document.location.pathname  + "?" + params;
+            //document.querySelector("#paginator > a[alt='next']").getAttribute("href");
+            debugLog(`InfScrolling to pid ${params.get("pid")}`);
+
+            fetch(nextPage)
+                    .then(response => {
+                        if (!response.ok) throw Error(response.statusText);
+                        return response.text();
+                    })
+                    .then(text => {
+                        let parser = new DOMParser();
+                        let htmlDocument = parser.parseFromString(text, "text/html");
+
+                        let newThumbContainer = htmlDocument.querySelector(".thumbnail-container");
+                        let oldThumbContainer = document.querySelector(".thumbnail-container");
+                        let firstOldThumb = oldThumbContainer.children[0];
+
+                        if(!newThumbContainer.childElementCount) {
+                            debugLog("InfScrolling hit last page");
+                            isInfiniteScrollHitLastPage = true;
+                            return;
+                        }
+
+                        Object.values(newThumbContainer.children).forEach(t => {
+                            // copy classes (applied tweaks)
+                            t.className = firstOldThumb.className;
+                            t.children[0].className = firstOldThumb.children[0].className;
+                            t.children[0].classList.remove("go-loader");
+                            t.children[0].children[0].className = firstOldThumb.children[0].children[0].className;
+                            // and put it in container
+                            oldThumbContainer.appendChild(t);
+                        });
+
+                        let newPaginator = htmlDocument.querySelector(".pagination");
+                        let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
+                        oldPaginator.replaceWith(newPaginator);
+
+                        let oldTopPaginator = document.querySelector(".top-pagination");
+                        if(oldTopPaginator) {
+                            /** @type {HTMLElement} */
+                            let newTopPaginator = newPaginator.cloneNode(true);
+                            newTopPaginator.classList.add("top-pagination");
+                            oldTopPaginator.replaceWith(newTopPaginator);
+                        }
+
+                        window.history.pushState(nextPage, htmlDocument.title, nextPage);
+                        history.scrollRestoration = 'manual';
+                        document.title = htmlDocument.title;
+                    });
+    }
     //      Misc
     /**
      * Find path of diven property with given value in given object
@@ -1354,6 +1523,34 @@
         return (...args) => {
             clearTimeout(timer);
             timer = setTimeout(() => { callee.apply(this, args); }, timeout);
+        };
+    }
+    /**
+     * Throttle decorator
+     * @param {function} fn 
+     * @param {Number} threshold 
+     * @param {*} scope 
+     * @returns 
+     */
+    function debounceFirst(fn, threshold, scope) {
+        threshold || (threshold = 250);
+        var last,
+            deferTimer;
+        return function () {
+          var context = scope || this;
+      
+          var now = +new Date,
+              args = arguments;
+          if (last && now < last + threshold) {
+            // hold on to it
+            clearTimeout(deferTimer);
+            deferTimer = setTimeout(function () {
+              last = now;
+            }, threshold);
+          } else {
+            last = now;
+            fn.apply(context, args);
+          }
         };
     }
 })();
