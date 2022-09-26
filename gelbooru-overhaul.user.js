@@ -1423,14 +1423,16 @@
                         }
 
                         Object.values(newThumbContainer.children).forEach(t => {
-                            // copy classes (applied tweaks)
-                            t.className = firstOldThumb.className;
-                            t.children[0].className = firstOldThumb.children[0].className;
-                            t.children[0].classList.remove("go-loader");
-                            t.children[0].children[0].className = firstOldThumb.children[0].children[0].className;
-                            // and put it in container
                             oldThumbContainer.appendChild(t);
                         });
+
+                        // reapply tweaks related to gallery page
+                        // some of them has dependent tweaks, skip it
+                        applyTweakEnlargeOnHover(Boolean(configManager.config.thumbs.items.enlargeOnHover.value));
+                        applyTweakLoadingIndicator(Boolean(configManager.config.thumbs.items.loader.value));
+                        applyTweakRoundCorners(Boolean(configManager.config.thumbs.items.roundCorners.value));
+                        applyTweakRemoveTitle(Boolean(configManager.config.thumbs.items.removeTitle.value));
+                        applyTweakFastDL(Boolean(configManager.config.fastDL.items.thumbs.value));
 
                         let newPaginator = htmlDocument.querySelector(".pagination");
                         let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
