@@ -1203,7 +1203,7 @@
                 text = text.replaceAll("\n\n", "\n");
 
                 let elem = document.createElement("a");
-                elem.href = "data:text," + text;
+                elem.href = "data:text," + encodeURIComponent(text);
                 elem.download = filename + ".txt";
                 elem.click();
             }
