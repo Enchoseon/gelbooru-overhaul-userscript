@@ -1126,7 +1126,7 @@
                 postCache = {};
 
             if (!postCache[postId]) {
-                fetch("https://gelbooru.com/index.php?page=post&s=view&id=" + postId)
+                fetch("https://" + window.location.host + "/index.php?page=post&s=view&id=" + postId)
                     .then(response => {
                         if (!response.ok) throw Error(response.statusText);
                         return response.text();
