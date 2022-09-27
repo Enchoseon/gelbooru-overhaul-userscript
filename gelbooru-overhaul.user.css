@@ -195,6 +195,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* FOOTER BUTTONS */
 .go-config-window footer input {
     border: 1px solid;
+    margin: 0 8px;
 }
 
 /* CONFIG WINDOW */
@@ -255,8 +256,6 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 .checkbox-input p {
     margin-left: 18px;
 }
-
-
 /* INFINITE SCROLL */
 /* GO TOP BUTTON */
 #go-top {
@@ -265,4 +264,21 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
     bottom: 1vh;
     cursor: pointer;
     font-weight: bold;
+}
+
+
+/* GENERAL */
+/* BUTTONS */
+input[type='submit'] {
+    cursor: pointer;
+}
+/* GENERAL */
+/* BUTTONS HOVER*/
+input[type='submit']:hover {
+    filter: brightness(120%);
+}
+/* GENERAL */
+/* BUTTONS ACTIVE*/
+input[type='submit']:active {
+    filter: brightness(140%);
 }
