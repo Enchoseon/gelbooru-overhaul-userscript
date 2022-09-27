@@ -247,6 +247,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
     margin-bottom: 6px;
     padding: 0 6px;
     width: -webkit-fill-available;
+    width: -moz-available;
     height: 1.5em;
 }
 /* CONFIG WINDOW */
