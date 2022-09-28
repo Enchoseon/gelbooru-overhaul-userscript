@@ -1003,18 +1003,27 @@
             submitClose.type = "submit";
             submitClose.className = "searchList";
             submitClose.value = "Close";
-            submitClose.addEventListener("click", () => sDiv.classList.toggle("go-config-window-hidden"));
+            submitClose.title = "Close window without saving";
+            submitClose.addEventListener("click", () => {
+                configManager.loadConfig();
+                sDiv.classList.add("go-config-window-hidden");
+            });
 
             let submitSave = document.createElement("input");
             submitSave.type = "submit";
             submitSave.className = "searchList";
             submitSave.value = "Save";
-            submitSave.addEventListener("click", () => configManager.saveConfig());
+            submitSave.title = "Save changes and close window";
+            submitSave.addEventListener("click", () => {
+                sDiv.classList.add("go-config-window-hidden");
+                configManager.saveConfig();
+            });
 
             let submitRevert = document.createElement("input");
             submitRevert.type = "submit";
             submitRevert.className = "searchList";
             submitRevert.value = "Revert";
+            submitRevert.title = "Cancel unsaved changes";
             submitRevert.addEventListener("click", () => {
                 configManager.loadConfig();
                 updateInputValues();
@@ -1024,6 +1033,7 @@
             submitDefaults.type = "submit";
             submitDefaults.className = "searchList";
             submitDefaults.value = "Defaults";
+            submitDefaults.title = "Reset config storage and load default config";
             submitDefaults.addEventListener("click", () => {
                 configManager.setDefaultConfig();
                 updateInputValues();
