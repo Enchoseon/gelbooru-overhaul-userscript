@@ -237,6 +237,30 @@
                 thumbs: {
                     name: "Thumbnails",
                     items: {
+                        resizeGallery : {
+                            value: true,
+                            name: "Resize gallery thumbnails",
+                            description: "Allows to set custom thumbnail size using value below.",
+                            update: applyTweakResizeThumbsGallery
+                        },
+                        resizeGallerySize : {
+                            value: "175px",
+                            name: "Max size of gallery thumbnail",
+                            description: "Keep in mind that images are 250x250px. There is no point in a greater number.",
+                            update: applyCssVariableGoThumbnailResize
+                        },
+                        resizeMoreLikeThis : {
+                            value: true,
+                            name: "Resize 'More Like This' thumbnails",
+                            description: "Allows to set custom thumbnail size using value below.",
+                            update: applyTweakResizeThumbsMoreLikeThis
+                        },
+                        resizeMoreLikeThisSize : {
+                            value: "175px",
+                            name: "Max size of 'More Like This' thumbnail",
+                            description: "Keep in mind that images are 250x250px. There is no point in a greater number.",
+                            update: applyCssVariableGoThumbnailResize
+                        },
                         enlargeOnHover: {
                             value: true,
                             name: "Enlarge on hover",
@@ -496,6 +520,25 @@
             `;
         });
     }
+    /** @type {PreferenceUpdateCallback} */
+    function applyCssVariableGoThumbnailResize() {
+        debugLog("Applying css variable .go-thumbnail-resize");
+        /** @type {HTMLStyleElement} */
+        let style = document.querySelector("#goThumbnailResizeVariables");
+
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "goThumbnailResizeVariables";
+            document.body.appendChild(style);
+        }
+
+        style.innerHTML = `
+        .go-thumbnail-resize {
+            --thumb-gallery-size: ${configManager.config.thumbs.items.resizeGallerySize.value};
+            --thumb-morelikethis-size: ${configManager.config.thumbs.items.resizeMoreLikeThisSize.value};
+        }
+        `;
+    }
 
     // Apply Tweak
     //      Collapsible sidebar
@@ -737,6 +780,37 @@
                     i.setAttribute("title", i.getAttribute("data-title"));
                     i.removeAttribute("data-title");
                 }
+            });
+        });
+    }
+    /** 
+    * @type {PreferenceUpdateCallback}
+    * @param {boolean} value
+    */
+    function applyTweakResizeThumbsGallery(value) {
+        if (PageTypes.GALLERY != currentPageType) return;
+
+        debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
+
+        onDOMReady(() => {
+            getThumbnails().forEach((i) => {
+                i.classList.toggle("go-thumbnail-resize", value);
+                i.parentElement.parentElement.classList.toggle("go-thumbnail-resize", value); // img < a < (article) < div.thumbnail-container
+            });
+        });
+    }
+    /** 
+    * @type {PreferenceUpdateCallback}
+    * @param {boolean} value
+    */
+    function applyTweakResizeThumbsMoreLikeThis(value) {
+        if (PageTypes.POST != currentPageType) return;
+
+        debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
+
+        onDOMReady(() => {
+            getThumbnails().forEach((i) => {
+                i.classList.toggle("go-thumbnail-resize", value);
             });
         });
     }
@@ -1433,6 +1507,7 @@
                         applyTweakRoundCorners(Boolean(configManager.config.thumbs.items.roundCorners.value));
                         applyTweakRemoveTitle(Boolean(configManager.config.thumbs.items.removeTitle.value));
                         applyTweakFastDL(Boolean(configManager.config.fastDL.items.thumbs.value));
+                        applyTweakResizeThumbsGallery(Boolean(configManager.config.thumbs.items.resizeGallery.value));
 
                         let newPaginator = htmlDocument.querySelector(".pagination");
                         let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");

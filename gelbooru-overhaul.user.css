@@ -282,3 +282,21 @@ input[type='submit']:hover {
 input[type='submit']:active {
     filter: brightness(140%);
 }
+/* GENERAL */
+/* GALLERY THUMBS */
+article.go-thumbnail-resize {
+    margin: 10px 0;
+    width: calc(var(--thumb-gallery-size, 175px) * 1.15);
+    height: calc(var(--thumb-gallery-size, 175px) * 1.1);
+}
+article.thumbnail-preview img.go-thumbnail-resize {
+    max-width: var(--thumb-gallery-size, 175px) !important;
+    max-height: var(--thumb-gallery-size, 175px) !important;
+}
+/* GENERAL */
+/* MORE LIKE THIS THUMBS */
+div a img.go-thumbnail-resize {
+    max-width: var(--thumb-morelikethis-size, 175px);
+    max-height: var(--thumb-morelikethis-size, 175px) !important;
+    height: auto;
+}
