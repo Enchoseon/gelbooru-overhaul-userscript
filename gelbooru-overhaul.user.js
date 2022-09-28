@@ -479,6 +479,9 @@
             --collapsed-color: ${configManager.config.collapsibleSidebar.items.color.value};
             --expanded-opacity: ${configManager.config.collapsibleSidebar.items.opacity.value};
         }
+        .go-collapse-sidebar-container-tweak {
+            --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
+        }
         `;
     }
     /** @type {PreferenceUpdateCallback} */

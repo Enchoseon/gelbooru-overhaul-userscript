@@ -30,7 +30,7 @@
 /* COLLAPSE SIDEBAR */
 /* FIX CONTAINER GRID */
 #container.go-collapse-sidebar-container-tweak {
-    grid-template-columns: 0 auto;
+    grid-template-columns: var(--collapsed-width, 5px) auto;
 }
 @media only screen and (max-width: 850px) {
     #container.go-collapse-sidebar-container-tweak {
