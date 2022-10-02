@@ -442,6 +442,7 @@
     class ThemeManager {
         constructor() {
             this.checkForThemeSwitch();
+            this.applyCssThemeVariable();
             // event listener for changing
             let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
             darkModeButton.onclick = undefined;
@@ -475,7 +476,7 @@
 
             if(isDarkModeRequired != this.isCurrentPageModeDark) {
                 isDarkModeRequired ? this.applyDefaultDarkMode() : this.applyDefaultLightMode();
-                applyCssVariableGoConfigWindow();
+                this.applyCssThemeVariable();
             }
         }
         /**
@@ -550,6 +551,29 @@
 
             setCookie("dark_mode", "1");
         }
+        applyCssThemeVariable() {
+            debugLog("Applying css theme variable");
+
+            onDOMReady(() => {
+                /** @type {HTMLStyleElement} */
+                let style = document.querySelector("#goThemeVariables");
+
+                if (!style) {
+                    style = document.createElement("style");
+                    style.id = "goThemeVariables";
+                    document.body.appendChild(style);
+                }
+        
+                setTimeout(() => {
+                    let bodyColor = window.getComputedStyle(document.body).backgroundColor;
+                    style.innerHTML = `
+                        :root {
+                            --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
+                        }
+                    `;
+                }, 100);
+            });
+        }
     }
 
     /** @var {Object.<string, string>} Enum with available page types */
@@ -568,7 +592,6 @@
 
     debugLog("Registering config window");
     registerConfigWindow();
-    applyCssVariableGoConfigWindow();
 
     // lazy fix for the back button, don't want to deal with HTML5 stuff
     window.onpopstate = function(event) {    
@@ -622,29 +645,6 @@
             .go-thumbnail-enlarge {
                 --enlarge-scale: ${configManager.config.thumbs.items.scale.value};
             }
-            `;
-        });
-    }
-    /** @type {PreferenceUpdateCallback} */
-    function applyCssVariableGoConfigWindow() {
-        debugLog("Applying css variable .go-config-window");
-
-        onDOMReady(() => {
-            /** @type {HTMLStyleElement} */
-            let style = document.querySelector("#goConfigWindowVariables");
-
-            if (!style) {
-                style = document.createElement("style");
-                style.id = "goConfigWindowVariables";
-                document.body.appendChild(style);
-            }
-        
-            let bodyColor = window.getComputedStyle(document.body).backgroundColor;
-            console.log(bodyColor);
-            style.innerHTML = `
-                :root {
-                    --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
-                }
             `;
         });
     }
