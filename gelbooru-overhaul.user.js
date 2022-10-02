@@ -440,10 +440,16 @@
      * @class Class that manages light/dark theme switching
      */
     class ThemeManager {
+        isMatchMediaSupported = (window.matchMedia && window.matchMedia('(prefers-color-scheme)').media !== 'not all');
         constructor() {
             this.checkForThemeSwitch();
             this.applyCssThemeVariable();
-            // event listener for changing
+            
+            if (this.isMatchMediaSupported)
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener("change", e => this.checkForThemeSwitch());
+            
+            this.scheduleCheckForThemeSwitch();
+            
             let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
             darkModeButton.onclick = undefined;
             darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
@@ -513,9 +519,7 @@
             if (configManager.config.darkMode.items.force.value) {
                 return true;
             } else if (configManager.config.darkMode.items.auto.value) {
-                let hasMediaColorScheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme)').media !== 'not all');
-
-                if (configManager.config.darkMode.items.forceTime.value || !hasMediaColorScheme) {
+                if (configManager.config.darkMode.items.forceTime.value || !this.isMatchMediaSupported) {
                     let hours = new Date().getHours();
                     return hours >= configManager.config.darkMode.items.timeStart.value || hours <= configManager.config.darkMode.items.timeEnd.value;
                 } else {
@@ -573,6 +577,15 @@
                     `;
                 }, 100);
             });
+        }
+        scheduleCheckForThemeSwitch() {
+            let date = new Date();
+            if (date.getMinutes() === 0) {
+                this.checkForThemeSwitch();
+                setTimeout(() => this.scheduleCheckForThemeSwitch(), 60 * 60 * 1000);
+            } else {
+                setTimeout(() => this.scheduleCheckForThemeSwitch(), 60 * 60 * 1000 - date.getMinutes() * 60 * 1000);
+            }
         }
     }
 
