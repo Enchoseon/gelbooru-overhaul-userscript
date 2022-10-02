@@ -447,7 +447,9 @@
             // event listener for button
             let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
             darkModeButton.onclick = undefined;
+            darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
             darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
+            darkModeButton.addEventListener("contextmenu", e => this.clearForceSessionMode());
         }
         get forceSessionMode() {
             let cookie = getCookie("force_dark_mode");
@@ -468,8 +470,10 @@
         }
         switchForceSessionMode() {
             this.forceSessionMode = !this.forceSessionMode;
-            console.log(this.forceSessionMode);
-            console.log(this);
+            this.checkForThemeSwitch();
+        }
+        clearForceSessionMode() {
+            this.forceSessionMode = undefined;
             this.checkForThemeSwitch();
         }
         /**
