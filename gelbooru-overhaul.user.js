@@ -441,25 +441,35 @@
      */
     class ThemeManager {
         constructor() {
-            // check current
             this.checkForThemeSwitch();
             // event listener for changing
-            // event listener for button
             let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
             darkModeButton.onclick = undefined;
             darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
             darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
             darkModeButton.addEventListener("contextmenu", e => this.clearForceSessionMode());
         }
+        /**
+         * @private
+         * @returns {boolean} Get cookie for current darkmode
+         */
         get forceSessionMode() {
             let cookie = getCookie("force_dark_mode");
             if(cookie) return cookie == "true";
             else return undefined;
         }
+        /**
+         * @private
+         * @param {boolean} value Set cookie for force darkmode
+         */
         set forceSessionMode(value) {
             if(value == undefined) clearCookie("force_dark_mode");
             else setCookie("force_dark_mode", String(value));
         }
+        /**
+         * Checks if darkmode needs to be switched
+         * @private
+         */
         checkForThemeSwitch() {
             let isDarkModeRequired = this.isDarkModeRequired;
 
@@ -468,10 +478,18 @@
                 applyCssVariableGoConfigWindow();
             }
         }
+        /**
+         * Switch cookie for force darkmode
+         * @private
+         */
         switchForceSessionMode() {
             this.forceSessionMode = !this.forceSessionMode;
             this.checkForThemeSwitch();
         }
+        /**
+         * Clear cookie for force darkmode
+         * @private
+         */
         clearForceSessionMode() {
             this.forceSessionMode = undefined;
             this.checkForThemeSwitch();
