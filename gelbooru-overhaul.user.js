@@ -436,6 +436,99 @@
             }
         }
     }
+    /**
+     * @class Class that manages light/dark theme switching
+     */
+    class ThemeManager {
+        constructor() {
+            // check current
+            this.checkForThemeSwitch();
+            // event listener for changing
+            // event listener for button
+            let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
+            darkModeButton.onclick = undefined;
+            darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
+        }
+        get forceSessionMode() {
+            let cookie = getCookie("force_dark_mode");
+            if(cookie) return cookie == "true";
+            else return undefined;
+        }
+        set forceSessionMode(value) {
+            if(value == undefined) clearCookie("force_dark_mode");
+            else setCookie("force_dark_mode", String(value));
+        }
+        checkForThemeSwitch() {
+            let isDarkModeRequired = this.isDarkModeRequired;
+
+            if(isDarkModeRequired != this.isCurrentPageModeDark) {
+                isDarkModeRequired ? this.applyDefaultDarkMode() : this.applyDefaultLightMode();
+                applyCssVariableGoConfigWindow();
+            }
+        }
+        switchForceSessionMode() {
+            this.forceSessionMode = !this.forceSessionMode;
+            console.log(this.forceSessionMode);
+            console.log(this);
+            this.checkForThemeSwitch();
+        }
+        /**
+         * @private
+         * @returns {boolean} Checks cookie for current darkmode
+         */
+        get isCurrentPageModeDark() {
+            return Boolean(getCookie("dark_mode"));
+        }
+        /**
+         * @private
+         * @returns {boolean} Required Dark Mode state
+         */
+        get isDarkModeRequired() {
+            let forceSession = this.forceSessionMode;
+            if (this.forceSessionMode != undefined) return forceSession;
+
+            if (configManager.config.darkMode.items.force.value) {
+                return true;
+            } else if (configManager.config.darkMode.items.auto.value) {
+                let hasMediaColorScheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme)').media !== 'not all');
+
+                if (configManager.config.darkMode.items.forceTime.value || !hasMediaColorScheme) {
+                    let hours = new Date().getHours();
+                    return hours >= configManager.config.darkMode.items.timeStart.value || hours <= configManager.config.darkMode.items.timeEnd.value;
+                } else {
+                    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+            } else {
+                return false;
+            }
+        }
+        /**
+         * applies default gelbooru light mode
+         */
+        applyDefaultLightMode() {
+            debugLog("Applying default light mode");
+
+            Object.values(document.head.querySelectorAll("link")).filter(i => i.href.includes("dark"))[0].remove();
+            
+            clearCookie("dark_mode");
+        }
+        /**
+         * applies default gelbooru dark mode
+         */
+        applyDefaultDarkMode() {
+            debugLog("Applying default dark mode");
+
+            let link = document.createElement("link");
+            link.setAttribute("rel", "stylesheet");
+            link.setAttribute("type", "text/css");
+            link.setAttribute("media", "screen");
+            link.setAttribute("href", "gridStyle-dark.css?13f");
+            link.setAttribute("title", "default");
+            document.head.appendChild(link);
+
+            setCookie("dark_mode", "1");
+        }
+    }
 
     /** @var {Object.<string, string>} Enum with available page types */
     const PageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
@@ -445,6 +538,8 @@
 
     let configManager = new ConfigManager();
     configManager.loadConfig();
+
+    let themeManager = new ThemeManager();
 
     debugLog("Registering styles");
     GM_addStyle(GM_getResourceText("css"));
@@ -516,6 +611,7 @@
 
         onDOMReady(() => {
             let bodyColor = window.getComputedStyle(document.body).backgroundColor;
+            console.log(bodyColor);
             style.innerHTML = `
                 :root {
                     --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
@@ -1643,5 +1739,45 @@
             fn.apply(context, args);
           }
         };
+    }
+    /**
+     * Set Cookie function
+     * @link https://www.quirksmode.org/js/cookies.html
+     * @param {String} name 
+     * @param {String} value 
+     * @param {Number} [days]
+     */
+    function setCookie(name,value,days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days*24*60*60*1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+    /**
+     * Get Cookie function
+     * @link https://www.quirksmode.org/js/cookies.html
+     * @param {String} name 
+     * @returns {String}
+     */
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+    /**
+     * Clear Cookie function
+     * @link https://www.quirksmode.org/js/cookies.html
+     * @param {String} name 
+     */
+    function clearCookie(name) {   
+        document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
 })();
