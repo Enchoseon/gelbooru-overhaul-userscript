@@ -559,57 +559,64 @@
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoCollapseSidebar() {
         debugLog("Applying css variable .go-collapse-sidebar");
-        /** @type {HTMLStyleElement} */
-        let style = document.querySelector("#goCollapseSidebarVariables");
 
-        if (!style) {
-            style = document.createElement("style");
-            style.id = "goCollapseSidebarVariables";
-            document.body.appendChild(style);
-        }
+        onDOMReady(() => {
+            /** @type {HTMLStyleElement} */
+            let style = document.querySelector("#goCollapseSidebarVariables");
 
-        style.innerHTML = `
-        .go-collapse-sidebar {
-            --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
-            --collapsed-color: ${configManager.config.collapsibleSidebar.items.color.value};
-            --expanded-opacity: ${configManager.config.collapsibleSidebar.items.opacity.value};
-        }
-        .go-collapse-sidebar-container-tweak {
-            --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
-        }
-        `;
+            if (!style) {
+                style = document.createElement("style");
+                style.id = "goCollapseSidebarVariables";
+                document.body.appendChild(style);
+            }
+
+            style.innerHTML = `
+            .go-collapse-sidebar {
+                --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
+                --collapsed-color: ${configManager.config.collapsibleSidebar.items.color.value};
+                --expanded-opacity: ${configManager.config.collapsibleSidebar.items.opacity.value};
+            }
+            .go-collapse-sidebar-container-tweak {
+                --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
+            }
+            `;
+        });
     }
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoThumbnailEnlarge() {
         debugLog("Applying css variable .go-thumbnail-enlarge");
-        /** @type {HTMLStyleElement} */
-        let style = document.querySelector("#goThumbnailEnlargeVariables");
 
-        if (!style) {
-            style = document.createElement("style");
-            style.id = "goThumbnailEnlargeVariables";
-            document.body.appendChild(style);
-        }
+        onDOMReady(() => {
+            /** @type {HTMLStyleElement} */
+            let style = document.querySelector("#goThumbnailEnlargeVariables");
 
-        style.innerHTML = `
-        .go-thumbnail-enlarge {
-            --enlarge-scale: ${configManager.config.thumbs.items.scale.value};
-        }
-        `;
+            if (!style) {
+                style = document.createElement("style");
+                style.id = "goThumbnailEnlargeVariables";
+                document.body.appendChild(style);
+            }
+
+            style.innerHTML = `
+            .go-thumbnail-enlarge {
+                --enlarge-scale: ${configManager.config.thumbs.items.scale.value};
+            }
+            `;
+        });
     }
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoConfigWindow() {
         debugLog("Applying css variable .go-config-window");
-        /** @type {HTMLStyleElement} */
-        let style = document.querySelector("#goConfigWindowVariables");
-
-        if (!style) {
-            style = document.createElement("style");
-            style.id = "goConfigWindowVariables";
-            document.body.appendChild(style);
-        }
 
         onDOMReady(() => {
+            /** @type {HTMLStyleElement} */
+            let style = document.querySelector("#goConfigWindowVariables");
+
+            if (!style) {
+                style = document.createElement("style");
+                style.id = "goConfigWindowVariables";
+                document.body.appendChild(style);
+            }
+        
             let bodyColor = window.getComputedStyle(document.body).backgroundColor;
             console.log(bodyColor);
             style.innerHTML = `
@@ -622,21 +629,24 @@
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoThumbnailResize() {
         debugLog("Applying css variable .go-thumbnail-resize");
-        /** @type {HTMLStyleElement} */
-        let style = document.querySelector("#goThumbnailResizeVariables");
 
-        if (!style) {
-            style = document.createElement("style");
-            style.id = "goThumbnailResizeVariables";
-            document.body.appendChild(style);
-        }
+        onDOMReady(() => {
+            /** @type {HTMLStyleElement} */
+            let style = document.querySelector("#goThumbnailResizeVariables");
 
-        style.innerHTML = `
-        .go-thumbnail-resize {
-            --thumb-gallery-size: ${configManager.config.thumbs.items.resizeGallerySize.value};
-            --thumb-morelikethis-size: ${configManager.config.thumbs.items.resizeMoreLikeThisSize.value};
-        }
-        `;
+            if (!style) {
+                style = document.createElement("style");
+                style.id = "goThumbnailResizeVariables";
+                document.body.appendChild(style);
+            }
+
+            style.innerHTML = `
+            .go-thumbnail-resize {
+                --thumb-gallery-size: ${configManager.config.thumbs.items.resizeGallerySize.value};
+                --thumb-morelikethis-size: ${configManager.config.thumbs.items.resizeMoreLikeThisSize.value};
+            }
+            `;
+        });
     }
 
     // Apply Tweak
