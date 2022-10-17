@@ -846,7 +846,7 @@
      * @param {boolean} value
      */
     function applyTweakAdvancedBlacklist(value) {
-        blacklistManager.setupManager(value);
+        //blacklistManager.setupManager(value);
     }
     // Functions
     //      Script
