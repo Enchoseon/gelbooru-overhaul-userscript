@@ -12,430 +12,13 @@
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @resource    css 	https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.user.css
+// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.css
+// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.css
 // ==/UserScript==
 
 (function () {
     "use strict";
-    /** 
-     * @class Class that manages (saves, loads, migrates) and provides the config data
-     */
-    class ConfigManager {
-        /** 
-         * @typedef  PreferenceItem
-         * @type     {Object}
-         * @property {number | string | boolean} value          Value of preference
-         * @property {string}                    name           Displayed name in config window
-         * @property {string}                    description    Description displayed in config window
-         * @property {PreferenceUpdateCallback}  [update]       Function which applies value of preference
-         * @property {boolean}                   [locked=false] Determines if preference should be available for editing
-         * 
-         * @typedef  PreferenceItemPacked
-         * @type     {Object}
-         * @property {number | string | boolean} value          Value of preference
-         * 
-         * @callback PreferenceUpdateCallback
-         * @param    {number | string | boolean} value          New value
-         * @returns  {void}
-         * 
-         * @typedef  PreferenceCategory 
-         * @type     {Object}
-         * @property {string}                          name     Displayed name in config window
-         * @property {Object.<string, PreferenceItem>} items    Children preference items
-         * 
-         * @typedef {Object.<string, PreferenceCategory>} Preferences
-         * 
-         * 
-         * 
-         * @typedef PreferenceCategoryPacked
-         * @type     {Object}
-         * @property {string}                                name     Displayed name in config window
-         * @property {Object.<string, PreferenceItemPacked>} items    Children preference items
-         * 
-         * @typedef {Object.<string, PreferenceCategoryPacked>} PreferencesPacked
-         */
-        /** 
-         * Internal version of the config used
-         * @private
-         * @type {number}
-         */
-        get currentConfigVersion() { return 1; };
-        /**
-         * Stores all the config properties
-         * @public
-         * @type {Preferences}
-         */
-        config;
-        /**
-         * @constructor
-         */
-        constructor() {
-        }
-        /**
-         * Load config from the userscrip manager storage.
-         * 
-         * If there is no saved config then load default.
-         * 
-         * If saved config is outdated then make migrations.
-         * @method loadConfig
-         */
-        loadConfig() {
-            let cfg = GM_getValue("config", undefined);
 
-            let unpackPreferences = this.unpackPreferences(cfg);
-            this.config = unpackPreferences.preferences;
-            if (unpackPreferences.isShouldBeSaved) this.saveConfig();
-
-            Object.values(this.config).forEach(c => Object.values(c.items).forEach(i => { if (i.update) i.update(i.value); }));
-            debugLog("Loaded config", configManager.config);
-        }
-        /**
-         * Saves current config to the userscript storage
-         * @method saveConfig
-         */
-        saveConfig() {
-            console.log(this.config);
-            console.log(this.packPreferences(this.config));
-            GM_setValue("config", this.packPreferences(this.config));
-        }
-        /**
-         * Clears config storage with default config
-         * @method setDefaultConfig
-         */
-        setDefaultConfig() {
-            this.config = this.getDefaultConfig();
-            GM_setValue("config", {});
-            this.saveConfig();
-        }
-        /**
-         * Get default config with current configVersion
-         * @private
-         * @method getDefaultConfig
-         * @returns {Object.<string, PreferenceCategory>} Default config with current configVersion
-         */
-        getDefaultConfig() {
-            return {
-                general: {
-                    name: "General",
-                    items: {
-                        configVersion: {
-                            value: 1,
-                            name: "Config Version",
-                            description: "Debug info of current config version",
-                            locked: true
-                        },
-                        debug: {
-                            value: false,
-                            name: "Debug",
-                            description: "Enable debugging information in the console",
-                        },
-                        maxCache: {
-                            value: 420,
-                            name: "Max cahed post items",
-                            description: "How many posts to keep in the cache to make fewer requests (does not apply to image cache)"
-                        }
-                    }
-                },
-                darkMode: {
-                    name: "Dark Mode",
-                    items: {
-                        auto: {
-                            value: true,
-                            name: "Auto Dark Mode",
-                            description: "Enable automatic dark theme switching",
-                        },
-                        force: {
-                            value: false,
-                            name: "Force Dark Mode",
-                            description: "Always apply a dark theme"
-                        },
-                        amoled: {
-                            value: false,
-                            name: "Amoled Dark",
-                            description: "Make dark theme darker"
-                        },
-                        forceTime: {
-                            value: false,
-                            name: "Force Time Dark Mode",
-                            description: "Force the use of a dark theme at a certain time, regardless of system preferences"
-                        },
-                        timeStart: {
-                            value: 18,
-                            name: "Dark Mode Time Start Hour",
-                            description: "Set the start time of the dark theme if 'Force Time Dark Mode' is enabled or system preference cannot be detected"
-                        },
-                        timeEnd: {
-                            value: 6,
-                            name: "Dark Mode Time End Hour",
-                            description: "Set the end time of the dark theme if 'Force Time Dark Mode' is enabled or system preference cannot be detected"
-                        }
-                    }
-                },
-                collapsibleSidebar: {
-                    name: "Collapsible Sidebar",
-                    items: {
-                        enable: {
-                            value: true,
-                            name: "Enable",
-                            description: "Hide the sidebar to the left on gallery and post pages",
-                            update: applyTweakCollapseSidebar
-                        },
-                        width: {
-                            value: "5px",
-                            name: "Collapsed width",
-                            description: "Width of collapsed sidebar",
-                            update: applyCssVariableGoCollapseSidebar
-                        },
-                        color: {
-                            value: "red",
-                            name: "Collapsed color",
-                            description: "Color of collapsed sidebar",
-                            update: applyCssVariableGoCollapseSidebar
-                        },
-                        opacity: {
-                            value: "90%",
-                            name: "Expanded opacity",
-                            description: "Opacity of expanded sidebar",
-                            update: applyCssVariableGoCollapseSidebar
-                        }
-                    }
-                },
-                post: {
-                    name: "Post page",
-                    items: {
-                        center: {
-                            value: true,
-                            name: "Center Content",
-                            description: "Center image or video",
-                            update: applyTweakPostCenter
-                        },
-                        fitTweaks: {
-                            value: true,
-                            name: "Fit Tweaks",
-                            description: "Fit image by height and by width on 'expand image' click",
-                            update: applyTweakPostFit
-                        },
-                        fitHorizontallyOnNarrow: {
-                            value: true,
-                            name: "Fit Horizontally on narrow",
-                            description: "Fit image by width when tab is too narrow (<850px)",
-                            update: applyTweakPostOnNarrow
-                        },
-                        switchFitOnClick: {
-                            value: true,
-                            name: "Switch fit on click",
-                            description: "Click on image to switch fit mode (zoom in/zoom out)",
-                            update: applyTweakPostClickSwitchFit
-                        },
-                        autoScroll: {
-                            value: true,
-                            name: "Auto scroll",
-                            description: "Scroll to post content itself when it loads, can be annoying and agressive",
-                            update: applyTweakPostAutoScroll
-                        }
-                    }
-                },
-                thumbs: {
-                    name: "Thumbnails",
-                    items: {
-                        resizeGallery : {
-                            value: true,
-                            name: "Resize gallery thumbnails",
-                            description: "Allows to set custom thumbnail size using value below.",
-                            update: applyTweakResizeThumbsGallery
-                        },
-                        resizeGallerySize : {
-                            value: "175px",
-                            name: "Max size of gallery thumbnail",
-                            description: "Keep in mind that images are 250x250px. There is no point in a greater number.",
-                            update: applyCssVariableGoThumbnailResize
-                        },
-                        resizeMoreLikeThis : {
-                            value: true,
-                            name: "Resize 'More Like This' thumbnails",
-                            description: "Allows to set custom thumbnail size using value below.",
-                            update: applyTweakResizeThumbsMoreLikeThis
-                        },
-                        resizeMoreLikeThisSize : {
-                            value: "175px",
-                            name: "Max size of 'More Like This' thumbnail",
-                            description: "Keep in mind that images are 250x250px. There is no point in a greater number.",
-                            update: applyCssVariableGoThumbnailResize
-                        },
-                        enlargeOnHover: {
-                            value: true,
-                            name: "Enlarge on hover",
-                            description: "Hover over the thumbnail to enlarge in",
-                            update: applyTweakEnlargeOnHover
-                        },
-                        scale: {
-                            value: 3,
-                            name: "Enlarge scale",
-                            description: "The scale value is applied when zooming in",
-                            update: applyCssVariableGoThumbnailEnlarge
-                        },
-                        highRes: {
-                            value: true,
-                            name: "Display high res",
-                            description: "Load high resolution image/video preview/animated gif when thumbnail is enlarged",
-                            update: applyTweakLoadHighRes
-                        },
-                        loader: {
-                            value: true,
-                            name: "Display loading indicator",
-                            description: "Show loading indicator until the high res version for the thumbnail being loaded",
-                            update: applyTweakLoadingIndicator
-                        },
-                        removeTitle: {
-                            value: true,
-                            name: "Remove title",
-                            description: "Remove popup hint for thumbnails to get rid of flicker and make viewing less annoying",
-                            update: applyTweakRemoveTitle
-                        },
-                        preventOffScreen: {
-                            value: true,
-                            name: "Prevent off screen enlarging",
-                            description: "The images on the sides of the screen will not extend beyond",
-                            update: applyTweakPreventOffScreen
-                        },
-                        roundCorners: {
-                            value: true,
-                            name: "Round corners",
-                            description: "Add tiny corner round to the thumbnails",
-                            update: applyTweakRoundCorners
-                        }
-                    }
-                },
-                fastDL: {
-                    name: "Fast Download",
-                    items: {
-                        thumbs: {
-                            value: false,
-                            name: "For thumbnails",
-                            description: "RMB on thumbnail to download post (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress",
-                            update: applyTweakFastDL
-                        },
-                        post: {
-                            value: false,
-                            name: "For post",
-                            description: "RMB on post image to download it (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress",
-                            update: applyTweakFastDLPost
-                        },
-                        saveAs: {
-                            value: true,
-                            name: "Use 'Save as'",
-                            description: "Request a download location (May not work for everyone)"
-                        },
-                        pattern: {
-                            value: "%postId% - %artist%",
-                            name: "File name pattern",
-                            description: "Simple name pattern for saved post. Available: %postId% %artist% %character% %copyright% %md5% (videos does not have md5)"
-                        },
-                        separator: {
-                            value: ", ",
-                            name: "File name pattern list separator",
-                            description: "Which sequence of characters separates multiple tag values"
-                        },
-                        saveTags: {
-                            value: true,
-                            name: "Also save tags",
-                            description: "Saves additional text file with all tags with same name"
-                        }
-                    }
-                },
-                infiniteScroll: {
-                    name: "Infinite Scroll",
-                    items: {
-                        enable: {
-                            value: true,
-                            name: "Enable",
-                            description: "Enable infinite scroll for gallery page. Refresh to clean page. History works wierd",
-                            update: applyTweakInfiniteScroll
-                        },
-                        threshold: {
-                            value: 500,
-                            name: "Infinite Scroll Threshold",
-                            description: "How early to start loading the next page in pixels from the bottom of the page. Depends on your internet and scroll speed"
-                        },
-                        paginatorOnTop: {
-                            value: true,
-                            name: "Copy paginator on top of gallery",
-                            description: "Place a copy of paginator on top of gallery to make navigation easier (or just possible with Infinite Scroll)",
-                            update: applyTweakPaginatorOnTop
-                        },
-                        goToTop: {
-                            value: true,
-                            name: "Go to top button",
-                            description: "Display floating 'Go to top' button",
-                            update: applyTweakGoToTop
-                        }
-                    }
-                }
-            };
-        }
-        /**
-         * Pack config object to store only keys and values
-         * @private
-         * @method
-         * @param {Preferences} prefs
-         * @returns {PreferencesPacked}
-         */
-        packPreferences(prefs) {
-            const forbiddenKeys = ["name", "description", "update", "locked"];
-            return JSON.parse(
-                JSON.stringify(prefs, (key, value) => {
-                    if (forbiddenKeys.includes(key)) return undefined;
-                    else return value;
-                })
-            );
-        }
-        /**
-         * Unpack config object and migrate if necessary
-         * @private
-         * @method
-         * @param {PreferencesPacked} json
-         * @returns {UnpackedPreferences}
-         * 
-         * @typedef {Object} UnpackedPreferences
-         * @property {Preferences} preferences
-         * @property {boolean} isShouldBeSaved
-         */
-        unpackPreferences(json) {
-            if (json == undefined) {
-                return { preferences: this.getDefaultConfig(), isShouldBeSaved: true };
-            }
-            else if (this.currentConfigVersion > json.general.items.configVersion.value) {
-                // step by step migration
-                /** @type {Preferences} */
-                /*
-                let migratedPrefs = MergeRecursive(this.getDefaultConfig(), json);
-                
-                if(migratedPrefs.general.items.configVersion.value == 0){
-                    // migrate to keep old config
-                    // migrate property values and NECESSARILY configVersion
-                    migratedPrefs.general.items.configVersion.value = 1;
-
-                    // transfer values (copy/to string/to number/change range/change units)
-                    // you only care about .value OR changed category/item key
-                    // names and descriptions do not need to be migrated
-                    migratedPrefs.PrefCat.items.NewPrefItem.value = migratedPrefs.PrefCat.items.OldPrefItem.value;
-                    // do not move the whole PrefItem or PrefCat, otherwise the config will be broken
-                    migratedPrefs.NewPrefCat.items.PrefItem.value = migratedPrefs.OldPrefCat.items.PrefItem.value; 
-                    // remove no longer needed properties
-                    delete migratedPrefs.PrefCat.items.OldPrefItem;
-                    delete migratedPrefs.OldPrefCat;
-                }
-                // next migrate step here...
-                if(migratedPrefs.general.items.configVersion.value == 1){}
-
-                return {preferences: migratedPrefs, isShouldBeSaved: true};
-                */
-                throw new Error("There is no migrations yet. Something went wrong on packed config loading");
-            }
-            else {
-                return { preferences: MergeRecursive(this.getDefaultConfig(), json), isShouldBeSaved: false };
-            }
-        }
-    }
     /**
      * @class Class that manages light/dark theme switching
      */
@@ -444,12 +27,12 @@
         constructor() {
             this.checkForThemeSwitch();
             this.applyCssThemeVariable();
-            
+
             if (this.isMatchMediaSupported)
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener("change", e => this.checkForThemeSwitch());
-            
+
             this.scheduleCheckForThemeSwitch();
-            
+
             let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
             darkModeButton.onclick = undefined;
             darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
@@ -461,8 +44,8 @@
          * @returns {boolean} Get cookie for current darkmode
          */
         get forceSessionMode() {
-            let cookie = getCookie("force_dark_mode");
-            if(cookie) return cookie == "true";
+            let cookie = utils.getCookie("force_dark_mode");
+            if (cookie) return cookie == "true";
             else return undefined;
         }
         /**
@@ -470,8 +53,8 @@
          * @param {boolean} value Set cookie for force darkmode
          */
         set forceSessionMode(value) {
-            if(value == undefined) clearCookie("force_dark_mode");
-            else setCookie("force_dark_mode", String(value));
+            if (value == undefined) utils.clearCookie("force_dark_mode");
+            else utils.setCookie("force_dark_mode", String(value));
         }
         /**
          * Checks if darkmode needs to be switched
@@ -480,7 +63,7 @@
         checkForThemeSwitch() {
             let isDarkModeRequired = this.isDarkModeRequired;
 
-            if(isDarkModeRequired != this.isCurrentPageModeDark) {
+            if (isDarkModeRequired != this.isCurrentPageModeDark) {
                 isDarkModeRequired ? this.applyDefaultDarkMode() : this.applyDefaultLightMode();
                 this.applyCssThemeVariable();
             }
@@ -506,7 +89,7 @@
          * @returns {boolean} Checks cookie for current darkmode
          */
         get isCurrentPageModeDark() {
-            return Boolean(getCookie("dark_mode"));
+            return Boolean(utils.getCookie("dark_mode"));
         }
         /**
          * @private
@@ -536,8 +119,8 @@
             debugLog("Applying default light mode");
 
             Object.values(document.head.querySelectorAll("link")).filter(i => i.href.includes("dark"))[0].remove();
-            
-            clearCookie("dark_mode");
+
+            utils.clearCookie("dark_mode");
         }
         /**
          * applies default gelbooru dark mode
@@ -553,7 +136,7 @@
             link.setAttribute("title", "default");
             document.head.appendChild(link);
 
-            setCookie("dark_mode", "1");
+            utils.setCookie("dark_mode", "1");
         }
         applyCssThemeVariable() {
             debugLog("Applying css theme variable");
@@ -567,7 +150,7 @@
                     style.id = "goThemeVariables";
                     document.body.appendChild(style);
                 }
-        
+
                 setTimeout(() => {
                     let bodyColor = window.getComputedStyle(document.body).backgroundColor;
                     style.innerHTML = `
@@ -588,7 +171,170 @@
             }
         }
     }
+    /**
+     * @class Class that manages blacklist features
+     */
+    class BlacklistManager {
+        /**
+         * @typedef  BlacklistEntry
+         * @type     {Object}
+         * @property {string}  tag        Blacklisted tag
+         * @property {boolean} isAnd      Describes if entry includes multiple tags
+         * @property {number}  hits       Displayed count of hits
+         * @property {boolean} isDisabled Describes if entry is disabled
+         * @property {HTMLElement} elem   Reference to displayed element
+         * 
+         * @typedef BlacklistItem
+         * @type {Object}
+         * @property {string} name
+         * @property {string} value
+         */
+        /**
+         * @type {BlacklistEntry[]}
+         * @private
+         */
+        blacklistEntries;
+        /**
+         * @type {BlacklistItem}
+         * @private
+         */
+        selectedBlacklistItem;
 
+        constructor() {
+            let item = { name: "Safe mode", value: "rating:q*\nrating:e*"};
+            this.addUpdateBlacklist(item);
+        }
+        /**
+         * @private
+         * @returns {BlacklistItem[]} List of available blacklists
+         */
+        get blacklistItems() {
+            return GM_getValue("blacklists", undefined);
+        }
+        /**
+         * @private
+         * @param {BlacklistItem[]} value
+         */
+        set blacklistItems(value) {
+            GM_setValue("blacklists", value);
+        }
+        /**
+         * Adds/updates blacklist item to storage
+         * @param {BlacklistItem} item 
+         * @private
+         */
+        addUpdateBlacklist(item) { 
+            let items = this.blacklistItems;
+
+            if(!items)
+                items = [];
+
+            let index = items.findIndex(i => i.name == item.name);
+
+            if(index == -1) {
+                items.push(item);
+            } else {
+                items[index] = item;
+            }
+
+            this.blacklistItems = items;
+
+            this.updateSidebar();
+        }
+        /**
+         * Removes blacklist item from storage
+         * @param {BlacklistItem} item 
+         * @private
+         */
+        removeBlacklist(item) { 
+            let index = this.blacklistItems.findIndex(i => i.name == item.name);
+
+            this.blacklistItems.splice(index, 1);
+
+            this.updateSidebar();
+        }
+
+        /**
+         * Parse current blacklist item's entries
+         */
+        parseEntries() { }
+
+        /**
+         * Updates blacklist sidebar placed above tags sidebar
+         * @private
+         */
+        updateSidebar() {
+            let aside = document.querySelector(".aside");
+            let titleSpan = aside.querySelector("#go-advBlacklistTitle");
+            let select = aside.querySelector("#go-advBlacklistSelect");
+
+            if (titleSpan) {
+                //update
+            } else {
+                //title
+                titleSpan = document.createElement("span");
+                titleSpan.id = "go-advBlacklistTitle";
+
+                titleSpan.appendChild(document.createElement("br"));
+
+                let b = document.createElement("b");
+                b.textContent = "Blacklist";
+                b.style = "margin-left: 15px;";
+                titleSpan.appendChild(b);
+
+                titleSpan.appendChild(document.createElement("br"));
+                titleSpan.appendChild(document.createElement("br"));
+
+
+                //dropdown
+                select = document.createElement("select");
+                select.id = "go-advBlacklistSelect";
+
+                if (this.blacklistItems && this.blacklistItems.length > 0) {
+                    this.blacklistItems.forEach(i => {
+                        let opt = document.createElement("option");
+                        opt.value = i.name;
+                        opt.textContent = i.name;
+                        select.appendChild(opt);
+                    });
+                } else {
+                    let opt = document.createElement("option");
+                    opt.value = "There is no blacklists";
+                    opt.textContent  = "There is no blacklists";
+                    select.appendChild(opt);
+                    select.setAttribute("disabled", "");
+                }
+
+                aside.insertBefore(select, aside.children[0]);
+                aside.insertBefore(titleSpan, select);
+
+            }
+        }
+        /**
+         * Removes blacklist sidebar placed above tags sidebar
+         * @private
+         */
+        removeSidebar() {
+            let aside = document.querySelector(".aside");
+            let title = aside.querySelector("#go-advBlacklistTitle");
+
+            if (title) {
+                title.remove();
+            }
+        }
+        /**
+         * Enable/disable blacklist manager
+         * @param {boolean} value 
+         * @public
+         */
+        setupManager(value) {
+            if (value) {
+                this.updateSidebar();
+            } else {
+                this.removeSidebar();
+            }
+        }
+    }
     /** @var {Object.<string, string>} Enum with available page types */
     const PageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
 
@@ -599,6 +345,11 @@
     configManager.loadConfig();
 
     let themeManager = new ThemeManager();
+    let blacklistManager = new BlacklistManager();
+
+    configManager.addUpdateListener("collapsibleSidebar.items.enable", applyTweakCollapseSidebar);
+
+    configManager.applyConfig();
 
     debugLog("Registering styles");
     GM_addStyle(GM_getResourceText("css"));
@@ -607,11 +358,11 @@
     registerConfigWindow();
 
     // lazy fix for the back button, don't want to deal with HTML5 stuff
-    window.onpopstate = function(event) {    
-        if(event && event.state) {
-            location.reload(); 
+    window.onpopstate = function (event) {
+        if (event && event.state) {
+            location.reload();
         }
-    }
+    };
 
     // Apply CSS Variables
     /** @type {PreferenceUpdateCallback} */
@@ -710,7 +461,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostFit(value) {
-        if(currentPageType != PageTypes.POST) return;
+        if (currentPageType != PageTypes.POST) return;
         debugLog(`Applying PostFit state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -721,7 +472,7 @@
 
             let resizeLink = document.querySelector("#resize-link > a");
             if (resizeLink) {
-                if(value)
+                if (value)
                     resizeLink.addEventListener("click", toggleFitMode);
                 else
                     resizeLink.removeEventListener("click", toggleFitMode);
@@ -733,7 +484,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostCenter(value) {
-        if(currentPageType != PageTypes.POST) return;
+        if (currentPageType != PageTypes.POST) return;
         debugLog(`Applying PostCenter state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -747,10 +498,10 @@
      * @param {boolean} value 
      */
     function applyTweakPostAutoScroll(value) {
-        if(currentPageType != PageTypes.POST) return;
+        if (currentPageType != PageTypes.POST) return;
         debugLog(`Applying PostAutoScroll state: ${String(value)}`);
 
-        if(value)
+        if (value)
             document.addEventListener("readystatechange", autoScroll);
         else
             document.removeEventListener("readystatechange", autoScroll);
@@ -760,7 +511,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostOnNarrow(value) {
-        if(currentPageType != PageTypes.POST) return;
+        if (currentPageType != PageTypes.POST) return;
         debugLog(`Applying PostOnNarrow state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -774,7 +525,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostClickSwitchFit(value) {
-        if(currentPageType != PageTypes.POST) return;
+        if (currentPageType != PageTypes.POST) return;
         debugLog(`Applying PostClickSwitchFit state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -784,7 +535,7 @@
             if (!img || !resizeLink)
                 return;
 
-            if(value){
+            if (value) {
                 img.classList.add("go-cursor-zoom-in");
                 img.addEventListener("click", toggleFitModeWithCursors);
             } else {
@@ -799,7 +550,7 @@
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
     */
-     function applyTweakEnlargeOnHover(value) {
+    function applyTweakEnlargeOnHover(value) {
         if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
 
         debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
@@ -1007,9 +758,9 @@
         debugLog(`Applying InfiniteScroll state: ${String(value)}`);
         onDOMReady(() => {
             if (value)
-            document.addEventListener("scroll", checkApplyInfiniteScroll);
-        else
-            document.removeEventListener("scroll", checkApplyInfiniteScroll);
+                document.addEventListener("scroll", checkApplyInfiniteScroll);
+            else
+                document.removeEventListener("scroll", checkApplyInfiniteScroll);
         });
     }
     /**
@@ -1022,11 +773,11 @@
         debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
         onDOMReady(() => {
-            if(value) {
-                if(document.querySelector(".top-pagination")) return;
+            if (value) {
+                if (document.querySelector(".top-pagination")) return;
 
                 /** @type {HTMLElement} */
-                let topPagination = document.querySelector(".pagination").cloneNode(true); 
+                let topPagination = document.querySelector(".pagination").cloneNode(true);
                 topPagination.classList.add("top-pagination");
                 document.querySelector("main").insertBefore(topPagination, document.querySelector(".thumbnail-container"));
             } else {
@@ -1044,13 +795,13 @@
         debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
         onDOMReady(() => {
-            if(value) {
+            if (value) {
                 let goTopDiv = document.createElement("div");
                 let goTopA = document.createElement("a");
 
                 goTopDiv.className = "alert alert-info";
                 goTopDiv.id = "go-top";
-                goTopDiv.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }))
+                goTopDiv.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
                 goTopA.textContent = "Go Top";
 
@@ -1061,24 +812,16 @@
             }
         });
     }
+    //      Advanced Blacklist
+    /**
+     * @type {PreferenceUpdateCallback}
+     * @param {boolean} value
+     */
+    function applyTweakAdvancedBlacklist(value) {
+        blacklistManager.setupManager(value);
+    }
     // Functions
     //      Script
-    /**
-     * Styled console.log()
-     * @param {string=}  message
-     * @param {*=}       value 
-     * @param {boolean}  [force]
-     */
-    function debugLog(message, value, force = false) {
-        if (force || configManager.config.general.items.debug.value) {
-            if (!value)
-                console.log("[GELO]: " + message);
-            else if (!message)
-                console.log("[GELO]: Outputs value", value);
-            else
-                console.log("[GELO]: " + message, value);
-        }
-    }
     /**
     * Runs func when document is ready
     * @param {function} func 
@@ -1150,6 +893,7 @@
             submitClose.title = "Close window without saving";
             submitClose.addEventListener("click", () => {
                 configManager.loadConfig();
+                configManager.applyConfig();
                 sDiv.classList.add("go-config-window-hidden");
             });
 
@@ -1161,6 +905,7 @@
             submitSave.addEventListener("click", () => {
                 sDiv.classList.add("go-config-window-hidden");
                 configManager.saveConfig();
+                configManager.applyConfig();
             });
 
             let submitRevert = document.createElement("input");
@@ -1170,6 +915,7 @@
             submitRevert.title = "Cancel unsaved changes";
             submitRevert.addEventListener("click", () => {
                 configManager.loadConfig();
+                configManager.applyConfig();
                 updateInputValues();
             });
 
@@ -1180,6 +926,7 @@
             submitDefaults.title = "Reset config storage and load default config";
             submitDefaults.addEventListener("click", () => {
                 configManager.setDefaultConfig();
+                configManager.applyConfig();
                 updateInputValues();
             });
 
@@ -1241,7 +988,7 @@
 
                     let inputBool = document.createElement("input");
                     inputBool.type = "checkbox";
-                    inputBool.id = findPath(configManager.config, pref[0], pref[1]).substring(1);
+                    inputBool.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1);
                     inputBool.name = pref[1].name;
                     inputBool.checked = Boolean(pref[1].value);
                     inputBool.disabled = pref[1].locked;
@@ -1268,12 +1015,12 @@
 
                     let inputText = document.createElement("input");
                     inputText.type = "text";
-                    inputText.id = findPath(configManager.config, pref[0], pref[1]).substring(1);
+                    inputText.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1);
                     inputText.name = pref[1].name;
                     inputText.value = String(pref[1].value);
                     inputText.disabled = pref[1].locked;
 
-                    let debouncedUpdate = debounce(updatePreferenceItem, 3000);
+                    let debouncedUpdate = utils.debounce(updatePreferenceItem, 3000);
                     inputText.addEventListener("input", /** @param {InputEvent} e */ e => debouncedUpdate(e, pref[1]));
 
                     let pText = document.createElement("p");
@@ -1292,11 +1039,11 @@
             document.querySelectorAll("#goConfigWindow input:not([type='submit'])").forEach(/** @param {HTMLInputElement} i */ i => {
                 switch (i.type) {
                     case "checkbox":
-                        i.checked = resolve(i.id + ".value", configManager.config);
+                        i.checked = utils.resolve(i.id + ".value", configManager.config);
                         break;
-                
+
                     case "text":
-                        i.value = resolve(i.id + ".value", configManager.config);
+                        i.value = utils.resolve(i.id + ".value", configManager.config);
                         break;
                 }
             });
@@ -1477,6 +1224,7 @@
         }
     }
 
+
     //      Tweak
     /**
      * @param {MouseEvent} e
@@ -1611,10 +1359,10 @@
      * Infinite scroll event listener
      * @param {Event} e 
      */
-    function checkApplyInfiniteScroll(e){
+    function checkApplyInfiniteScroll(e) {
         const threshold = Number(configManager.config.infiniteScroll.items.threshold.value);
         if (document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
-            if(!this.throttledScroll) this.throttledScroll = debounceFirst(applyInfiniteScroll, 1000);
+            if (!this.throttledScroll) this.throttledScroll = utils.debounceFirst(applyInfiniteScroll, 1000);
             this.throttledScroll();
         }
     }
@@ -1623,206 +1371,62 @@
      */
     let isInfiniteScrollHitLastPage = false;
     function applyInfiniteScroll() {
-            if(isInfiniteScrollHitLastPage) return;
+        if (isInfiniteScrollHitLastPage) return;
 
-            let params = new URLSearchParams(document.URL.split('?')[1]);
-            params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
-            let nextPage = document.location.pathname  + "?" + params;
-            //document.querySelector("#paginator > a[alt='next']").getAttribute("href");
-            debugLog(`InfScrolling to pid ${params.get("pid")}`);
+        let params = new URLSearchParams(document.URL.split('?')[1]);
+        params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
+        let nextPage = document.location.pathname + "?" + params;
+        //document.querySelector("#paginator > a[alt='next']").getAttribute("href");
+        debugLog(`InfScrolling to pid ${params.get("pid")}`);
 
-            fetch(nextPage)
-                    .then(response => {
-                        if (!response.ok) throw Error(response.statusText);
-                        return response.text();
-                    })
-                    .then(text => {
-                        let parser = new DOMParser();
-                        let htmlDocument = parser.parseFromString(text, "text/html");
+        fetch(nextPage)
+            .then(response => {
+                if (!response.ok) throw Error(response.statusText);
+                return response.text();
+            })
+            .then(text => {
+                let parser = new DOMParser();
+                let htmlDocument = parser.parseFromString(text, "text/html");
 
-                        let newThumbContainer = htmlDocument.querySelector(".thumbnail-container");
-                        let oldThumbContainer = document.querySelector(".thumbnail-container");
-                        let firstOldThumb = oldThumbContainer.children[0];
+                let newThumbContainer = htmlDocument.querySelector(".thumbnail-container");
+                let oldThumbContainer = document.querySelector(".thumbnail-container");
+                let firstOldThumb = oldThumbContainer.children[0];
 
-                        if(!newThumbContainer.childElementCount) {
-                            debugLog("InfScrolling hit last page");
-                            isInfiniteScrollHitLastPage = true;
-                            return;
-                        }
-
-                        Object.values(newThumbContainer.children).forEach(t => {
-                            oldThumbContainer.appendChild(t);
-                        });
-
-                        // reapply tweaks related to gallery page
-                        // some of them has dependent tweaks, skip it
-                        applyTweakEnlargeOnHover(Boolean(configManager.config.thumbs.items.enlargeOnHover.value));
-                        applyTweakLoadingIndicator(Boolean(configManager.config.thumbs.items.loader.value));
-                        applyTweakRoundCorners(Boolean(configManager.config.thumbs.items.roundCorners.value));
-                        applyTweakRemoveTitle(Boolean(configManager.config.thumbs.items.removeTitle.value));
-                        applyTweakFastDL(Boolean(configManager.config.fastDL.items.thumbs.value));
-                        applyTweakResizeThumbsGallery(Boolean(configManager.config.thumbs.items.resizeGallery.value));
-
-                        let newPaginator = htmlDocument.querySelector(".pagination");
-                        let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
-                        oldPaginator.replaceWith(newPaginator);
-
-                        let oldTopPaginator = document.querySelector(".top-pagination");
-                        if(oldTopPaginator) {
-                            /** @type {HTMLElement} */
-                            let newTopPaginator = newPaginator.cloneNode(true);
-                            newTopPaginator.classList.add("top-pagination");
-                            oldTopPaginator.replaceWith(newTopPaginator);
-                        }
-
-                        window.history.pushState(nextPage, htmlDocument.title, nextPage);
-                        history.scrollRestoration = 'manual';
-                        document.title = htmlDocument.title;
-                    });
-    }
-    //      Misc
-    /**
-     * Find path of diven property with given value in given object
-     * @param {Object} obj 
-     * @param {string} name 
-     * @param {*} val 
-     * @param {string} [currentPath] 
-     * @returns {string}
-     */
-    function findPath(obj, name, val, currentPath) {
-        currentPath = currentPath || '';
-
-        let matchingPath;
-
-        if (!obj || typeof obj !== 'object') return;
-
-        if (obj[name] === val) return `${currentPath}.${name}`;
-
-        for (const key of Object.keys(obj)) {
-            if (key === name && obj[key] === val) {
-                matchingPath = currentPath;
-            } else {
-                matchingPath = findPath(obj[key], name, val, `${currentPath}.${key}`);
-            }
-
-            if (matchingPath) break;
-        }
-
-        return matchingPath;
-    }
-    /**
-     * Recursive merge obj2 into obj1
-     * @link https://stackoverflow.com/a/383245/19972602
-     * @param {*} obj1 
-     * @param {*} obj2 
-     * @returns {*} obj2 merged into obj1
-     */
-    function MergeRecursive(obj1, obj2) {
-        for (var p in obj2) {
-            try {
-                // Property in destination object set; update its value.
-                if (obj2[p].constructor == Object) {
-                    obj1[p] = MergeRecursive(obj1[p], obj2[p]);
-                } else {
-                    obj1[p] = obj2[p];
+                if (!newThumbContainer.childElementCount) {
+                    debugLog("InfScrolling hit last page");
+                    isInfiniteScrollHitLastPage = true;
+                    return;
                 }
-            } catch (e) {
-                // Property in destination object not set; create it and set its value.
-                obj1[p] = obj2[p];
-            }
-        }
-        return obj1;
+
+                Object.values(newThumbContainer.children).forEach(t => {
+                    oldThumbContainer.appendChild(t);
+                });
+
+                // reapply tweaks related to gallery page
+                // some of them has dependent tweaks, skip it
+                applyTweakEnlargeOnHover(Boolean(configManager.config.thumbs.items.enlargeOnHover.value));
+                applyTweakLoadingIndicator(Boolean(configManager.config.thumbs.items.loader.value));
+                applyTweakRoundCorners(Boolean(configManager.config.thumbs.items.roundCorners.value));
+                applyTweakRemoveTitle(Boolean(configManager.config.thumbs.items.removeTitle.value));
+                applyTweakFastDL(Boolean(configManager.config.fastDL.items.thumbs.value));
+                applyTweakResizeThumbsGallery(Boolean(configManager.config.thumbs.items.resizeGallery.value));
+
+                let newPaginator = htmlDocument.querySelector(".pagination");
+                let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
+                oldPaginator.replaceWith(newPaginator);
+
+                let oldTopPaginator = document.querySelector(".top-pagination");
+                if (oldTopPaginator) {
+                    /** @type {HTMLElement} */
+                    let newTopPaginator = newPaginator.cloneNode(true);
+                    newTopPaginator.classList.add("top-pagination");
+                    oldTopPaginator.replaceWith(newTopPaginator);
+                }
+
+                window.history.pushState(nextPage, htmlDocument.title, nextPage);
+                history.scrollRestoration = 'manual';
+                document.title = htmlDocument.title;
+            });
     }
-    /**
-     * Find property in object using string path
-     * @param {string} path 
-     * @param {Object} obj 
-     * @param {string} separator 
-     * @returns 
-     */
-    function resolve(path, obj=self, separator ='.') {
-        var properties = Array.isArray(path) ? path : path.split(separator);
-        return properties.reduce((prev, curr) => prev?.[curr], obj);
-    }
-    /**
-     * Debounce decorator
-     * @param {function} callee 
-     * @param {number} timeout 
-     * @returns {function}
-     */
-    function debounce(callee, timeout) {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => { callee.apply(this, args); }, timeout);
-        };
-    }
-    /**
-     * Throttle decorator
-     * @param {function} fn 
-     * @param {Number} threshold 
-     * @param {*} scope 
-     * @returns 
-     */
-    function debounceFirst(fn, threshold, scope) {
-        threshold || (threshold = 250);
-        var last,
-            deferTimer;
-        return function () {
-          var context = scope || this;
-      
-          var now = +new Date,
-              args = arguments;
-          if (last && now < last + threshold) {
-            // hold on to it
-            clearTimeout(deferTimer);
-            deferTimer = setTimeout(function () {
-              last = now;
-            }, threshold);
-          } else {
-            last = now;
-            fn.apply(context, args);
-          }
-        };
-    }
-    /**
-     * Set Cookie function
-     * @link https://www.quirksmode.org/js/cookies.html
-     * @param {String} name 
-     * @param {String} value 
-     * @param {Number} [days]
-     */
-    function setCookie(name,value,days) {
-        var expires = "";
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days*24*60*60*1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-    }
-    /**
-     * Get Cookie function
-     * @link https://www.quirksmode.org/js/cookies.html
-     * @param {String} name 
-     * @returns {String}
-     */
-    function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
-            var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1,c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-        }
-        return null;
-    }
-    /**
-     * Clear Cookie function
-     * @link https://www.quirksmode.org/js/cookies.html
-     * @param {String} name 
-     */
-    function clearCookie(name) {   
-        document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    }
+    
 })();
