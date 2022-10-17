@@ -46,7 +46,6 @@ class ConfigManager {
      * @type {Preferences}
      */
     config;
-    
     /**
      * Stores all the dispatch handlers
      * @private
@@ -80,7 +79,6 @@ class ConfigManager {
         if(handlers) handlers.forEach(h => h(value));
     }
     /**
-     * 
      * @param {string} prefKey 
      * @returns {PreferenceItem} Found preference item or undefined
      */
@@ -96,6 +94,10 @@ class ConfigManager {
 
         return item;
     }
+    /**
+     * @param {string} prefKey
+     * @returns {string | number | boolean} Found preference value or undefined
+     */
     findValueByKey(prefKey){
         let item = this.findItemByKey(prefKey);
         if (!item) return undefined;
@@ -131,9 +133,9 @@ class ConfigManager {
      * @method applyConfig
      */
     applyConfig() {
-        Object.values(this.config).forEach(c => {
-            Object.entries(c.items).forEach(ie => {
-                this.onUpdate(utils.findPath(this.config, ie[0], ie[1]).substring(1), ie[1].value);
+        Object.entries(this.config).forEach(ce => {
+            Object.entries(ce[1].items).forEach(ie => {
+                this.onUpdate(`${ce[0]}.${ie[0]}`, ie[1].value);
             });
         });
     }

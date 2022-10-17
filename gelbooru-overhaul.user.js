@@ -346,37 +346,37 @@
     let themeManager = new ThemeManager();
     let blacklistManager = new BlacklistManager();
 
-    configManager.addUpdateListener("advancedBlacklist.items.enable", applyTweakAdvancedBlacklist);
+    configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
 
-    configManager.addUpdateListener("collapsibleSidebar.items.enable", applyTweakCollapseSidebar);
-    configManager.addUpdateListener("collapsibleSidebar.items.width", applyCssVariableGoCollapseSidebar);
-    configManager.addUpdateListener("collapsibleSidebar.items.color", applyCssVariableGoCollapseSidebar);
-    configManager.addUpdateListener("collapsibleSidebar.items.opacity", applyCssVariableGoCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.enable", applyTweakCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.width", applyCssVariableGoCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.color", applyCssVariableGoCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.opacity", applyCssVariableGoCollapseSidebar);
 
-    configManager.addUpdateListener("post.items.center", applyTweakPostCenter);
-    configManager.addUpdateListener("post.items.fitTweaks", applyTweakPostFit);
-    configManager.addUpdateListener("post.items.fitHorizontallyOnNarrow", applyTweakPostOnNarrow);
-    configManager.addUpdateListener("post.items.switchFitOnClick", applyTweakPostClickSwitchFit);
-    configManager.addUpdateListener("post.items.autoScroll", applyTweakPostAutoScroll);
+    configManager.addUpdateListener("post.center", applyTweakPostCenter);
+    configManager.addUpdateListener("post.fitTweaks", applyTweakPostFit);
+    configManager.addUpdateListener("post.fitHorizontallyOnNarrow", applyTweakPostOnNarrow);
+    configManager.addUpdateListener("post.switchFitOnClick", applyTweakPostClickSwitchFit);
+    configManager.addUpdateListener("post.autoScroll", applyTweakPostAutoScroll);
 
-    configManager.addUpdateListener("thumbs.items.resizeGallery", applyTweakResizeThumbsGallery);
-    configManager.addUpdateListener("thumbs.items.resizeGallerySize", applyCssVariableGoThumbnailResize);
-    configManager.addUpdateListener("thumbs.items.resizeMoreLikeThis", applyTweakResizeThumbsMoreLikeThis);
-    configManager.addUpdateListener("thumbs.items.resizeMoreLikeThisSize", applyCssVariableGoThumbnailResize);
-    configManager.addUpdateListener("thumbs.items.enlargeOnHover", applyTweakEnlargeOnHover);
-    configManager.addUpdateListener("thumbs.items.scale", applyCssVariableGoThumbnailEnlarge);
-    configManager.addUpdateListener("thumbs.items.highRes", applyTweakLoadHighRes);
-    configManager.addUpdateListener("thumbs.items.loader", applyTweakLoadingIndicator);
-    configManager.addUpdateListener("thumbs.items.removeTitle", applyTweakRemoveTitle);
-    configManager.addUpdateListener("thumbs.items.preventOffScreen", applyTweakPreventOffScreen);
-    configManager.addUpdateListener("thumbs.items.roundCorners", applyTweakRoundCorners);
+    configManager.addUpdateListener("thumbs.resizeGallery", applyTweakResizeThumbsGallery);
+    configManager.addUpdateListener("thumbs.resizeGallerySize", applyCssVariableGoThumbnailResize);
+    configManager.addUpdateListener("thumbs.resizeMoreLikeThis", applyTweakResizeThumbsMoreLikeThis);
+    configManager.addUpdateListener("thumbs.resizeMoreLikeThisSize", applyCssVariableGoThumbnailResize);
+    configManager.addUpdateListener("thumbs.enlargeOnHover", applyTweakEnlargeOnHover);
+    configManager.addUpdateListener("thumbs.scale", applyCssVariableGoThumbnailEnlarge);
+    configManager.addUpdateListener("thumbs.highRes", applyTweakLoadHighRes);
+    configManager.addUpdateListener("thumbs.loader", applyTweakLoadingIndicator);
+    configManager.addUpdateListener("thumbs.removeTitle", applyTweakRemoveTitle);
+    configManager.addUpdateListener("thumbs.preventOffScreen", applyTweakPreventOffScreen);
+    configManager.addUpdateListener("thumbs.roundCorners", applyTweakRoundCorners);
 
-    configManager.addUpdateListener("fastDL.items.thumbs", applyTweakFastDL);
-    configManager.addUpdateListener("fastDL.items.post", applyTweakFastDLPost);
+    configManager.addUpdateListener("fastDL.thumbs", applyTweakFastDL);
+    configManager.addUpdateListener("fastDL.post", applyTweakFastDLPost);
 
-    configManager.addUpdateListener("infiniteScroll.items.enable", applyTweakInfiniteScroll);
-    configManager.addUpdateListener("infiniteScroll.items.paginatorOnTop", applyTweakPaginatorOnTop);
-    configManager.addUpdateListener("infiniteScroll.items.goToTop", applyTweakGoToTop);
+    configManager.addUpdateListener("infiniteScroll.enable", applyTweakInfiniteScroll);
+    configManager.addUpdateListener("infiniteScroll.paginatorOnTop", applyTweakPaginatorOnTop);
+    configManager.addUpdateListener("infiniteScroll.goToTop", applyTweakGoToTop);
 
     configManager.applyConfig();
 
@@ -1016,7 +1016,7 @@
 
                     let inputBool = document.createElement("input");
                     inputBool.type = "checkbox";
-                    inputBool.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1);
+                    inputBool.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
                     inputBool.name = pref[1].name;
                     inputBool.checked = Boolean(pref[1].value);
                     inputBool.disabled = pref[1].locked;
@@ -1043,7 +1043,7 @@
 
                     let inputText = document.createElement("input");
                     inputText.type = "text";
-                    inputText.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1);
+                    inputText.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
                     inputText.name = pref[1].name;
                     inputText.value = String(pref[1].value);
                     inputText.disabled = pref[1].locked;
@@ -1067,11 +1067,11 @@
             document.querySelectorAll("#goConfigWindow input:not([type='submit'])").forEach(/** @param {HTMLInputElement} i */ i => {
                 switch (i.type) {
                     case "checkbox":
-                        i.checked = utils.resolve(i.id + ".value", configManager.config);
+                        i.checked = Boolean(configManager.findValueByKey(i.id));
                         break;
 
                     case "text":
-                        i.value = utils.resolve(i.id + ".value", configManager.config);
+                        i.value = String(configManager.findValueByKey(i.id));
                         break;
                 }
             });
