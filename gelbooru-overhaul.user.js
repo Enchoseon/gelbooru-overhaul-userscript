@@ -344,7 +344,7 @@
     configManager.loadConfig();
 
     let themeManager = new ThemeManager();
-    let blacklistManager = new BlacklistManager();
+    //let blacklistManager = new BlacklistManager();
 
     configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
 
