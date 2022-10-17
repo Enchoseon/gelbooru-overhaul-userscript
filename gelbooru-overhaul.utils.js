@@ -1,4 +1,33 @@
+class context {
+    static configManager;
+}
 class utils {
+    /** @var {Object.<string, string>} Enum with available page types */
+    static pageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
+    /**
+     * Current page type (see {@link utils.pageTypes})
+     * @returns {string}
+     */
+    static getPageType() {
+        let params = new URLSearchParams(document.URL.split('?')[1]);
+
+        if (!params.has("page"))
+            return utils.pageTypes.UNDEFINED;
+
+        if (params.get("page") == "post" && params.get("s") == "list")
+            return utils.pageTypes.GALLERY;
+
+        if (params.get("page") == "post" && params.get("s") == "view")
+            return utils.pageTypes.POST;
+
+        if (params.get("page") == "wiki" && params.get("s") == "view")
+            return utils.pageTypes.WIKI_VIEW;
+
+        if (params.get("page") == "pool" && params.get("s") == "show")
+            return utils.pageTypes.POOL_VIEW;
+
+        return utils.pageTypes.UNDEFINED;
+    }
     /**
      * Styled console.log()
      * @param {string=}  message
@@ -6,7 +35,7 @@ class utils {
      * @param {boolean}  [force]
      */
     static debugLog(message, value, force = false) {
-        if (force || true ) {//configManager.config.general.items.debug.value) {
+        if (force || context.configManager.config.general.items.debug.value) {
             if (!value)
                 console.log("[GELO]: " + message);
             else if (!message)

@@ -18,6 +18,7 @@
 
 (function () {
     "use strict";
+
     /**
      * @class Class that manages light/dark theme switching
      */
@@ -98,12 +99,12 @@
             let forceSession = this.forceSessionMode;
             if (this.forceSessionMode != undefined) return forceSession;
 
-            if (configManager.config.darkMode.items.force.value) {
+            if (configManager.findValueByKey("darkMode.force")) {
                 return true;
-            } else if (configManager.config.darkMode.items.auto.value) {
-                if (configManager.config.darkMode.items.forceTime.value || !this.isMatchMediaSupported) {
+            } else if (configManager.findValueByKey("darkMode.auto")) {
+                if (configManager.findValueByKey("darkMode.forceTime") || !this.isMatchMediaSupported) {
                     let hours = new Date().getHours();
-                    return hours >= configManager.config.darkMode.items.timeStart.value || hours <= configManager.config.darkMode.items.timeEnd.value;
+                    return hours >= configManager.findValueByKey("darkMode.timeStart") || hours <= configManager.findValueByKey("darkMode.timeEnd");
                 } else {
                     return window.matchMedia('(prefers-color-scheme: dark)').matches;
                 }
@@ -200,7 +201,7 @@
         selectedBlacklistItem;
 
         constructor() {
-            let item = { name: "Safe mode", value: "rating:q*\nrating:e*"};
+            let item = { name: "Safe mode", value: "rating:q*\nrating:e*" };
             this.addUpdateBlacklist(item);
         }
         /**
@@ -222,15 +223,15 @@
          * @param {BlacklistItem} item 
          * @private
          */
-        addUpdateBlacklist(item) { 
+        addUpdateBlacklist(item) {
             let items = this.blacklistItems;
 
-            if(!items)
+            if (!items)
                 items = [];
 
             let index = items.findIndex(i => i.name == item.name);
 
-            if(index == -1) {
+            if (index == -1) {
                 items.push(item);
             } else {
                 items[index] = item;
@@ -245,7 +246,7 @@
          * @param {BlacklistItem} item 
          * @private
          */
-        removeBlacklist(item) { 
+        removeBlacklist(item) {
             let index = this.blacklistItems.findIndex(i => i.name == item.name);
 
             this.blacklistItems.splice(index, 1);
@@ -299,7 +300,7 @@
                 } else {
                     let opt = document.createElement("option");
                     opt.value = "There is no blacklists";
-                    opt.textContent  = "There is no blacklists";
+                    opt.textContent = "There is no blacklists";
                     select.appendChild(opt);
                     select.setAttribute("disabled", "");
                 }
@@ -334,19 +335,48 @@
             }
         }
     }
-    /** @var {Object.<string, string>} Enum with available page types */
-    const PageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
 
-    let currentPageType = getPageType();
+    let currentPageType = utils.getPageType();
     utils.debugLog("Current page type is " + currentPageType, null, true);
 
     let configManager = new ConfigManager();
+    context.configManager = configManager;
     configManager.loadConfig();
 
     let themeManager = new ThemeManager();
     let blacklistManager = new BlacklistManager();
 
+    configManager.addUpdateListener("advancedBlacklist.items.enable", applyTweakAdvancedBlacklist);
+
     configManager.addUpdateListener("collapsibleSidebar.items.enable", applyTweakCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.items.width", applyCssVariableGoCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.items.color", applyCssVariableGoCollapseSidebar);
+    configManager.addUpdateListener("collapsibleSidebar.items.opacity", applyCssVariableGoCollapseSidebar);
+
+    configManager.addUpdateListener("post.items.center", applyTweakPostCenter);
+    configManager.addUpdateListener("post.items.fitTweaks", applyTweakPostFit);
+    configManager.addUpdateListener("post.items.fitHorizontallyOnNarrow", applyTweakPostOnNarrow);
+    configManager.addUpdateListener("post.items.switchFitOnClick", applyTweakPostClickSwitchFit);
+    configManager.addUpdateListener("post.items.autoScroll", applyTweakPostAutoScroll);
+
+    configManager.addUpdateListener("thumbs.items.resizeGallery", applyTweakResizeThumbsGallery);
+    configManager.addUpdateListener("thumbs.items.resizeGallerySize", applyCssVariableGoThumbnailResize);
+    configManager.addUpdateListener("thumbs.items.resizeMoreLikeThis", applyTweakResizeThumbsMoreLikeThis);
+    configManager.addUpdateListener("thumbs.items.resizeMoreLikeThisSize", applyCssVariableGoThumbnailResize);
+    configManager.addUpdateListener("thumbs.items.enlargeOnHover", applyTweakEnlargeOnHover);
+    configManager.addUpdateListener("thumbs.items.scale", applyCssVariableGoThumbnailEnlarge);
+    configManager.addUpdateListener("thumbs.items.highRes", applyTweakLoadHighRes);
+    configManager.addUpdateListener("thumbs.items.loader", applyTweakLoadingIndicator);
+    configManager.addUpdateListener("thumbs.items.removeTitle", applyTweakRemoveTitle);
+    configManager.addUpdateListener("thumbs.items.preventOffScreen", applyTweakPreventOffScreen);
+    configManager.addUpdateListener("thumbs.items.roundCorners", applyTweakRoundCorners);
+
+    configManager.addUpdateListener("fastDL.items.thumbs", applyTweakFastDL);
+    configManager.addUpdateListener("fastDL.items.post", applyTweakFastDLPost);
+
+    configManager.addUpdateListener("infiniteScroll.items.enable", applyTweakInfiniteScroll);
+    configManager.addUpdateListener("infiniteScroll.items.paginatorOnTop", applyTweakPaginatorOnTop);
+    configManager.addUpdateListener("infiniteScroll.items.goToTop", applyTweakGoToTop);
 
     configManager.applyConfig();
 
@@ -380,12 +410,12 @@
 
             style.innerHTML = `
             .go-collapse-sidebar {
-                --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
-                --collapsed-color: ${configManager.config.collapsibleSidebar.items.color.value};
-                --expanded-opacity: ${configManager.config.collapsibleSidebar.items.opacity.value};
+                --collapsed-width: ${configManager.findValueByKey("collapsibleSidebar.width")};
+                --collapsed-color: ${configManager.findValueByKey("collapsibleSidebar.color")};
+                --expanded-opacity: ${configManager.findValueByKey("collapsibleSidebar.opacity")};
             }
             .go-collapse-sidebar-container-tweak {
-                --collapsed-width: ${configManager.config.collapsibleSidebar.items.width.value};
+                --collapsed-width: ${configManager.findValueByKey("collapsibleSidebar.width")};
             }
             `;
         });
@@ -406,7 +436,7 @@
 
             style.innerHTML = `
             .go-thumbnail-enlarge {
-                --enlarge-scale: ${configManager.config.thumbs.items.scale.value};
+                --enlarge-scale: ${configManager.findValueByKey("thumbs.scale")};
             }
             `;
         });
@@ -424,11 +454,11 @@
                 style.id = "goThumbnailResizeVariables";
                 document.body.appendChild(style);
             }
-
+            
             style.innerHTML = `
             .go-thumbnail-resize {
-                --thumb-gallery-size: ${configManager.config.thumbs.items.resizeGallerySize.value};
-                --thumb-morelikethis-size: ${configManager.config.thumbs.items.resizeMoreLikeThisSize.value};
+                --thumb-gallery-size: ${configManager.findValueByKey("thumbs.resizeGallerySize")};
+                --thumb-morelikethis-size: ${configManager.findValueByKey("thumbs.resizeMoreLikeThisSize")};
             }
             `;
         });
@@ -441,7 +471,7 @@
      * @param {boolean} value
      */
     function applyTweakCollapseSidebar(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying TweakCollapseSidebar state: ${String(value)}`);
         onDOMReady(() => {
@@ -460,7 +490,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostFit(value) {
-        if (currentPageType != PageTypes.POST) return;
+        if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostFit state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -483,7 +513,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostCenter(value) {
-        if (currentPageType != PageTypes.POST) return;
+        if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostCenter state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -497,7 +527,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostAutoScroll(value) {
-        if (currentPageType != PageTypes.POST) return;
+        if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostAutoScroll state: ${String(value)}`);
 
         if (value)
@@ -510,7 +540,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostOnNarrow(value) {
-        if (currentPageType != PageTypes.POST) return;
+        if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostOnNarrow state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -524,7 +554,7 @@
      * @param {boolean} value 
      */
     function applyTweakPostClickSwitchFit(value) {
-        if (currentPageType != PageTypes.POST) return;
+        if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostClickSwitchFit state: ${String(value)}`);
 
         onDOMReady(() => {
@@ -550,32 +580,32 @@
     * @param {boolean} value
     */
     function applyTweakEnlargeOnHover(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
                 i.parentElement.classList.toggle("go-thumbnail-enlarge", value);
 
-                if (currentPageType == PageTypes.POST)
+                if (currentPageType == utils.pageTypes.POST)
                     i.style.margin = '';
                 i.parentElement.style.margin = '10px'; //TODO: css
             });
         });
 
         // Dependent tweak
-        applyTweakLoadHighRes(Boolean(configManager.config.thumbs.items.highRes.value));
-        applyTweakPreventOffScreen(Boolean(configManager.config.thumbs.items.preventOffScreen.value));
+        applyTweakLoadHighRes(Boolean(configManager.findValueByKey("thumbs.highRes")));
+        applyTweakPreventOffScreen(Boolean(configManager.findValueByKey("thumbs.preventOffScreen")));
     }
     /** 
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
     function applyTweakLoadHighRes(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         // Dependencies check
-        let dependValue = configManager.config.thumbs.items.enlargeOnHover.value && value;
+        let dependValue = configManager.findValueByKey("thumbs.enlargeOnHover") && value;
 
         utils.debugLog(`Applying LoadHighRes state: ${String(dependValue)}`);
 
@@ -593,18 +623,17 @@
         });
 
         // Dependent tweak
-        applyTweakLoadingIndicator(Boolean(configManager.config.thumbs.items.loader.value));
+        applyTweakLoadingIndicator(Boolean(configManager.findValueByKey("thumbs.loader")));
     }
     /** 
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
     */
     function applyTweakLoadingIndicator(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
-        // Dependencies check
-        let dependValue = configManager.config.thumbs.items.enlargeOnHover.value &&
-            configManager.config.thumbs.items.highRes.value && value;
+        // Dependencies chec
+        let dependValue = configManager.findValueByKey("thumbs.enlargeOnHover") && configManager.findValueByKey("thumbs.highRes") && value;
 
         utils.debugLog(`Applying LoadingIndicator state: ${String(dependValue)}`);
 
@@ -623,10 +652,10 @@
     * @param {boolean} value
     */
     function applyTweakPreventOffScreen(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         // Dependencies check
-        let dependValue = configManager.config.thumbs.items.enlargeOnHover.value && value;
+        let dependValue = configManager.findValueByKey("thumbs.enlargeOnHover") && value;
 
         utils.debugLog(`Applying PreventOffScreen state: ${String(dependValue)}`);
 
@@ -646,7 +675,7 @@
     * @param {boolean} value
     */
     function applyTweakRoundCorners(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying RoundCorners state: ${String(value)}`);
 
@@ -661,7 +690,7 @@
     * @param {boolean} value
     */
     function applyTweakRemoveTitle(value) {
-        if (PageTypes.GALLERY != currentPageType) return;
+        if (utils.pageTypes.GALLERY != currentPageType) return;
 
         utils.debugLog(`Applying RemoveTitle state: ${String(value)}`);
 
@@ -682,7 +711,7 @@
     * @param {boolean} value
     */
     function applyTweakResizeThumbsGallery(value) {
-        if (PageTypes.GALLERY != currentPageType) return;
+        if (utils.pageTypes.GALLERY != currentPageType) return;
 
         utils.debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
 
@@ -698,7 +727,7 @@
     * @param {boolean} value
     */
     function applyTweakResizeThumbsMoreLikeThis(value) {
-        if (PageTypes.POST != currentPageType) return;
+        if (utils.pageTypes.POST != currentPageType) return;
 
         utils.debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
 
@@ -714,7 +743,7 @@
      * @param {boolean} value
      */
     function applyTweakFastDL(value) {
-        if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying FastDL state: ${String(value)}`);
 
@@ -733,7 +762,7 @@
      * @param {boolean} value
      */
     function applyTweakFastDLPost(value) {
-        if (currentPageType != PageTypes.POST) return;
+        if (currentPageType != utils.pageTypes.POST) return;
 
         utils.debugLog(`Applying FastDLPost state: ${String(value)}`);
 
@@ -752,7 +781,7 @@
      * @param {boolean} value
      */
     function applyTweakInfiniteScroll(value) {
-        if (currentPageType != PageTypes.GALLERY) return;
+        if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
         onDOMReady(() => {
@@ -767,7 +796,7 @@
      * @param {boolean} value
      */
     function applyTweakPaginatorOnTop(value) {
-        if (currentPageType != PageTypes.GALLERY) return;
+        if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
@@ -789,7 +818,7 @@
      * @param {boolean} value
      */
     function applyTweakGoToTop(value) {
-        if (currentPageType != PageTypes.GALLERY) return;
+        if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
@@ -1048,30 +1077,6 @@
             });
         }
     }
-    /**
-     * Current page type (see {@link PageTypes})
-     * @returns {string}
-     */
-    function getPageType() {
-        let params = new URLSearchParams(document.URL.split('?')[1]);
-
-        if (!params.has("page"))
-            return PageTypes.UNDEFINED;
-
-        if (params.get("page") == "post" && params.get("s") == "list")
-            return PageTypes.GALLERY;
-
-        if (params.get("page") == "post" && params.get("s") == "view")
-            return PageTypes.POST;
-
-        if (params.get("page") == "wiki" && params.get("s") == "view")
-            return PageTypes.WIKI_VIEW;
-
-        if (params.get("page") == "pool" && params.get("s") == "show")
-            return PageTypes.POOL_VIEW;
-
-        return PageTypes.UNDEFINED;
-    }
     /** 
      * @typedef PostItem
      * @property {string} highResThumb - high resolution thumb url (image/animated gif/video preview)
@@ -1096,7 +1101,7 @@
             let postCache = GM_getValue("postCache", {});
 
             // just clear postCache if exceeded limit
-            if (Object.keys(postCache).length > configManager.config.general.items.maxCache.value)
+            if (Object.keys(postCache).length > configManager.findValueByKey("general.maxCache"))
                 postCache = {};
 
             if (!postCache[postId]) {
@@ -1148,8 +1153,8 @@
     function downloadPostItem(post) {
         return new Promise((resolve, reject) => {
             //build filename
-            let filename = String(configManager.config.fastDL.items.pattern.value);
-            let spr = String(configManager.config.fastDL.items.separator.value);
+            let filename = String(configManager.findValueByKey("fastDL.pattern"));
+            let spr = String(configManager.findValueByKey("fastDL.separator"));
 
             filename = filename.replace("%md5%", post.md5);
             filename = filename.replace("%postId%", String(post.id));
@@ -1162,12 +1167,12 @@
             GM_download({
                 url: post.download,
                 name: filename + "." + post.download.split(".").at(-1),
-                saveAs: configManager.config.fastDL.items.saveAs.value,
+                saveAs: configManager.findValueByKey("fastDL.saveAs"),
                 onload: resolve("Download finished"),
                 onerror: (error, details) => reject({ error, details }),
             });
 
-            if (configManager.config.fastDL.items.saveTags.value) {
+            if (configManager.findValueByKey("fastDL.saveTags")) {
                 let text = post.tags.artist.map(i => "artist:" + i).join("\n") + "\n" +
                     post.tags.character.map(i => "character:" + i).join("\n") + "\n" +
                     post.tags.copyright.map(i => "series:" + i).join("\n") + "\n" +
@@ -1206,7 +1211,7 @@
         utils.debugLog("Updating prefItem with value", { pref, value });
 
         pref.value = value;
-        if (pref.update) pref.update(pref.value);
+        configManager.onUpdate(e.target.id, value);
     }
     /**
      * Returns thumbnails from current page
@@ -1214,9 +1219,9 @@
      */
     function getThumbnails() {
         switch (currentPageType) {
-            case PageTypes.GALLERY:
+            case utils.pageTypes.GALLERY:
                 return document.querySelectorAll(".thumbnail-preview > a > img");
-            case PageTypes.POST:
+            case utils.pageTypes.POST:
                 return document.querySelectorAll(".mainBodyPadding > div:last-of-type > a > img");
             default:
                 return undefined;
@@ -1296,10 +1301,10 @@
         let elem = e.target;
         let rect = elem.getBoundingClientRect();
         let xOrigin = rect.x + (rect.width / 2);
-
-        if (xOrigin - (rect.width * Number(configManager.config.thumbs.items.scale.value) / 2) <= window.innerWidth * 0.01) {
+        
+        if (xOrigin - (rect.width * Number(configManager.findValueByKey("thumbs.scale")) / 2) <= window.innerWidth * 0.01) {
             elem.style.transformOrigin = 'left';
-        } else if (xOrigin + (rect.width * Number(configManager.config.thumbs.items.scale.value) / 2) >= window.innerWidth * 0.99) {
+        } else if (xOrigin + (rect.width * Number(configManager.findValueByKey("thumbs.scale")) / 2) >= window.innerWidth * 0.99) {
             elem.style.transformOrigin = 'right';
         } else {
             elem.style.transformOrigin = '';
@@ -1359,7 +1364,7 @@
      * @param {Event} e 
      */
     function checkApplyInfiniteScroll(e) {
-        const threshold = Number(configManager.config.infiniteScroll.items.threshold.value);
+        const threshold = Number(configManager.findValueByKey("infiniteScroll.threshold"));
         if (document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
             if (!this.throttledScroll) this.throttledScroll = utils.debounceFirst(applyInfiniteScroll, 1000);
             this.throttledScroll();
@@ -1403,12 +1408,12 @@
 
                 // reapply tweaks related to gallery page
                 // some of them has dependent tweaks, skip it
-                applyTweakEnlargeOnHover(Boolean(configManager.config.thumbs.items.enlargeOnHover.value));
-                applyTweakLoadingIndicator(Boolean(configManager.config.thumbs.items.loader.value));
-                applyTweakRoundCorners(Boolean(configManager.config.thumbs.items.roundCorners.value));
-                applyTweakRemoveTitle(Boolean(configManager.config.thumbs.items.removeTitle.value));
-                applyTweakFastDL(Boolean(configManager.config.fastDL.items.thumbs.value));
-                applyTweakResizeThumbsGallery(Boolean(configManager.config.thumbs.items.resizeGallery.value));
+                applyTweakEnlargeOnHover(Boolean(configManager.findValueByKey("thumbs.enlargeOnHover")));
+                applyTweakLoadingIndicator(Boolean(configManager.findValueByKey("thumbs.loader")));
+                applyTweakRoundCorners(Boolean(configManager.findValueByKey("thumbs.roundCorners")));
+                applyTweakRemoveTitle(Boolean(configManager.findValueByKey("thumbs.removeTitle")));
+                applyTweakFastDL(Boolean(configManager.findValueByKey("fastDL.thumbs")));
+                applyTweakResizeThumbsGallery(Boolean(configManager.findValueByKey("thumbs.resizeGallery")));
 
                 let newPaginator = htmlDocument.querySelector(".pagination");
                 let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
@@ -1427,5 +1432,5 @@
                 document.title = htmlDocument.title;
             });
     }
-    
+
 })();

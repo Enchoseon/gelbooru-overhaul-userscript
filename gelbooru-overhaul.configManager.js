@@ -8,7 +8,6 @@ class ConfigManager {
      * @property {number | string | boolean} value          Value of preference
      * @property {string}                    name           Displayed name in config window
      * @property {string}                    description    Description displayed in config window
-     * @property {PreferenceUpdateCallback}  [update]       Function which applies value of preference
      * @property {boolean}                   [locked=false] Determines if preference should be available for editing
      * 
      * @typedef  PreferenceItemPacked
@@ -51,9 +50,9 @@ class ConfigManager {
     /**
      * Stores all the dispatch handlers
      * @private
-     * @type {Object<string,function[]>}
+     * @type {Object<string, PreferenceUpdateCallback[]>}
      */
-    dispatchHandlers;
+    dispatchHandlers = {};
     /**
      * @constructor
      */
@@ -63,15 +62,45 @@ class ConfigManager {
      * Registers an event listener
      * @public
      * @param {string} prefKey 
-     * @param {Function} handler 
+     * @param {PreferenceUpdateCallback} handler 
      * @returns {number} Number of listeners for gven key
      */
     addUpdateListener(prefKey, handler) {
+        if(!this.dispatchHandlers[prefKey]) this.dispatchHandlers[prefKey] = [];
         return this.dispatchHandlers[prefKey].push(handler);
     }
-    onUpdate(prefKey) {
+    /**
+     * Call handlers for given key using given arg
+     * @public
+     * @param {string} prefKey 
+     * @param {number | string | boolean} value 
+     */
+    onUpdate(prefKey, value) {
         let handlers = this.dispatchHandlers[prefKey];
-        if(handlers) handlers.forEach.call();
+        if(handlers) handlers.forEach(h => h(value));
+    }
+    /**
+     * 
+     * @param {string} prefKey 
+     * @returns {PreferenceItem} Found preference item or undefined
+     */
+    findItemByKey(prefKey){
+        if (!prefKey || prefKey.length < 1) return undefined;
+        let args = prefKey.split(".");
+
+        let cat = this.config[args[0]];
+        if (!cat) return undefined;
+
+        let item = cat.items[args[1]];
+        if (!item) return undefined;
+
+        return item;
+    }
+    findValueByKey(prefKey){
+        let item = this.findItemByKey(prefKey);
+        if (!item) return undefined;
+        
+        return item.value;
     }
     /**
      * Load config from the userscrip manager storage.
@@ -102,7 +131,11 @@ class ConfigManager {
      * @method applyConfig
      */
     applyConfig() {
-        Object.values(this.config).forEach(c => Object.values(c.items).forEach(i => { if (i.update) i.update(i.value); }));
+        Object.values(this.config).forEach(c => {
+            Object.entries(c.items).forEach(ie => {
+                this.onUpdate(utils.findPath(this.config, ie[0], ie[1]).substring(1), ie[1].value);
+            });
+        });
     }
     /**
      * Clears config storage with default config
@@ -183,8 +216,7 @@ class ConfigManager {
                     enable: {
                         name: "Enable",
                         description: "Enable advanced mulipreset danbooru-like blacklist",
-                        value: true,
-                        //update: applyTweakAdvancedBlacklist
+                        value: true
                     }
                 }
             },
@@ -194,27 +226,19 @@ class ConfigManager {
                     enable: {
                         value: true,
                         name: "Enable",
-                        description: "Hide the sidebar to the left on gallery and post pages",
-                        //update: applyTweakCollapseSidebar
-                    },
+                        description: "Hide the sidebar to the left on gallery and post pages"                    },
                     width: {
                         value: "5px",
                         name: "Collapsed width",
-                        description: "Width of collapsed sidebar",
-                        //update: applyCssVariableGoCollapseSidebar
-                    },
+                        description: "Width of collapsed sidebar"                    },
                     color: {
                         value: "red",
                         name: "Collapsed color",
-                        description: "Color of collapsed sidebar",
-                        //update: applyCssVariableGoCollapseSidebar
-                    },
+                        description: "Color of collapsed sidebar"                    },
                     opacity: {
                         value: "90%",
                         name: "Expanded opacity",
-                        description: "Opacity of expanded sidebar",
-                        //update: applyCssVariableGoCollapseSidebar
-                    }
+                        description: "Opacity of expanded sidebar"                    }
                 }
             },
             post: {
@@ -223,33 +247,23 @@ class ConfigManager {
                     center: {
                         value: true,
                         name: "Center Content",
-                        description: "Center image or video",
-                        //update: applyTweakPostCenter
-                    },
+                        description: "Center image or video"                    },
                     fitTweaks: {
                         value: true,
                         name: "Fit Tweaks",
-                        description: "Fit image by height and by width on 'expand image' click",
-                        //update: applyTweakPostFit
-                    },
+                        description: "Fit image by height and by width on 'expand image' click"                    },
                     fitHorizontallyOnNarrow: {
                         value: true,
                         name: "Fit Horizontally on narrow",
-                        description: "Fit image by width when tab is too narrow (<850px)",
-                        //update: applyTweakPostOnNarrow
-                    },
+                        description: "Fit image by width when tab is too narrow (<850px)"                    },
                     switchFitOnClick: {
                         value: true,
                         name: "Switch fit on click",
-                        description: "Click on image to switch fit mode (zoom in/zoom out)",
-                        //update: applyTweakPostClickSwitchFit
-                    },
+                        description: "Click on image to switch fit mode (zoom in/zoom out)"                    },
                     autoScroll: {
                         value: true,
                         name: "Auto scroll",
-                        description: "Scroll to post content itself when it loads, can be annoying and agressive",
-                        //update: applyTweakPostAutoScroll
-                    }
+                        description: "Scroll to post content itself when it loads, can be annoying and agressive"                    }
                 }
             },
             thumbs: {
@@ -258,69 +272,47 @@ class ConfigManager {
                     resizeGallery: {
                         value: true,
                         name: "Resize gallery thumbnails",
-                        description: "Allows to set custom thumbnail size using value below.",
-                        //update: applyTweakResizeThumbsGallery
-                    },
+                        description: "Allows to set custom thumbnail size using value below."                    },
                     resizeGallerySize: {
                         value: "175px",
                         name: "Max size of gallery thumbnail",
-                        description: "Keep in mind that images are 250x250px. There is no point in a greater number.",
-                        //update: applyCssVariableGoThumbnailResize
-                    },
+                        description: "Keep in mind that images are 250x250px. There is no point in a greater number."                    },
                     resizeMoreLikeThis: {
                         value: true,
                         name: "Resize 'More Like This' thumbnails",
-                        description: "Allows to set custom thumbnail size using value below.",
-                        //update: applyTweakResizeThumbsMoreLikeThis
-                    },
+                        description: "Allows to set custom thumbnail size using value below."                    },
                     resizeMoreLikeThisSize: {
                         value: "175px",
                         name: "Max size of 'More Like This' thumbnail",
-                        description: "Keep in mind that images are 250x250px. There is no point in a greater number.",
-                        //update: applyCssVariableGoThumbnailResize
-                    },
+                        description: "Keep in mind that images are 250x250px. There is no point in a greater number."                    },
                     enlargeOnHover: {
                         value: true,
                         name: "Enlarge on hover",
-                        description: "Hover over the thumbnail to enlarge in",
-                        //update: applyTweakEnlargeOnHover
-                    },
+                        description: "Hover over the thumbnail to enlarge in"                    },
                     scale: {
                         value: 3,
                         name: "Enlarge scale",
-                        description: "The scale value is applied when zooming in",
-                        //update: applyCssVariableGoThumbnailEnlarge
-                    },
+                        description: "The scale value is applied when zooming in"                    },
                     highRes: {
                         value: true,
                         name: "Display high res",
-                        description: "Load high resolution image/video preview/animated gif when thumbnail is enlarged",
-                        //update: applyTweakLoadHighRes
-                    },
+                        description: "Load high resolution image/video preview/animated gif when thumbnail is enlarged"                    },
                     loader: {
                         value: true,
                         name: "Display loading indicator",
-                        description: "Show loading indicator until the high res version for the thumbnail being loaded",
-                        //update: applyTweakLoadingIndicator
-                    },
+                        description: "Show loading indicator until the high res version for the thumbnail being loaded"                    },
                     removeTitle: {
                         value: true,
                         name: "Remove title",
-                        description: "Remove popup hint for thumbnails to get rid of flicker and make viewing less annoying",
-                        //update: applyTweakRemoveTitle
-                    },
+                        description: "Remove popup hint for thumbnails to get rid of flicker and make viewing less annoying"                    },
                     preventOffScreen: {
                         value: true,
                         name: "Prevent off screen enlarging",
-                        description: "The images on the sides of the screen will not extend beyond",
-                        //update: applyTweakPreventOffScreen
-                    },
+                        description: "The images on the sides of the screen will not extend beyond"                    },
                     roundCorners: {
                         value: true,
                         name: "Round corners",
-                        description: "Add tiny corner round to the thumbnails",
-                        //update: applyTweakRoundCorners
-                    }
+                        description: "Add tiny corner round to the thumbnails"                    }
                 }
             },
             fastDL: {
@@ -329,15 +321,11 @@ class ConfigManager {
                     thumbs: {
                         value: false,
                         name: "For thumbnails",
-                        description: "RMB on thumbnail to download post (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress",
-                        //update: applyTweakFastDL
-                    },
+                        description: "RMB on thumbnail to download post (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress"                    },
                     post: {
                         value: false,
                         name: "For post",
-                        description: "RMB on post image to download it (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress",
-                        //update: applyTweakFastDLPost
-                    },
+                        description: "RMB on post image to download it (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress"                    },
                     saveAs: {
                         value: true,
                         name: "Use 'Save as'",
@@ -366,9 +354,7 @@ class ConfigManager {
                     enable: {
                         value: true,
                         name: "Enable",
-                        description: "Enable infinite scroll for gallery page. Refresh to clean page. History works wierd",
-                        //update: applyTweakInfiniteScroll
-                    },
+                        description: "Enable infinite scroll for gallery page. Refresh to clean page. History works wierd"                    },
                     threshold: {
                         value: 500,
                         name: "Infinite Scroll Threshold",
@@ -377,15 +363,11 @@ class ConfigManager {
                     paginatorOnTop: {
                         value: true,
                         name: "Copy paginator on top of gallery",
-                        description: "Place a copy of paginator on top of gallery to make navigation easier (or just possible with Infinite Scroll)",
-                        //update: applyTweakPaginatorOnTop
-                    },
+                        description: "Place a copy of paginator on top of gallery to make navigation easier (or just possible with Infinite Scroll)"                    },
                     goToTop: {
                         value: true,
                         name: "Go to top button",
-                        description: "Display floating 'Go to top' button",
-                        //update: applyTweakGoToTop
-                    }
+                        description: "Display floating 'Go to top' button"                    }
                 }
             }
         };
