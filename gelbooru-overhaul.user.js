@@ -12,13 +12,12 @@
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @resource    css 	https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.user.css
-// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.css
-// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.css
+// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.js
+// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.js
 // ==/UserScript==
 
 (function () {
     "use strict";
-
     /**
      * @class Class that manages light/dark theme switching
      */
@@ -116,7 +115,7 @@
          * applies default gelbooru light mode
          */
         applyDefaultLightMode() {
-            debugLog("Applying default light mode");
+            utils.debugLog("Applying default light mode");
 
             Object.values(document.head.querySelectorAll("link")).filter(i => i.href.includes("dark"))[0].remove();
 
@@ -126,7 +125,7 @@
          * applies default gelbooru dark mode
          */
         applyDefaultDarkMode() {
-            debugLog("Applying default dark mode");
+            utils.debugLog("Applying default dark mode");
 
             let link = document.createElement("link");
             link.setAttribute("rel", "stylesheet");
@@ -139,7 +138,7 @@
             utils.setCookie("dark_mode", "1");
         }
         applyCssThemeVariable() {
-            debugLog("Applying css theme variable");
+            utils.debugLog("Applying css theme variable");
 
             onDOMReady(() => {
                 /** @type {HTMLStyleElement} */
@@ -339,7 +338,7 @@
     const PageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
 
     let currentPageType = getPageType();
-    debugLog("Current page type is " + currentPageType, null, true);
+    utils.debugLog("Current page type is " + currentPageType, null, true);
 
     let configManager = new ConfigManager();
     configManager.loadConfig();
@@ -351,10 +350,10 @@
 
     configManager.applyConfig();
 
-    debugLog("Registering styles");
+    utils.debugLog("Registering styles");
     GM_addStyle(GM_getResourceText("css"));
 
-    debugLog("Registering config window");
+    utils.debugLog("Registering config window");
     registerConfigWindow();
 
     // lazy fix for the back button, don't want to deal with HTML5 stuff
@@ -367,7 +366,7 @@
     // Apply CSS Variables
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoCollapseSidebar() {
-        debugLog("Applying css variable .go-collapse-sidebar");
+        utils.debugLog("Applying css variable .go-collapse-sidebar");
 
         onDOMReady(() => {
             /** @type {HTMLStyleElement} */
@@ -393,7 +392,7 @@
     }
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoThumbnailEnlarge() {
-        debugLog("Applying css variable .go-thumbnail-enlarge");
+        utils.debugLog("Applying css variable .go-thumbnail-enlarge");
 
         onDOMReady(() => {
             /** @type {HTMLStyleElement} */
@@ -414,7 +413,7 @@
     }
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoThumbnailResize() {
-        debugLog("Applying css variable .go-thumbnail-resize");
+        utils.debugLog("Applying css variable .go-thumbnail-resize");
 
         onDOMReady(() => {
             /** @type {HTMLStyleElement} */
@@ -444,7 +443,7 @@
     function applyTweakCollapseSidebar(value) {
         if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
 
-        debugLog(`Applying TweakCollapseSidebar state: ${String(value)}`);
+        utils.debugLog(`Applying TweakCollapseSidebar state: ${String(value)}`);
         onDOMReady(() => {
             document.querySelector("#container > section").classList.toggle("go-collapse-sidebar", value);
             document.querySelector("#tag-list").classList.toggle("go-tag-list-top-bottom-padding", value);
@@ -462,7 +461,7 @@
      */
     function applyTweakPostFit(value) {
         if (currentPageType != PageTypes.POST) return;
-        debugLog(`Applying PostFit state: ${String(value)}`);
+        utils.debugLog(`Applying PostFit state: ${String(value)}`);
 
         onDOMReady(() => {
             document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
@@ -485,7 +484,7 @@
      */
     function applyTweakPostCenter(value) {
         if (currentPageType != PageTypes.POST) return;
-        debugLog(`Applying PostCenter state: ${String(value)}`);
+        utils.debugLog(`Applying PostCenter state: ${String(value)}`);
 
         onDOMReady(() => {
             document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
@@ -499,7 +498,7 @@
      */
     function applyTweakPostAutoScroll(value) {
         if (currentPageType != PageTypes.POST) return;
-        debugLog(`Applying PostAutoScroll state: ${String(value)}`);
+        utils.debugLog(`Applying PostAutoScroll state: ${String(value)}`);
 
         if (value)
             document.addEventListener("readystatechange", autoScroll);
@@ -512,7 +511,7 @@
      */
     function applyTweakPostOnNarrow(value) {
         if (currentPageType != PageTypes.POST) return;
-        debugLog(`Applying PostOnNarrow state: ${String(value)}`);
+        utils.debugLog(`Applying PostOnNarrow state: ${String(value)}`);
 
         onDOMReady(() => {
             document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
@@ -526,7 +525,7 @@
      */
     function applyTweakPostClickSwitchFit(value) {
         if (currentPageType != PageTypes.POST) return;
-        debugLog(`Applying PostClickSwitchFit state: ${String(value)}`);
+        utils.debugLog(`Applying PostClickSwitchFit state: ${String(value)}`);
 
         onDOMReady(() => {
             let img = document.querySelector("#image");
@@ -553,7 +552,7 @@
     function applyTweakEnlargeOnHover(value) {
         if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
 
-        debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
+        utils.debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
                 i.parentElement.classList.toggle("go-thumbnail-enlarge", value);
@@ -578,7 +577,7 @@
         // Dependencies check
         let dependValue = configManager.config.thumbs.items.enlargeOnHover.value && value;
 
-        debugLog(`Applying LoadHighRes state: ${String(dependValue)}`);
+        utils.debugLog(`Applying LoadHighRes state: ${String(dependValue)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -607,7 +606,7 @@
         let dependValue = configManager.config.thumbs.items.enlargeOnHover.value &&
             configManager.config.thumbs.items.highRes.value && value;
 
-        debugLog(`Applying LoadingIndicator state: ${String(dependValue)}`);
+        utils.debugLog(`Applying LoadingIndicator state: ${String(dependValue)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -629,7 +628,7 @@
         // Dependencies check
         let dependValue = configManager.config.thumbs.items.enlargeOnHover.value && value;
 
-        debugLog(`Applying PreventOffScreen state: ${String(dependValue)}`);
+        utils.debugLog(`Applying PreventOffScreen state: ${String(dependValue)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -649,7 +648,7 @@
     function applyTweakRoundCorners(value) {
         if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
 
-        debugLog(`Applying RoundCorners state: ${String(value)}`);
+        utils.debugLog(`Applying RoundCorners state: ${String(value)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -664,7 +663,7 @@
     function applyTweakRemoveTitle(value) {
         if (PageTypes.GALLERY != currentPageType) return;
 
-        debugLog(`Applying RemoveTitle state: ${String(value)}`);
+        utils.debugLog(`Applying RemoveTitle state: ${String(value)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -685,7 +684,7 @@
     function applyTweakResizeThumbsGallery(value) {
         if (PageTypes.GALLERY != currentPageType) return;
 
-        debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
+        utils.debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -701,7 +700,7 @@
     function applyTweakResizeThumbsMoreLikeThis(value) {
         if (PageTypes.POST != currentPageType) return;
 
-        debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
+        utils.debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -717,7 +716,7 @@
     function applyTweakFastDL(value) {
         if (![PageTypes.GALLERY, PageTypes.POST].includes(currentPageType)) return;
 
-        debugLog(`Applying FastDL state: ${String(value)}`);
+        utils.debugLog(`Applying FastDL state: ${String(value)}`);
 
         onDOMReady(() => {
             getThumbnails().forEach((i) => {
@@ -736,7 +735,7 @@
     function applyTweakFastDLPost(value) {
         if (currentPageType != PageTypes.POST) return;
 
-        debugLog(`Applying FastDLPost state: ${String(value)}`);
+        utils.debugLog(`Applying FastDLPost state: ${String(value)}`);
 
         onDOMReady(() => {
             let post = document.querySelector("#gelcomVideoPlayer, #image");
@@ -755,7 +754,7 @@
     function applyTweakInfiniteScroll(value) {
         if (currentPageType != PageTypes.GALLERY) return;
 
-        debugLog(`Applying InfiniteScroll state: ${String(value)}`);
+        utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
         onDOMReady(() => {
             if (value)
                 document.addEventListener("scroll", checkApplyInfiniteScroll);
@@ -770,7 +769,7 @@
     function applyTweakPaginatorOnTop(value) {
         if (currentPageType != PageTypes.GALLERY) return;
 
-        debugLog(`Applying InfiniteScroll state: ${String(value)}`);
+        utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
         onDOMReady(() => {
             if (value) {
@@ -792,7 +791,7 @@
     function applyTweakGoToTop(value) {
         if (currentPageType != PageTypes.GALLERY) return;
 
-        debugLog(`Applying InfiniteScroll state: ${String(value)}`);
+        utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
         onDOMReady(() => {
             if (value) {
@@ -1182,7 +1181,7 @@
                 elem.download = filename + ".txt";
                 elem.click();
             }
-            debugLog("Downloading started", { url: post.download, filename });
+            utils.debugLog("Downloading started", { url: post.download, filename });
         });
     }
     /**
@@ -1192,9 +1191,9 @@
     function downloadPostById(postId) {
         loadPostItem(postId)
             .then(p => downloadPostItem(p)
-                .then(() => debugLog("Post item successfully downloaded", p))
-                .catch((r) => debugLog("Failed to download post item", { post: p, error: r.error, details: r.details })))
-            .catch(e => debugLog("Failed to load post item for", { post: e.target, id: postId, error: e }));
+                .then(() => utils.debugLog("Post item successfully downloaded", p))
+                .catch((r) => utils.debugLog("Failed to download post item", { post: p, error: r.error, details: r.details })))
+            .catch(e => utils.debugLog("Failed to load post item for", { post: e.target, id: postId, error: e }));
     }
     /**
      * Updating and applying preference item value
@@ -1204,7 +1203,7 @@
      */
     function updatePreferenceItem(e, pref) {
         let value = e.target.type == "checkbox" ? e.target.checked : e.target.value;
-        debugLog("Updating prefItem with value", { pref, value });
+        utils.debugLog("Updating prefItem with value", { pref, value });
 
         pref.value = value;
         if (pref.update) pref.update(pref.value);
@@ -1234,7 +1233,7 @@
         let img = e.target;
         loadPostItem(/id=([0-9]+)/.exec(img.parentElement.getAttribute("href"))[1])
             .then((post) => img.src = post.highResThumb)
-            .catch((error) => debugLog("Failed to load highres image for following element with following error:", { img, error }));
+            .catch((error) => utils.debugLog("Failed to load highres image for following element with following error:", { img, error }));
 
     }
     /**
@@ -1255,11 +1254,11 @@
 
         if (image) {
             // only if image fit window
-            debugLog(`Height is ${window.innerHeight} vs ${image.height}`);
-            debugLog(`Width  is ${window.innerWidth} vs ${image.width}`);
+            utils.debugLog(`Height is ${window.innerHeight} vs ${image.height}`);
+            utils.debugLog(`Width  is ${window.innerWidth} vs ${image.width}`);
 
             if (window.innerHeight > image.height && window.innerWidth > image.width) {
-                debugLog("Scrolling");
+                utils.debugLog("Scrolling");
                 image.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
                 history.scrollRestoration = 'manual';
             } else {
@@ -1269,7 +1268,7 @@
         // not works for video
     }
     function toggleFitMode() {
-        debugLog("Toggling fit mode");
+        utils.debugLog("Toggling fit mode");
 
         let noteContainer = document.querySelector(".note-container");
         noteContainer.classList.toggle("go-fit-height");
@@ -1377,7 +1376,7 @@
         params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
         let nextPage = document.location.pathname + "?" + params;
         //document.querySelector("#paginator > a[alt='next']").getAttribute("href");
-        debugLog(`InfScrolling to pid ${params.get("pid")}`);
+        utils.debugLog(`InfScrolling to pid ${params.get("pid")}`);
 
         fetch(nextPage)
             .then(response => {
@@ -1393,7 +1392,7 @@
                 let firstOldThumb = oldThumbContainer.children[0];
 
                 if (!newThumbContainer.childElementCount) {
-                    debugLog("InfScrolling hit last page");
+                    utils.debugLog("InfScrolling hit last page");
                     isInfiniteScrollHitLastPage = true;
                     return;
                 }
