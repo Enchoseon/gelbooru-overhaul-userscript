@@ -141,25 +141,23 @@
         applyCssThemeVariable() {
             utils.debugLog("Applying css theme variable");
 
-            onDOMReady(() => {
-                /** @type {HTMLStyleElement} */
-                let style = document.querySelector("#goThemeVariables");
+            /** @type {HTMLStyleElement} */
+            let style = document.querySelector("#goThemeVariables");
 
-                if (!style) {
-                    style = document.createElement("style");
-                    style.id = "goThemeVariables";
-                    document.body.appendChild(style);
-                }
+            if (!style) {
+                style = document.createElement("style");
+                style.id = "goThemeVariables";
+                document.body.appendChild(style);
+            }
 
-                setTimeout(() => {
-                    let bodyColor = window.getComputedStyle(document.body).backgroundColor;
-                    style.innerHTML = `
-                        :root {
-                            --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
-                        }
-                    `;
-                }, 100);
-            });
+            setTimeout(() => {
+                let bodyColor = window.getComputedStyle(document.body).backgroundColor;
+                style.innerHTML = `
+                    :root {
+                        --background-color: ${bodyColor == "rgba(0, 0, 0, 0)" ? "white" : bodyColor};
+                    }
+                `;
+            }, 100);
         }
         scheduleCheckForThemeSwitch() {
             let date = new Date();
@@ -336,55 +334,69 @@
         }
     }
 
-    let currentPageType = utils.getPageType();
-    utils.debugLog("Current page type is " + currentPageType, null, true);
+    let currentPageType;
 
-    let configManager = new ConfigManager();
-    context.configManager = configManager;
-    configManager.loadConfig();
+    let configManager;
+    let themeManager;
+    let blacklistManager;
 
-    let themeManager = new ThemeManager();
-    let blacklistManager;// = new BlacklistManager();
+    let blackoutStyle = GM_addStyle(`body { visibility: hidden; }`);
 
-    configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
+    onDOMReady(main);
 
-    configManager.addUpdateListener("collapsibleSidebar.enable", applyTweakCollapseSidebar);
-    configManager.addUpdateListener("collapsibleSidebar.width", applyCssVariableGoCollapseSidebar);
-    configManager.addUpdateListener("collapsibleSidebar.color", applyCssVariableGoCollapseSidebar);
-    configManager.addUpdateListener("collapsibleSidebar.opacity", applyCssVariableGoCollapseSidebar);
+    function main() {
+        currentPageType = utils.getPageType();
+        utils.debugLog("Current page type is " + currentPageType, null, true);
 
-    configManager.addUpdateListener("post.center", applyTweakPostCenter);
-    configManager.addUpdateListener("post.fitTweaks", applyTweakPostFit);
-    configManager.addUpdateListener("post.fitHorizontallyOnNarrow", applyTweakPostOnNarrow);
-    configManager.addUpdateListener("post.switchFitOnClick", applyTweakPostClickSwitchFit);
-    configManager.addUpdateListener("post.autoScroll", applyTweakPostAutoScroll);
+        configManager = new ConfigManager();
+        context.configManager = configManager;
+        configManager.loadConfig();
 
-    configManager.addUpdateListener("thumbs.resizeGallery", applyTweakResizeThumbsGallery);
-    configManager.addUpdateListener("thumbs.resizeGallerySize", applyCssVariableGoThumbnailResize);
-    configManager.addUpdateListener("thumbs.resizeMoreLikeThis", applyTweakResizeThumbsMoreLikeThis);
-    configManager.addUpdateListener("thumbs.resizeMoreLikeThisSize", applyCssVariableGoThumbnailResize);
-    configManager.addUpdateListener("thumbs.enlargeOnHover", applyTweakEnlargeOnHover);
-    configManager.addUpdateListener("thumbs.scale", applyCssVariableGoThumbnailEnlarge);
-    configManager.addUpdateListener("thumbs.highRes", applyTweakLoadHighRes);
-    configManager.addUpdateListener("thumbs.loader", applyTweakLoadingIndicator);
-    configManager.addUpdateListener("thumbs.removeTitle", applyTweakRemoveTitle);
-    configManager.addUpdateListener("thumbs.preventOffScreen", applyTweakPreventOffScreen);
-    configManager.addUpdateListener("thumbs.roundCorners", applyTweakRoundCorners);
+        themeManager = new ThemeManager();
+        blacklistManager;// = new BlacklistManager();
 
-    configManager.addUpdateListener("fastDL.thumbs", applyTweakFastDL);
-    configManager.addUpdateListener("fastDL.post", applyTweakFastDLPost);
+        configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
 
-    configManager.addUpdateListener("infiniteScroll.enable", applyTweakInfiniteScroll);
-    configManager.addUpdateListener("infiniteScroll.paginatorOnTop", applyTweakPaginatorOnTop);
-    configManager.addUpdateListener("infiniteScroll.goToTop", applyTweakGoToTop);
+        configManager.addUpdateListener("collapsibleSidebar.enable", applyTweakCollapseSidebar);
+        configManager.addUpdateListener("collapsibleSidebar.width", applyCssVariableGoCollapseSidebar);
+        configManager.addUpdateListener("collapsibleSidebar.color", applyCssVariableGoCollapseSidebar);
+        configManager.addUpdateListener("collapsibleSidebar.opacity", applyCssVariableGoCollapseSidebar);
 
-    configManager.applyConfig();
+        configManager.addUpdateListener("post.center", applyTweakPostCenter);
+        configManager.addUpdateListener("post.fitTweaks", applyTweakPostFit);
+        configManager.addUpdateListener("post.fitHorizontallyOnNarrow", applyTweakPostOnNarrow);
+        configManager.addUpdateListener("post.switchFitOnClick", applyTweakPostClickSwitchFit);
+        configManager.addUpdateListener("post.autoScroll", applyTweakPostAutoScroll);
 
-    utils.debugLog("Registering styles");
-    GM_addStyle(GM_getResourceText("css"));
+        configManager.addUpdateListener("thumbs.resizeGallery", applyTweakResizeThumbsGallery);
+        configManager.addUpdateListener("thumbs.resizeGallerySize", applyCssVariableGoThumbnailResize);
+        configManager.addUpdateListener("thumbs.resizeMoreLikeThis", applyTweakResizeThumbsMoreLikeThis);
+        configManager.addUpdateListener("thumbs.resizeMoreLikeThisSize", applyCssVariableGoThumbnailResize);
+        configManager.addUpdateListener("thumbs.enlargeOnHover", applyTweakEnlargeOnHover);
+        configManager.addUpdateListener("thumbs.scale", applyCssVariableGoThumbnailEnlarge);
+        configManager.addUpdateListener("thumbs.highRes", applyTweakLoadHighRes);
+        configManager.addUpdateListener("thumbs.loader", applyTweakLoadingIndicator);
+        configManager.addUpdateListener("thumbs.removeTitle", applyTweakRemoveTitle);
+        configManager.addUpdateListener("thumbs.preventOffScreen", applyTweakPreventOffScreen);
+        configManager.addUpdateListener("thumbs.roundCorners", applyTweakRoundCorners);
 
-    utils.debugLog("Registering config window");
-    registerConfigWindow();
+        configManager.addUpdateListener("fastDL.thumbs", applyTweakFastDL);
+        configManager.addUpdateListener("fastDL.post", applyTweakFastDLPost);
+
+        configManager.addUpdateListener("infiniteScroll.enable", applyTweakInfiniteScroll);
+        configManager.addUpdateListener("infiniteScroll.paginatorOnTop", applyTweakPaginatorOnTop);
+        configManager.addUpdateListener("infiniteScroll.goToTop", applyTweakGoToTop);
+
+        configManager.applyConfig();
+
+        utils.debugLog("Registering styles");
+        GM_addStyle(GM_getResourceText("css"));
+
+        utils.debugLog("Registering config window");
+        registerConfigWindow();
+
+        blackoutStyle.remove();
+    }
 
     // lazy fix for the back button, don't want to deal with HTML5 stuff
     window.onpopstate = function (event) {
@@ -398,70 +410,64 @@
     function applyCssVariableGoCollapseSidebar() {
         utils.debugLog("Applying css variable .go-collapse-sidebar");
 
-        onDOMReady(() => {
-            /** @type {HTMLStyleElement} */
-            let style = document.querySelector("#goCollapseSidebarVariables");
+        /** @type {HTMLStyleElement} */
+        let style = document.querySelector("#goCollapseSidebarVariables");
 
-            if (!style) {
-                style = document.createElement("style");
-                style.id = "goCollapseSidebarVariables";
-                document.body.appendChild(style);
-            }
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "goCollapseSidebarVariables";
+            document.body.appendChild(style);
+        }
 
-            style.innerHTML = `
-            .go-collapse-sidebar {
-                --collapsed-width: ${configManager.findValueByKey("collapsibleSidebar.width")};
-                --collapsed-color: ${configManager.findValueByKey("collapsibleSidebar.color")};
-                --expanded-opacity: ${configManager.findValueByKey("collapsibleSidebar.opacity")};
-            }
-            .go-collapse-sidebar-container-tweak {
-                --collapsed-width: ${configManager.findValueByKey("collapsibleSidebar.width")};
-            }
-            `;
-        });
+        style.innerHTML = `
+        .go-collapse-sidebar {
+            --collapsed-width: ${configManager.findValueByKey("collapsibleSidebar.width")};
+            --collapsed-color: ${configManager.findValueByKey("collapsibleSidebar.color")};
+            --expanded-opacity: ${configManager.findValueByKey("collapsibleSidebar.opacity")};
+        }
+        .go-collapse-sidebar-container-tweak {
+            --collapsed-width: ${configManager.findValueByKey("collapsibleSidebar.width")};
+        }
+        `;
     }
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoThumbnailEnlarge() {
         utils.debugLog("Applying css variable .go-thumbnail-enlarge");
 
-        onDOMReady(() => {
-            /** @type {HTMLStyleElement} */
-            let style = document.querySelector("#goThumbnailEnlargeVariables");
+        /** @type {HTMLStyleElement} */
+        let style = document.querySelector("#goThumbnailEnlargeVariables");
 
-            if (!style) {
-                style = document.createElement("style");
-                style.id = "goThumbnailEnlargeVariables";
-                document.body.appendChild(style);
-            }
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "goThumbnailEnlargeVariables";
+            document.body.appendChild(style);
+        }
 
-            style.innerHTML = `
-            .go-thumbnail-enlarge {
-                --enlarge-scale: ${configManager.findValueByKey("thumbs.scale")};
-            }
-            `;
-        });
+        style.innerHTML = `
+        .go-thumbnail-enlarge {
+            --enlarge-scale: ${configManager.findValueByKey("thumbs.scale")};
+        }
+        `;
     }
     /** @type {PreferenceUpdateCallback} */
     function applyCssVariableGoThumbnailResize() {
         utils.debugLog("Applying css variable .go-thumbnail-resize");
 
-        onDOMReady(() => {
-            /** @type {HTMLStyleElement} */
-            let style = document.querySelector("#goThumbnailResizeVariables");
+        /** @type {HTMLStyleElement} */
+        let style = document.querySelector("#goThumbnailResizeVariables");
 
-            if (!style) {
-                style = document.createElement("style");
-                style.id = "goThumbnailResizeVariables";
-                document.body.appendChild(style);
-            }
-            
-            style.innerHTML = `
-            .go-thumbnail-resize {
-                --thumb-gallery-size: ${configManager.findValueByKey("thumbs.resizeGallerySize")};
-                --thumb-morelikethis-size: ${configManager.findValueByKey("thumbs.resizeMoreLikeThisSize")};
-            }
-            `;
-        });
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "goThumbnailResizeVariables";
+            document.body.appendChild(style);
+        }
+
+        style.innerHTML = `
+        .go-thumbnail-resize {
+            --thumb-gallery-size: ${configManager.findValueByKey("thumbs.resizeGallerySize")};
+            --thumb-morelikethis-size: ${configManager.findValueByKey("thumbs.resizeMoreLikeThisSize")};
+        }
+        `;
     }
 
     // Apply Tweak
@@ -474,15 +480,15 @@
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying TweakCollapseSidebar state: ${String(value)}`);
-        onDOMReady(() => {
-            document.querySelector("#container > section").classList.toggle("go-collapse-sidebar", value);
-            document.querySelector("#tag-list").classList.toggle("go-tag-list-top-bottom-padding", value);
 
-            document.querySelectorAll("#tag-list > li[class^='tag-type']").forEach((i) => { i.classList.toggle("go-collapse-sidebar-tags-list-tweak", value); });
-            document.querySelector("#container").classList.toggle("go-collapse-sidebar-container-tweak", value);
-            Object.values(document.getElementsByClassName("mobile-spacing")).forEach((i) => { i.classList.toggle("go-mobile-unspacing", value); });
-            Object.values(document.getElementsByClassName("sm-hidden")).forEach((i) => { i.classList.toggle("go-sm-unhidden", value); });
-        });
+        document.querySelector("#container > section").classList.toggle("go-collapse-sidebar", value);
+        document.querySelector("#tag-list").classList.toggle("go-tag-list-top-bottom-padding", value);
+
+        document.querySelectorAll("#tag-list > li[class^='tag-type']").forEach((i) => { i.classList.toggle("go-collapse-sidebar-tags-list-tweak", value); });
+        document.querySelector("#container").classList.toggle("go-collapse-sidebar-container-tweak", value);
+        Object.values(document.getElementsByClassName("mobile-spacing")).forEach((i) => { i.classList.toggle("go-mobile-unspacing", value); });
+        Object.values(document.getElementsByClassName("sm-hidden")).forEach((i) => { i.classList.toggle("go-sm-unhidden", value); });
+
     }
     //      Post
     /**
@@ -493,20 +499,19 @@
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostFit state: ${String(value)}`);
 
-        onDOMReady(() => {
-            document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
-                i.classList.toggle("go-fit-height", value);
-                i.classList.toggle("fit-width", !value);
-            });
-
-            let resizeLink = document.querySelector("#resize-link > a");
-            if (resizeLink) {
-                if (value)
-                    resizeLink.addEventListener("click", toggleFitMode);
-                else
-                    resizeLink.removeEventListener("click", toggleFitMode);
-            }
+        document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
+            i.classList.toggle("go-fit-height", value);
+            i.classList.toggle("fit-width", !value);
         });
+
+        let resizeLink = document.querySelector("#resize-link > a");
+        if (resizeLink) {
+            if (value)
+                resizeLink.addEventListener("click", toggleFitMode);
+            else
+                resizeLink.removeEventListener("click", toggleFitMode);
+        }
+
     }
     /**
      * @type {PreferenceUpdateCallback}
@@ -516,10 +521,8 @@
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostCenter state: ${String(value)}`);
 
-        onDOMReady(() => {
-            document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
-                i.classList.toggle("go-center", value);
-            });
+        document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
+            i.classList.toggle("go-center", value);
         });
     }
     /**
@@ -543,10 +546,8 @@
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostOnNarrow state: ${String(value)}`);
 
-        onDOMReady(() => {
-            document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
-                i.classList.toggle("go-fit-width-on-narrow", value);
-            });
+        document.querySelectorAll(".note-container, #image, #gelcomVideoPlayer").forEach(i => {
+            i.classList.toggle("go-fit-width-on-narrow", value);
         });
     }
     /**
@@ -557,22 +558,20 @@
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostClickSwitchFit state: ${String(value)}`);
 
-        onDOMReady(() => {
-            let img = document.querySelector("#image");
-            let resizeLink = document.querySelector("#resize-link > a");
+        let img = document.querySelector("#image");
+        let resizeLink = document.querySelector("#resize-link > a");
 
-            if (!img || !resizeLink)
-                return;
+        if (!img || !resizeLink)
+            return;
 
-            if (value) {
-                img.classList.add("go-cursor-zoom-in");
-                img.addEventListener("click", toggleFitModeWithCursors);
-            } else {
-                img.classList.remove("go-cursor-zoom-in");
-                img.classList.remove("go-cursor-zoom-out");
-                img.removeEventListener("click", toggleFitModeWithCursors);
-            }
-        });
+        if (value) {
+            img.classList.add("go-cursor-zoom-in");
+            img.addEventListener("click", toggleFitModeWithCursors);
+        } else {
+            img.classList.remove("go-cursor-zoom-in");
+            img.classList.remove("go-cursor-zoom-out");
+            img.removeEventListener("click", toggleFitModeWithCursors);
+        }
     }
     //      Thumbs
     /**
@@ -583,15 +582,15 @@
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                i.parentElement.classList.toggle("go-thumbnail-enlarge", value);
 
-                if (currentPageType == utils.pageTypes.POST)
-                    i.style.margin = '';
-                i.parentElement.style.margin = '10px'; //TODO: css
-            });
+        getThumbnails().forEach((i) => {
+            i.parentElement.classList.toggle("go-thumbnail-enlarge", value);
+
+            if (currentPageType == utils.pageTypes.POST)
+                i.style.margin = '';
+            i.parentElement.style.margin = '10px'; //TODO: css
         });
+
 
         // Dependent tweak
         applyTweakLoadHighRes(Boolean(configManager.findValueByKey("thumbs.highRes")));
@@ -609,17 +608,15 @@
 
         utils.debugLog(`Applying LoadHighRes state: ${String(dependValue)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                if (dependValue) {
-                    i.setAttribute("data-thumb-src", i.src);
-                    i.addEventListener("mouseenter", setImageHighResSource);
-                    i.addEventListener("mouseleave", setImageLowResSource);
-                } else {
-                    i.removeEventListener("mouseenter", setImageHighResSource);
-                    i.removeEventListener("mouseleave", setImageLowResSource);
-                }
-            });
+        getThumbnails().forEach((i) => {
+            if (dependValue) {
+                i.setAttribute("data-thumb-src", i.src);
+                i.addEventListener("mouseenter", setImageHighResSource);
+                i.addEventListener("mouseleave", setImageLowResSource);
+            } else {
+                i.removeEventListener("mouseenter", setImageHighResSource);
+                i.removeEventListener("mouseleave", setImageLowResSource);
+            }
         });
 
         // Dependent tweak
@@ -637,14 +634,12 @@
 
         utils.debugLog(`Applying LoadingIndicator state: ${String(dependValue)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                if (dependValue) {
-                    i.addEventListener("mouseenter", addLoadingIndicator);
-                } else {
-                    i.removeEventListener("mouseenter", addLoadingIndicator);
-                }
-            });
+        getThumbnails().forEach((i) => {
+            if (dependValue) {
+                i.addEventListener("mouseenter", addLoadingIndicator);
+            } else {
+                i.removeEventListener("mouseenter", addLoadingIndicator);
+            }
         });
     }
     /** 
@@ -659,15 +654,13 @@
 
         utils.debugLog(`Applying PreventOffScreen state: ${String(dependValue)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                if (dependValue) {
-                    i.parentElement.addEventListener("mouseenter", updateTransformOrigin);
-                } else {
-                    i.parentElement.removeEventListener("mouseenter", updateTransformOrigin);
-                    i.parentElement.style.transformOrigin = "";
-                }
-            });
+        getThumbnails().forEach((i) => {
+            if (dependValue) {
+                i.parentElement.addEventListener("mouseenter", updateTransformOrigin);
+            } else {
+                i.parentElement.removeEventListener("mouseenter", updateTransformOrigin);
+                i.parentElement.style.transformOrigin = "";
+            }
         });
     }
     /** 
@@ -679,10 +672,8 @@
 
         utils.debugLog(`Applying RoundCorners state: ${String(value)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                i.classList.toggle("go-thumbnail-corners", value);
-            });
+        getThumbnails().forEach((i) => {
+            i.classList.toggle("go-thumbnail-corners", value);
         });
     }
     /** 
@@ -694,16 +685,14 @@
 
         utils.debugLog(`Applying RemoveTitle state: ${String(value)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                if (value) {
-                    i.setAttribute("data-title", i.getAttribute("title"));
-                    i.removeAttribute("title");
-                } else {
-                    i.setAttribute("title", i.getAttribute("data-title"));
-                    i.removeAttribute("data-title");
-                }
-            });
+        getThumbnails().forEach((i) => {
+            if (value) {
+                i.setAttribute("data-title", i.getAttribute("title"));
+                i.removeAttribute("title");
+            } else {
+                i.setAttribute("title", i.getAttribute("data-title"));
+                i.removeAttribute("data-title");
+            }
         });
     }
     /** 
@@ -715,11 +704,9 @@
 
         utils.debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                i.classList.toggle("go-thumbnail-resize", value);
-                i.parentElement.parentElement.classList.toggle("go-thumbnail-resize", value); // img < a < (article) < div.thumbnail-container
-            });
+        getThumbnails().forEach((i) => {
+            i.classList.toggle("go-thumbnail-resize", value);
+            i.parentElement.parentElement.classList.toggle("go-thumbnail-resize", value); // img < a < (article) < div.thumbnail-container
         });
     }
     /** 
@@ -731,10 +718,8 @@
 
         utils.debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                i.classList.toggle("go-thumbnail-resize", value);
-            });
+        getThumbnails().forEach((i) => {
+            i.classList.toggle("go-thumbnail-resize", value);
         });
     }
     //      FastDL
@@ -747,14 +732,12 @@
 
         utils.debugLog(`Applying FastDL state: ${String(value)}`);
 
-        onDOMReady(() => {
-            getThumbnails().forEach((i) => {
-                if (value) {
-                    i.addEventListener("contextmenu", downloadThumbWithRMB);
-                } else {
-                    i.removeEventListener("contextmenu", downloadThumbWithRMB);
-                }
-            });
+        getThumbnails().forEach((i) => {
+            if (value) {
+                i.addEventListener("contextmenu", downloadThumbWithRMB);
+            } else {
+                i.removeEventListener("contextmenu", downloadThumbWithRMB);
+            }
         });
     }
     /**
@@ -766,14 +749,12 @@
 
         utils.debugLog(`Applying FastDLPost state: ${String(value)}`);
 
-        onDOMReady(() => {
-            let post = document.querySelector("#gelcomVideoPlayer, #image");
-            if (value) {
-                post.addEventListener("contextmenu", downloadPostWithRMB);
-            } else {
-                post.removeEventListener("contextmenu", downloadPostWithRMB);
-            }
-        });
+        let post = document.querySelector("#gelcomVideoPlayer, #image");
+        if (value) {
+            post.addEventListener("contextmenu", downloadPostWithRMB);
+        } else {
+            post.removeEventListener("contextmenu", downloadPostWithRMB);
+        }
     }
     //      Infinite Scroll
     /**
@@ -784,12 +765,9 @@
         if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
-        onDOMReady(() => {
-            if (value)
-                document.addEventListener("scroll", checkApplyInfiniteScroll);
-            else
-                document.removeEventListener("scroll", checkApplyInfiniteScroll);
-        });
+
+        if (value) document.addEventListener("scroll", checkApplyInfiniteScroll);
+        else document.removeEventListener("scroll", checkApplyInfiniteScroll);
     }
     /**
      * @type {PreferenceUpdateCallback}
@@ -800,18 +778,16 @@
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
-        onDOMReady(() => {
-            if (value) {
-                if (document.querySelector(".top-pagination")) return;
+        if (value) {
+            if (document.querySelector(".top-pagination")) return;
 
-                /** @type {HTMLElement} */
-                let topPagination = document.querySelector(".pagination").cloneNode(true);
-                topPagination.classList.add("top-pagination");
-                document.querySelector("main").insertBefore(topPagination, document.querySelector(".thumbnail-container"));
-            } else {
-                document.querySelector(".top-pagination").remove();
-            }
-        });
+            /** @type {HTMLElement} */
+            let topPagination = document.querySelector(".pagination").cloneNode(true);
+            topPagination.classList.add("top-pagination");
+            document.querySelector("main").insertBefore(topPagination, document.querySelector(".thumbnail-container"));
+        } else {
+            document.querySelector(".top-pagination").remove();
+        }
     }
     /**
      * @type {PreferenceUpdateCallback}
@@ -822,23 +798,21 @@
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
-        onDOMReady(() => {
-            if (value) {
-                let goTopDiv = document.createElement("div");
-                let goTopA = document.createElement("a");
+        if (value) {
+            let goTopDiv = document.createElement("div");
+            let goTopA = document.createElement("a");
 
-                goTopDiv.className = "alert alert-info";
-                goTopDiv.id = "go-top";
-                goTopDiv.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            goTopDiv.className = "alert alert-info";
+            goTopDiv.id = "go-top";
+            goTopDiv.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-                goTopA.textContent = "Go Top";
+            goTopA.textContent = "Go Top";
 
-                goTopDiv.appendChild(goTopA);
-                document.body.appendChild(goTopDiv);
-            } else {
-                document.querySelector("#go-top").remove();
-            }
-        });
+            goTopDiv.appendChild(goTopA);
+            document.body.appendChild(goTopDiv);
+        } else {
+            document.querySelector("#go-top").remove();
+        }
     }
     //      Advanced Blacklist
     /**
@@ -869,12 +843,10 @@
         // button to open window
         let settingsButton = buildSettingsButton(sDiv);
 
-        onDOMReady(() => {
-            let topnav = document.querySelector("#myTopnav");
-            topnav.insertBefore(settingsButton, topnav.querySelectorAll("a")[1]);
+        let topnav = document.querySelector("#myTopnav");
+        topnav.insertBefore(settingsButton, topnav.querySelectorAll("a")[1]);
 
-            document.querySelector("#container").appendChild(sDiv);
-        });
+        document.querySelector("#container").appendChild(sDiv);
 
         function buildSettingsButton(settingsElem) {
             let settingsButton = document.createElement("a");
@@ -1301,7 +1273,7 @@
         let elem = e.target;
         let rect = elem.getBoundingClientRect();
         let xOrigin = rect.x + (rect.width / 2);
-        
+
         if (xOrigin - (rect.width * Number(configManager.findValueByKey("thumbs.scale")) / 2) <= window.innerWidth * 0.01) {
             elem.style.transformOrigin = 'left';
         } else if (xOrigin + (rect.width * Number(configManager.findValueByKey("thumbs.scale")) / 2) >= window.innerWidth * 0.99) {
