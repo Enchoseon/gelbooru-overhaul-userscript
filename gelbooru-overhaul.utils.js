@@ -1,5 +1,6 @@
 class context {
     static configManager;
+    static pageType;
 }
 class utils {
     /** @var {Object.<string, string>} Enum with available page types */
@@ -188,4 +189,153 @@ class utils {
     static clearCookie(name) {
         document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
+    /**
+     * Returns thumbnails from current page
+     * @returns {NodeListOf<HTMLImageElement>}
+     */
+    static getThumbnails() {
+        switch (context.pageType) {
+            case utils.pageTypes.GALLERY:
+                return document.querySelectorAll(".thumbnail-preview > a > img");
+            case utils.pageTypes.POST:
+                return document.querySelectorAll(".mainBodyPadding > div:last-of-type > a > img");
+            default:
+                return undefined;
+        }
+    }
+    /** 
+     * @typedef PostItem
+     * @property {string} highResThumb - high resolution thumb url (image/animated gif/video preview)
+     * @property {string} download - download url (original image/gif/video)
+     * @property {Object} tags - list of tags by category
+     * @property {string[]} tags.artist - artist tags (can be empty)
+     * @property {string[]} tags.character - character tags (can be empty)
+     * @property {string[]} tags.copyright - copyright tags (can be empty)
+     * @property {string[]} tags.metadata - metadata tags (can be empty)
+     * @property {string[]} tags.general - general tags (can be empty)
+     * @property {string} md5 - md5 for file (0's for video)
+     * @property {number} id - post id
+     */
+    /**
+     * Cache and return post item
+     * @param {number} postId 
+     * @returns {Promise<PostItem>}
+     */
+    static loadPostItem(postId) {
+        return new Promise((resolve, reject) => {
+            /** @type {Object<number, PostItem} */
+            let postCache = GM_getValue("postCache", {});
+
+            // just clear postCache if exceeded limit
+            if (Object.keys(postCache).length > context.configManager.findValueByKey("general.maxCache"))
+                postCache = {};
+
+            if (!postCache[postId]) {
+                fetch("https://" + window.location.host + "/index.php?page=post&s=view&id=" + postId)
+                    .then(response => {
+                        if (!response.ok) throw Error(response.statusText);
+                        return response.text();
+                    })
+                    .then(text => {
+                        let parser = new DOMParser();
+                        let htmlDocument = parser.parseFromString(text, "text/html");
+
+                        let fileLink = htmlDocument.querySelector("meta[property='og:image']").content;
+                        let highResThumb = htmlDocument.querySelector("video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
+                        let md5 = htmlDocument.querySelector("video") ? "0".repeat(32) : htmlDocument.querySelector("section.image-container").getAttribute("data-md5");
+                        // video have highRes thumbnail but does not have md5
+
+                        let tags = {
+                            artist: [...htmlDocument.querySelectorAll(".tag-type-artist       > a")].map(i => i.text),
+                            character: [...htmlDocument.querySelectorAll(".tag-type-character > a")].map(i => i.text),
+                            copyright: [...htmlDocument.querySelectorAll(".tag-type-copyright > a")].map(i => i.text),
+                            metadata: [...htmlDocument.querySelectorAll(".tag-type-metadata   > a")].map(i => i.text),
+                            general: [...htmlDocument.querySelectorAll(".tag-type-general     > a")].map(i => i.text),
+                        };
+
+                        if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
+
+                        postCache[postId] = {
+                            highResThumb: highResThumb,
+                            download: fileLink,
+                            tags: tags,
+                            md5: md5,
+                            id: postId
+                        };
+                        GM_setValue("postCache", postCache);
+                        resolve(postCache[postId]);
+                    })
+                    .catch(error => reject(error));
+            } else {
+                resolve(postCache[postId]);
+            }
+        });
+    }
+    /**
+     * 
+     * @param {PostItem} post 
+     * @returns {Promise}
+     */
+    static downloadPostItem(post) {
+        return new Promise((resolve, reject) => {
+            //build filename
+            let filename = String(context.configManager.findValueByKey("fastDL.pattern"));
+            let spr = String(context.configManager.findValueByKey("fastDL.separator"));
+
+            filename = filename.replace("%md5%", post.md5);
+            filename = filename.replace("%postId%", String(post.id));
+            filename = filename.replace("%artist%", post.tags.artist.length ? post.tags.artist.join(spr) : "unknown_artist");
+            filename = filename.replace("%character%", post.tags.character.length ? post.tags.character.join(spr) : "unknown_character");
+            filename = filename.replace("%copyright%", post.tags.copyright.length ? post.tags.copyright.join(spr) : "unknown_copyright");
+
+            filename = filename.replace(/[<>:"/\|?*]/, "_"); // illegal chars
+
+            GM_download({
+                url: post.download,
+                name: filename + "." + post.download.split(".").at(-1),
+                saveAs: context.configManager.findValueByKey("fastDL.saveAs"),
+                onload: resolve("Download finished"),
+                onerror: (error, details) => reject({ error, details }),
+            });
+
+            if (context.configManager.findValueByKey("fastDL.saveTags")) {
+                let text = post.tags.artist.map(i => "artist:" + i).join("\n") + "\n" +
+                    post.tags.character.map(i => "character:" + i).join("\n") + "\n" +
+                    post.tags.copyright.map(i => "series:" + i).join("\n") + "\n" +
+                    post.tags.metadata.map(i => "meta:" + i).join("\n") + "\n" +
+                    post.tags.general.join("\n") + "\n";
+
+                text = text.replaceAll("\n\n", "\n");
+
+                let elem = document.createElement("a");
+                elem.href = "data:text," + encodeURIComponent(text);
+                elem.download = filename + ".txt";
+                elem.click();
+            }
+            utils.debugLog("Downloading started", { url: post.download, filename });
+        });
+    }
+    /**
+     * 
+     * @param {number} postId
+     */
+    static downloadPostById(postId) {
+        loadPostItem(postId)
+            .then(p => downloadPostItem(p)
+                .then(() => utils.debugLog("Post item successfully downloaded", p))
+                .catch((r) => utils.debugLog("Failed to download post item", { post: p, error: r.error, details: r.details })))
+            .catch(e => utils.debugLog("Failed to load post item for", { post: e.target, id: postId, error: e }));
+    }
+    /**
+     * Wildcard converter (*? supported)
+     * @link https://stackoverflow.com/a/57527468
+     * @param {string} wildcard 
+     * @param {string} str 
+     * @returns {boolean} If str matches wildcard
+     */
+    static wildTest(wildcard, str) {
+        let w = wildcard.replace(/[.+^${}()|[\]\\]/g, '\\$&'); // regexp escape 
+        const re = new RegExp(`^${w.replace(/\*/g,'.*').replace(/\?/g,'.')}$`,'i');
+        return re.test(str); // remove last 'i' above to have case sensitive
+      }
 }

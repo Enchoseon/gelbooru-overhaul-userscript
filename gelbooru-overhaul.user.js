@@ -14,6 +14,7 @@
 // @resource    css 	https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.user.css
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.js
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.js
+// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.blacklistManager.js
 // ==/UserScript==
 
 (function () {
@@ -169,171 +170,7 @@
             }
         }
     }
-    /**
-     * @class Class that manages blacklist features
-     */
-    class BlacklistManager {
-        /**
-         * @typedef  BlacklistEntry
-         * @type     {Object}
-         * @property {string}  tag        Blacklisted tag
-         * @property {boolean} isAnd      Describes if entry includes multiple tags
-         * @property {number}  hits       Displayed count of hits
-         * @property {boolean} isDisabled Describes if entry is disabled
-         * @property {HTMLElement} elem   Reference to displayed element
-         * 
-         * @typedef BlacklistItem
-         * @type {Object}
-         * @property {string} name
-         * @property {string} value
-         */
-        /**
-         * @type {BlacklistEntry[]}
-         * @private
-         */
-        blacklistEntries;
-        /**
-         * @type {BlacklistItem}
-         * @private
-         */
-        selectedBlacklistItem;
-
-        constructor() {
-            let item = { name: "Safe mode", value: "rating:q*\nrating:e*" };
-            this.addUpdateBlacklist(item);
-        }
-        /**
-         * @private
-         * @returns {BlacklistItem[]} List of available blacklists
-         */
-        get blacklistItems() {
-            return GM_getValue("blacklists", undefined);
-        }
-        /**
-         * @private
-         * @param {BlacklistItem[]} value
-         */
-        set blacklistItems(value) {
-            GM_setValue("blacklists", value);
-        }
-        /**
-         * Adds/updates blacklist item to storage
-         * @param {BlacklistItem} item 
-         * @private
-         */
-        addUpdateBlacklist(item) {
-            let items = this.blacklistItems;
-
-            if (!items)
-                items = [];
-
-            let index = items.findIndex(i => i.name == item.name);
-
-            if (index == -1) {
-                items.push(item);
-            } else {
-                items[index] = item;
-            }
-
-            this.blacklistItems = items;
-
-            this.updateSidebar();
-        }
-        /**
-         * Removes blacklist item from storage
-         * @param {BlacklistItem} item 
-         * @private
-         */
-        removeBlacklist(item) {
-            let index = this.blacklistItems.findIndex(i => i.name == item.name);
-
-            this.blacklistItems.splice(index, 1);
-
-            this.updateSidebar();
-        }
-
-        /**
-         * Parse current blacklist item's entries
-         */
-        parseEntries() { }
-
-        /**
-         * Updates blacklist sidebar placed above tags sidebar
-         * @private
-         */
-        updateSidebar() {
-            let aside = document.querySelector(".aside");
-            let titleSpan = aside.querySelector("#go-advBlacklistTitle");
-            let select = aside.querySelector("#go-advBlacklistSelect");
-
-            if (titleSpan) {
-                //update
-            } else {
-                //title
-                titleSpan = document.createElement("span");
-                titleSpan.id = "go-advBlacklistTitle";
-
-                titleSpan.appendChild(document.createElement("br"));
-
-                let b = document.createElement("b");
-                b.textContent = "Blacklist";
-                b.style = "margin-left: 15px;";
-                titleSpan.appendChild(b);
-
-                titleSpan.appendChild(document.createElement("br"));
-                titleSpan.appendChild(document.createElement("br"));
-
-
-                //dropdown
-                select = document.createElement("select");
-                select.id = "go-advBlacklistSelect";
-
-                if (this.blacklistItems && this.blacklistItems.length > 0) {
-                    this.blacklistItems.forEach(i => {
-                        let opt = document.createElement("option");
-                        opt.value = i.name;
-                        opt.textContent = i.name;
-                        select.appendChild(opt);
-                    });
-                } else {
-                    let opt = document.createElement("option");
-                    opt.value = "There is no blacklists";
-                    opt.textContent = "There is no blacklists";
-                    select.appendChild(opt);
-                    select.setAttribute("disabled", "");
-                }
-
-                aside.insertBefore(select, aside.children[0]);
-                aside.insertBefore(titleSpan, select);
-
-            }
-        }
-        /**
-         * Removes blacklist sidebar placed above tags sidebar
-         * @private
-         */
-        removeSidebar() {
-            let aside = document.querySelector(".aside");
-            let title = aside.querySelector("#go-advBlacklistTitle");
-
-            if (title) {
-                title.remove();
-            }
-        }
-        /**
-         * Enable/disable blacklist manager
-         * @param {boolean} value 
-         * @public
-         */
-        setupManager(value) {
-            if (value) {
-                this.updateSidebar();
-            } else {
-                this.removeSidebar();
-            }
-        }
-    }
-
+    
     let currentPageType;
 
     let configManager;
@@ -346,6 +183,7 @@
 
     function main() {
         currentPageType = utils.getPageType();
+        context.pageType = currentPageType;
         utils.debugLog("Current page type is " + currentPageType, null, true);
 
         configManager = new ConfigManager();
@@ -353,7 +191,7 @@
         configManager.loadConfig();
 
         themeManager = new ThemeManager();
-        blacklistManager;// = new BlacklistManager();
+        blacklistManager = new BlacklistManager();
 
         configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
 
@@ -583,7 +421,7 @@
 
         utils.debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             i.parentElement.classList.toggle("go-thumbnail-enlarge", value);
 
             if (currentPageType == utils.pageTypes.POST)
@@ -608,7 +446,7 @@
 
         utils.debugLog(`Applying LoadHighRes state: ${String(dependValue)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             if (dependValue) {
                 i.setAttribute("data-thumb-src", i.src);
                 i.addEventListener("mouseenter", setImageHighResSource);
@@ -634,7 +472,7 @@
 
         utils.debugLog(`Applying LoadingIndicator state: ${String(dependValue)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             if (dependValue) {
                 i.addEventListener("mouseenter", addLoadingIndicator);
             } else {
@@ -654,7 +492,7 @@
 
         utils.debugLog(`Applying PreventOffScreen state: ${String(dependValue)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             if (dependValue) {
                 i.parentElement.addEventListener("mouseenter", updateTransformOrigin);
             } else {
@@ -672,7 +510,7 @@
 
         utils.debugLog(`Applying RoundCorners state: ${String(value)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             i.classList.toggle("go-thumbnail-corners", value);
         });
     }
@@ -685,7 +523,7 @@
 
         utils.debugLog(`Applying RemoveTitle state: ${String(value)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             if (value) {
                 i.setAttribute("data-title", i.getAttribute("title"));
                 i.removeAttribute("title");
@@ -704,7 +542,7 @@
 
         utils.debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             i.classList.toggle("go-thumbnail-resize", value);
             i.parentElement.parentElement.classList.toggle("go-thumbnail-resize", value); // img < a < (article) < div.thumbnail-container
         });
@@ -718,7 +556,7 @@
 
         utils.debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             i.classList.toggle("go-thumbnail-resize", value);
         });
     }
@@ -732,7 +570,7 @@
 
         utils.debugLog(`Applying FastDL state: ${String(value)}`);
 
-        getThumbnails().forEach((i) => {
+        utils.getThumbnails().forEach((i) => {
             if (value) {
                 i.addEventListener("contextmenu", downloadThumbWithRMB);
             } else {
@@ -820,7 +658,10 @@
      * @param {boolean} value
      */
     function applyTweakAdvancedBlacklist(value) {
-        //blacklistManager.setupManager(value);
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
+        utils.debugLog(`Applying AdvancedBlacklist state: ${String(value)}`);
+
+        blacklistManager.setupManager(value);
     }
     // Functions
     //      Script
@@ -1049,129 +890,6 @@
             });
         }
     }
-    /** 
-     * @typedef PostItem
-     * @property {string} highResThumb - high resolution thumb url (image/animated gif/video preview)
-     * @property {string} download - download url (original image/gif/video)
-     * @property {Object} tags - list of tags by category
-     * @property {string[]} tags.artist - artist tags (can be empty)
-     * @property {string[]} tags.character - character tags (can be empty)
-     * @property {string[]} tags.copyright - copyright tags (can be empty)
-     * @property {string[]} tags.metadata - metadata tags (can be empty)
-     * @property {string[]} tags.general - general tags (can be empty)
-     * @property {string} md5 - md5 for file (0's for video)
-     * @property {number} id - post id
-     */
-    /**
-     * Cache and return post item
-     * @param {number} postId 
-     * @returns {Promise<PostItem>}
-     */
-    function loadPostItem(postId) {
-        return new Promise((resolve, reject) => {
-            /** @type {Object<number, PostItem} */
-            let postCache = GM_getValue("postCache", {});
-
-            // just clear postCache if exceeded limit
-            if (Object.keys(postCache).length > configManager.findValueByKey("general.maxCache"))
-                postCache = {};
-
-            if (!postCache[postId]) {
-                fetch("https://" + window.location.host + "/index.php?page=post&s=view&id=" + postId)
-                    .then(response => {
-                        if (!response.ok) throw Error(response.statusText);
-                        return response.text();
-                    })
-                    .then(text => {
-                        let parser = new DOMParser();
-                        let htmlDocument = parser.parseFromString(text, "text/html");
-
-                        let fileLink = htmlDocument.querySelector("meta[property='og:image']").content;
-                        let highResThumb = htmlDocument.querySelector("video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
-                        let md5 = htmlDocument.querySelector("video") ? "0".repeat(32) : htmlDocument.querySelector("section.image-container").getAttribute("data-md5");
-                        // video have highRes thumbnail but does not have md5
-
-                        let tags = {
-                            artist: [...htmlDocument.querySelectorAll(".tag-type-artist       > a")].map(i => i.text),
-                            character: [...htmlDocument.querySelectorAll(".tag-type-character > a")].map(i => i.text),
-                            copyright: [...htmlDocument.querySelectorAll(".tag-type-copyright > a")].map(i => i.text),
-                            metadata: [...htmlDocument.querySelectorAll(".tag-type-metadata   > a")].map(i => i.text),
-                            general: [...htmlDocument.querySelectorAll(".tag-type-general     > a")].map(i => i.text),
-                        };
-
-                        if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
-
-                        postCache[postId] = {
-                            highResThumb: highResThumb,
-                            download: fileLink,
-                            tags: tags,
-                            md5: md5,
-                            id: postId
-                        };
-                        GM_setValue("postCache", postCache);
-                        resolve(postCache[postId]);
-                    })
-                    .catch(error => reject(error));
-            } else {
-                resolve(postCache[postId]);
-            }
-        });
-    }
-    /**
-     * 
-     * @param {PostItem} post 
-     * @returns {Promise}
-     */
-    function downloadPostItem(post) {
-        return new Promise((resolve, reject) => {
-            //build filename
-            let filename = String(configManager.findValueByKey("fastDL.pattern"));
-            let spr = String(configManager.findValueByKey("fastDL.separator"));
-
-            filename = filename.replace("%md5%", post.md5);
-            filename = filename.replace("%postId%", String(post.id));
-            filename = filename.replace("%artist%", post.tags.artist.length ? post.tags.artist.join(spr) : "unknown_artist");
-            filename = filename.replace("%character%", post.tags.character.length ? post.tags.character.join(spr) : "unknown_character");
-            filename = filename.replace("%copyright%", post.tags.copyright.length ? post.tags.copyright.join(spr) : "unknown_copyright");
-
-            filename = filename.replace(/[<>:"/\|?*]/, "_"); // illegal chars
-
-            GM_download({
-                url: post.download,
-                name: filename + "." + post.download.split(".").at(-1),
-                saveAs: configManager.findValueByKey("fastDL.saveAs"),
-                onload: resolve("Download finished"),
-                onerror: (error, details) => reject({ error, details }),
-            });
-
-            if (configManager.findValueByKey("fastDL.saveTags")) {
-                let text = post.tags.artist.map(i => "artist:" + i).join("\n") + "\n" +
-                    post.tags.character.map(i => "character:" + i).join("\n") + "\n" +
-                    post.tags.copyright.map(i => "series:" + i).join("\n") + "\n" +
-                    post.tags.metadata.map(i => "meta:" + i).join("\n") + "\n" +
-                    post.tags.general.join("\n") + "\n";
-
-                text = text.replaceAll("\n\n", "\n");
-
-                let elem = document.createElement("a");
-                elem.href = "data:text," + encodeURIComponent(text);
-                elem.download = filename + ".txt";
-                elem.click();
-            }
-            utils.debugLog("Downloading started", { url: post.download, filename });
-        });
-    }
-    /**
-     * 
-     * @param {number} postId
-     */
-    function downloadPostById(postId) {
-        loadPostItem(postId)
-            .then(p => downloadPostItem(p)
-                .then(() => utils.debugLog("Post item successfully downloaded", p))
-                .catch((r) => utils.debugLog("Failed to download post item", { post: p, error: r.error, details: r.details })))
-            .catch(e => utils.debugLog("Failed to load post item for", { post: e.target, id: postId, error: e }));
-    }
     /**
      * Updating and applying preference item value
      * @param {Object} e 
@@ -1185,20 +903,6 @@
         pref.value = value;
         configManager.onUpdate(e.target.id, value);
     }
-    /**
-     * Returns thumbnails from current page
-     * @returns {NodeListOf<HTMLImageElement>}
-     */
-    function getThumbnails() {
-        switch (currentPageType) {
-            case utils.pageTypes.GALLERY:
-                return document.querySelectorAll(".thumbnail-preview > a > img");
-            case utils.pageTypes.POST:
-                return document.querySelectorAll(".mainBodyPadding > div:last-of-type > a > img");
-            default:
-                return undefined;
-        }
-    }
 
 
     //      Tweak
@@ -1208,7 +912,7 @@
     function setImageHighResSource(e) {
         /** @type {HTMLImageElement} */
         let img = e.target;
-        loadPostItem(/id=([0-9]+)/.exec(img.parentElement.getAttribute("href"))[1])
+        utils.loadPostItem(Number(/id=([0-9]+)/.exec(img.parentElement.getAttribute("href"))[1]))
             .then((post) => img.src = post.highResThumb)
             .catch((error) => utils.debugLog("Failed to load highres image for following element with following error:", { img, error }));
 
@@ -1303,7 +1007,7 @@
         e.preventDefault();
 
         let postId = Number(/id=([0-9]+)/.exec(e.target.parentElement.getAttribute("href"))[1]);
-        downloadPostById(postId);
+        utils.downloadPostById(postId);
     }
     /**
      * FastDL contextmenu event listener
@@ -1317,7 +1021,7 @@
         e.preventDefault();
 
         let postId = Number(/id=([0-9]+)/.exec(document.location.href)[1]);
-        downloadPostById(postId);
+        utils.downloadPostById(postId);
     }
     /**
      * 
