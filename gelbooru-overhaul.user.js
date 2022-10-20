@@ -170,11 +170,14 @@
             }
         }
     }
-    
+    /** @type {string} */
     let currentPageType;
 
+    /** @type {ConfigManager} */
     let configManager;
+    /** @type {ThemeManager} */
     let themeManager;
+    /** @type {BlacklistManager} */
     let blacklistManager;
 
     let blackoutStyle = GM_addStyle(`body { visibility: hidden; }`);
@@ -1090,6 +1093,8 @@
                 applyTweakRemoveTitle(Boolean(configManager.findValueByKey("thumbs.removeTitle")));
                 applyTweakFastDL(Boolean(configManager.findValueByKey("fastDL.thumbs")));
                 applyTweakResizeThumbsGallery(Boolean(configManager.findValueByKey("thumbs.resizeGallery")));
+
+                if(configManager.findValueByKey("advancedBlacklist.enable")) blacklistManager.applyBlacklist();
 
                 let newPaginator = htmlDocument.querySelector(".pagination");
                 let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");

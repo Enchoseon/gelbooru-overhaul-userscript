@@ -213,6 +213,8 @@ class utils {
      * @property {string[]} tags.copyright - copyright tags (can be empty)
      * @property {string[]} tags.metadata - metadata tags (can be empty)
      * @property {string[]} tags.general - general tags (can be empty)
+     * @property {string} rating - post rating
+     * @property {number} score - post score
      * @property {string} md5 - md5 for file (0's for video)
      * @property {number} id - post id
      */
@@ -245,6 +247,8 @@ class utils {
                         let md5 = htmlDocument.querySelector("video") ? "0".repeat(32) : htmlDocument.querySelector("section.image-container").getAttribute("data-md5");
                         // video have highRes thumbnail but does not have md5
 
+                        if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
+
                         let tags = {
                             artist: [...htmlDocument.querySelectorAll(".tag-type-artist       > a")].map(i => i.text),
                             character: [...htmlDocument.querySelectorAll(".tag-type-character > a")].map(i => i.text),
@@ -253,14 +257,17 @@ class utils {
                             general: [...htmlDocument.querySelectorAll(".tag-type-general     > a")].map(i => i.text),
                         };
 
-                        if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
+                        let score = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Score: ")).children[0].textContent
+                        let rating = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Rating: ")).textContent.substring(8).toLowerCase();
 
                         postCache[postId] = {
                             highResThumb: highResThumb,
                             download: fileLink,
                             tags: tags,
                             md5: md5,
-                            id: postId
+                            id: postId,
+                            score: Number(score),
+                            rating: rating
                         };
                         GM_setValue("postCache", postCache);
                         resolve(postCache[postId]);

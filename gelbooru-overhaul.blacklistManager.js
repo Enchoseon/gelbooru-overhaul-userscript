@@ -112,6 +112,11 @@
             return l.replace(/([\/\/|#].*)/, "").trim();
         });
 
+        // clear namespace excep rating:
+        lines.map(l => {
+            return l.replace(/^(?!rating:)(?:.+:)(.+)$/, "$1");
+        });
+
         let entries = lines.map((l) => {
             /** @type {BlacklistEntry} */
             let entry = {
@@ -280,12 +285,14 @@
         this.selectedBlacklistItem = this.blacklistItems.find(i => i.name == name);
 
         this.parseEntries();
-        this.applyBlacklist().then(() => {
-
-        this.updateSidebar();
+        this.applyBlacklist();
+    }
+    applyBlacklist() {
+        this.checkPosts().then(() => {
+            this.updateSidebar();
         });
     }
-    async applyBlacklist() {
+    async checkPosts() {
         let thumbs = utils.getThumbnails();
         let promises = Object.values(thumbs).map(t => {
             let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
@@ -296,7 +303,7 @@
             this.totalHits = [];
 
             items.forEach(item => {
-                if (this.applyPost(item)) this.totalHits.push(item.id);
+                if (this.checkPost(item)) this.totalHits.push(item.id);
             });
         });
     }
@@ -305,7 +312,7 @@
      * @param {PostItem} item 
      * @returns {boolean} Is post was hit by any entry
      */
-    applyPost(item) {
+    checkPost(item) {
         let isHit = false;
 
         this.blacklistEntries.forEach(e => {
@@ -327,6 +334,7 @@
         if (entry.isDisabled) return false;
 
         let postTags = post.tags.artist.concat(post.tags.character, post.tags.copyright, post.tags.general, post.tags.metadata);
+        postTags = postTags.concat([`rating:${post.rating}`]);
 
         if (entry.isAnd) {
             let tags = entry.tag.split(/ AND | && /);
