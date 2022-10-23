@@ -287,13 +287,13 @@
         this.parseEntries();
         this.applyBlacklist();
     }
-    applyBlacklist() {
-        this.checkPosts().then(() => {
+    applyBlacklist(thumbs = null) {
+        if(!thumbs) thumbs = utils.getThumbnails();
+        this.checkPosts(thumbs).then(() => {
             this.updateSidebar();
         });
     }
-    async checkPosts() {
-        let thumbs = utils.getThumbnails();
+    async checkPosts(thumbs) {
         let promises = Object.values(thumbs).map(t => {
             let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
             return utils.loadPostItem(id).then(i => i);

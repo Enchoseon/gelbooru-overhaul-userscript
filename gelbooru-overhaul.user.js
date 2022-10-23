@@ -15,6 +15,7 @@
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.js
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.js
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.blacklistManager.js
+// @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.infiniteScrolling.js
 // ==/UserScript==
 
 (function () {
@@ -179,6 +180,8 @@
     let themeManager;
     /** @type {BlacklistManager} */
     let blacklistManager;
+    /** @type {InfiniteScrolling} */
+    let infiniteScrolling;
 
     let blackoutStyle = GM_addStyle(`body { visibility: hidden; }`);
 
@@ -195,6 +198,8 @@
 
         themeManager = new ThemeManager();
         blacklistManager = new BlacklistManager();
+
+        infiniteScrolling = new InfiniteScrolling();
 
         configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
 
@@ -227,6 +232,18 @@
         configManager.addUpdateListener("infiniteScroll.enable", applyTweakInfiniteScroll);
         configManager.addUpdateListener("infiniteScroll.paginatorOnTop", applyTweakPaginatorOnTop);
         configManager.addUpdateListener("infiniteScroll.goToTop", applyTweakGoToTop);
+
+        infiniteScrolling.addUpdateListener(e => {
+            applyTweakEnlargeOnHover(Boolean(configManager.findValueByKey("thumbs.enlargeOnHover")), e);
+            applyTweakLoadingIndicator(Boolean(configManager.findValueByKey("thumbs.loader")), e);
+            applyTweakRoundCorners(Boolean(configManager.findValueByKey("thumbs.roundCorners")), e);
+            applyTweakRemoveTitle(Boolean(configManager.findValueByKey("thumbs.removeTitle")), e);
+            applyTweakFastDL(Boolean(configManager.findValueByKey("fastDL.thumbs")), e);
+
+            applyTweakResizeThumbsGallery(Boolean(configManager.findValueByKey("thumbs.resizeGallery")), e);
+            if (configManager.findValueByKey("advancedBlacklist.enable"))
+                blacklistManager.applyBlacklist(e);
+        });
 
         configManager.applyConfig();
 
@@ -418,13 +435,15 @@
     /**
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
+    * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakEnlargeOnHover(value) {
+    function applyTweakEnlargeOnHover(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
 
-        utils.getThumbnails().forEach((i) => {
+        if (!thumbs) thumbs = utils.getThumbnails();
+        thumbs.forEach((i) => {
             i.parentElement.classList.toggle("go-thumbnail-enlarge", value);
 
             if (currentPageType == utils.pageTypes.POST)
@@ -466,8 +485,9 @@
     /** 
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
+    * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakLoadingIndicator(value) {
+    function applyTweakLoadingIndicator(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         // Dependencies chec
@@ -475,7 +495,8 @@
 
         utils.debugLog(`Applying LoadingIndicator state: ${String(dependValue)}`);
 
-        utils.getThumbnails().forEach((i) => {
+        if (!thumbs) thumbs = utils.getThumbnails();
+        thumbs.forEach((i) => {
             if (dependValue) {
                 i.addEventListener("mouseenter", addLoadingIndicator);
             } else {
@@ -507,26 +528,30 @@
     /** 
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
+    * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakRoundCorners(value) {
+    function applyTweakRoundCorners(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying RoundCorners state: ${String(value)}`);
 
-        utils.getThumbnails().forEach((i) => {
+        if (!thumbs) thumbs = utils.getThumbnails();
+        thumbs.forEach((i) => {
             i.classList.toggle("go-thumbnail-corners", value);
         });
     }
     /** 
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
+    * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakRemoveTitle(value) {
+    function applyTweakRemoveTitle(value, thumbs = null) {
         if (utils.pageTypes.GALLERY != currentPageType) return;
 
         utils.debugLog(`Applying RemoveTitle state: ${String(value)}`);
 
-        utils.getThumbnails().forEach((i) => {
+        if (!thumbs) thumbs = utils.getThumbnails();
+        thumbs.forEach((i) => {
             if (value) {
                 i.setAttribute("data-title", i.getAttribute("title"));
                 i.removeAttribute("title");
@@ -539,13 +564,15 @@
     /** 
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
+    * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakResizeThumbsGallery(value) {
+    function applyTweakResizeThumbsGallery(value, thumbs = null) {
         if (utils.pageTypes.GALLERY != currentPageType) return;
 
         utils.debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
 
-        utils.getThumbnails().forEach((i) => {
+        if (!thumbs) thumbs = utils.getThumbnails();
+        thumbs.forEach((i) => {
             i.classList.toggle("go-thumbnail-resize", value);
             i.parentElement.parentElement.classList.toggle("go-thumbnail-resize", value); // img < a < (article) < div.thumbnail-container
         });
@@ -567,13 +594,15 @@
     /**
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
+     * @param {HTMLImageElement[]} thumbs
      */
-    function applyTweakFastDL(value) {
+    function applyTweakFastDL(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying FastDL state: ${String(value)}`);
 
-        utils.getThumbnails().forEach((i) => {
+        if (!thumbs) thumbs = utils.getThumbnails();
+        thumbs.forEach((i) => {
             if (value) {
                 i.addEventListener("contextmenu", downloadThumbWithRMB);
             } else {
@@ -607,8 +636,7 @@
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
 
-        if (value) document.addEventListener("scroll", checkApplyInfiniteScroll);
-        else document.removeEventListener("scroll", checkApplyInfiniteScroll);
+        infiniteScrolling.setup(value);
     }
     /**
      * @type {PreferenceUpdateCallback}
@@ -1037,81 +1065,6 @@
 
         e.target.classList.toggle("go-cursor-zoom-in");
         e.target.classList.toggle("go-cursor-zoom-out");
-    }
-    /**
-     * Infinite scroll event listener
-     * @param {Event} e 
-     */
-    function checkApplyInfiniteScroll(e) {
-        const threshold = Number(configManager.findValueByKey("infiniteScroll.threshold"));
-        if (document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
-            if (!this.throttledScroll) this.throttledScroll = utils.debounceFirst(applyInfiniteScroll, 1000);
-            this.throttledScroll();
-        }
-    }
-    /**
-     * Main InfiniteScroll function
-     */
-    let isInfiniteScrollHitLastPage = false;
-    function applyInfiniteScroll() {
-        if (isInfiniteScrollHitLastPage) return;
-
-        let params = new URLSearchParams(document.URL.split('?')[1]);
-        params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
-        let nextPage = document.location.pathname + "?" + params;
-        //document.querySelector("#paginator > a[alt='next']").getAttribute("href");
-        utils.debugLog(`InfScrolling to pid ${params.get("pid")}`);
-
-        fetch(nextPage)
-            .then(response => {
-                if (!response.ok) throw Error(response.statusText);
-                return response.text();
-            })
-            .then(text => {
-                let parser = new DOMParser();
-                let htmlDocument = parser.parseFromString(text, "text/html");
-
-                let newThumbContainer = htmlDocument.querySelector(".thumbnail-container");
-                let oldThumbContainer = document.querySelector(".thumbnail-container");
-                let firstOldThumb = oldThumbContainer.children[0];
-
-                if (!newThumbContainer.childElementCount) {
-                    utils.debugLog("InfScrolling hit last page");
-                    isInfiniteScrollHitLastPage = true;
-                    return;
-                }
-
-                Object.values(newThumbContainer.children).forEach(t => {
-                    oldThumbContainer.appendChild(t);
-                });
-
-                // reapply tweaks related to gallery page
-                // some of them has dependent tweaks, skip it
-                applyTweakEnlargeOnHover(Boolean(configManager.findValueByKey("thumbs.enlargeOnHover")));
-                applyTweakLoadingIndicator(Boolean(configManager.findValueByKey("thumbs.loader")));
-                applyTweakRoundCorners(Boolean(configManager.findValueByKey("thumbs.roundCorners")));
-                applyTweakRemoveTitle(Boolean(configManager.findValueByKey("thumbs.removeTitle")));
-                applyTweakFastDL(Boolean(configManager.findValueByKey("fastDL.thumbs")));
-                applyTweakResizeThumbsGallery(Boolean(configManager.findValueByKey("thumbs.resizeGallery")));
-
-                if(configManager.findValueByKey("advancedBlacklist.enable")) blacklistManager.applyBlacklist();
-
-                let newPaginator = htmlDocument.querySelector(".pagination");
-                let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
-                oldPaginator.replaceWith(newPaginator);
-
-                let oldTopPaginator = document.querySelector(".top-pagination");
-                if (oldTopPaginator) {
-                    /** @type {HTMLElement} */
-                    let newTopPaginator = newPaginator.cloneNode(true);
-                    newTopPaginator.classList.add("top-pagination");
-                    oldTopPaginator.replaceWith(newTopPaginator);
-                }
-
-                window.history.pushState(nextPage, htmlDocument.title, nextPage);
-                history.scrollRestoration = 'manual';
-                document.title = htmlDocument.title;
-            });
     }
 
 })();
