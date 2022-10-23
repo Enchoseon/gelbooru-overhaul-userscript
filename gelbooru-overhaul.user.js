@@ -11,7 +11,7 @@
 // @grant       GM_download
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
-// @resource    css 	https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.user.css
+// @resource    css 	https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.css
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.js
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.js
 // @require     https://github.com/PetrK39/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.blacklistManager.js
