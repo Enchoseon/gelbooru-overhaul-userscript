@@ -202,6 +202,9 @@
         infiniteScrolling = new InfiniteScrolling();
 
         configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.hideBlack", applyCssVariableBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.hideBlur", applyCssVariableBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.showOnHover", applyCssVariableBlacklist);
 
         configManager.addUpdateListener("collapsibleSidebar.enable", applyTweakCollapseSidebar);
         configManager.addUpdateListener("collapsibleSidebar.width", applyCssVariableGoCollapseSidebar);
@@ -324,6 +327,33 @@
         .go-thumbnail-resize {
             --thumb-gallery-size: ${configManager.findValueByKey("thumbs.resizeGallerySize")};
             --thumb-morelikethis-size: ${configManager.findValueByKey("thumbs.resizeMoreLikeThisSize")};
+        }
+        `;
+    }
+    /** @type {PreferenceUpdateCallback} */
+    function applyCssVariableBlacklist() {
+        utils.debugLog("Applying css variable .go-blacklisted");
+
+        /** @type {HTMLStyleElement} */
+        let style = document.querySelector("#goBlacklistVariables");
+
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "goBlacklistVariables";
+            document.body.appendChild(style);
+        }
+
+        let black = configManager.findValueByKey("advancedBlacklist.hideBlack") ? "0%" : "100%";
+        let blur = configManager.findValueByKey("advancedBlacklist.hideBlur");
+        let show = configManager.findValueByKey("advancedBlacklist.showOnHover");
+
+        style.innerHTML = `
+        .go-blacklisted {
+            --blacklist-black: ${black};
+            --blacklist-blur: ${blur};
+
+            --blacklist-hoverBlack: ${show ? "100%" : black};
+            --blacklist-hoverBlur: ${show ? "0" : blur};
         }
         `;
     }

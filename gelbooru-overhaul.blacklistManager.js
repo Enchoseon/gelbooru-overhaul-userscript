@@ -290,6 +290,7 @@
     applyBlacklist(thumbs = null) {
         if(!thumbs) thumbs = utils.getThumbnails();
         this.checkPosts(thumbs).then(() => {
+            this.hidePosts(thumbs);
             this.updateSidebar();
         });
     }
@@ -305,6 +306,14 @@
             items.forEach(item => {
                 if (this.checkPost(item)) this.totalHits.push(item.id);
             });
+        });
+    }
+    hidePosts(thumbs) {
+
+        thumbs.forEach(t => {
+            let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
+
+            t.classList.toggle("go-blacklisted", this.totalHits.includes(id));
         });
     }
     /**

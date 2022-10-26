@@ -300,3 +300,14 @@ div a img.go-thumbnail-resize {
     max-height: var(--thumb-morelikethis-size, 175px) !important;
     height: auto;
 }
+
+
+/* BLACKLIST */
+img.go-blacklisted {
+    filter: brightness(var(--blacklist-black, 0%)) blur(var(--blacklist-blur, 0));
+    transition: 142ms;
+}
+img.go-blacklisted:hover {
+    filter: brightness(var(--blacklist-hoverBlack, 0%)) blur(var(--blacklist-hoverBlur, 0));
+    transition: 142ms;
+}

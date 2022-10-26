@@ -219,6 +219,21 @@ class ConfigManager {
                         name: "Enable",
                         description: "Enable advanced mulipreset danbooru-like blacklist",
                         value: true
+                    },
+                    hideBlack: {
+                        name: "Blacklout hidden images",
+                        description: "Makes blacklisted images pitch black",
+                        value: false
+                    },
+                    hideBlur: {
+                        name: "Blur hidden images",
+                        description: "Makes blacklisted images blurry. Set 0 to disable",
+                        value: "8px"
+                    },
+                    showOnHover: {
+                        name: "Show hidden images on hover",
+                        description: "Temporarily show blacklisted image when you hover over it",
+                        value: true
                     }
                 }
             },
