@@ -121,6 +121,28 @@ class utils {
             timer = setTimeout(() => { callee.apply(this, args); }, timeout);
         };
     }
+    static throttle(fn, threshhold, scope) {
+        threshhold || (threshhold = 250);
+        var last,
+            deferTimer;
+        return function () {
+            var context = scope || this;
+
+            var now = +new Date,
+                args = arguments;
+            if (last && now < last + threshhold) {
+                // hold on to it
+                clearTimeout(deferTimer);
+                deferTimer = setTimeout(function () {
+                    last = now;
+                    fn.apply(context, args);
+                }, threshhold);
+            } else {
+                last = now;
+                fn.apply(context, args);
+            }
+        };
+    }
     /**
      * Throttle decorator
      * @param {function} fn 
@@ -218,21 +240,32 @@ class utils {
      * @property {string} md5 - md5 for file (0's for video)
      * @property {number} id - post id
      */
+    static GM_setValueThrottle = utils.throttle((v) => GM_setValue("postCache", v), 100);
+    /** @type {Object<number, PostItem>} */
+    static localPostCache;
+    /** @returns {Object<number, PostItem>} */
+    static get postCache() {
+        if (!this.localPostCache) this.localPostCache = GM_getValue("postCache", {});
+        return this.localPostCache;
+    }
+    static set postCache(value) {
+        utils.GM_setValueThrottle(value);
+    }
+    static postCacheSave() {
+        utils.GM_setValueThrottle(utils.postCache);
+    }
     /**
      * Cache and return post item
      * @param {number} postId 
      * @returns {Promise<PostItem>}
      */
-    static loadPostItem(postId) {
+    static async loadPostItem(postId) {
         return new Promise((resolve, reject) => {
-            /** @type {Object<number, PostItem} */
-            let postCache = GM_getValue("postCache", {});
-
             // just clear postCache if exceeded limit
-            if (Object.keys(postCache).length > context.configManager.findValueByKey("general.maxCache"))
-                postCache = {};
+            if (Object.keys(utils.postCache).length > context.configManager.findValueByKey("general.maxCache"))
+                utils.postCache = {};
 
-            if (!postCache[postId]) {
+            if (!utils.postCache[postId]) {
                 fetch("https://" + window.location.host + "/index.php?page=post&s=view&id=" + postId)
                     .then(response => {
                         if (!response.ok) throw Error(response.statusText);
@@ -257,24 +290,28 @@ class utils {
                             general: [...htmlDocument.querySelectorAll(".tag-type-general     > a")].map(i => i.text),
                         };
 
-                        let score = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Score: ")).children[0].textContent
+                        let score = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Score: ")).children[0].textContent;
                         let rating = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Rating: ")).textContent.substring(8).toLowerCase();
 
-                        postCache[postId] = {
-                            highResThumb: highResThumb,
-                            download: fileLink,
-                            tags: tags,
-                            md5: md5,
-                            id: postId,
-                            score: Number(score),
-                            rating: rating
-                        };
-                        GM_setValue("postCache", postCache);
-                        resolve(postCache[postId]);
+                        try {
+                            utils.postCache[postId] = {
+                                highResThumb: highResThumb,
+                                download: fileLink,
+                                tags: tags,
+                                md5: md5,
+                                id: postId,
+                                score: Number(score),
+                                rating: rating
+                            };
+                        } catch (error) {
+                            console.log(utils.postCache);
+                        }
+                        resolve(utils.postCache[postId]);
+                        utils.postCacheSave();
                     })
                     .catch(error => reject(error));
             } else {
-                resolve(postCache[postId]);
+                resolve(utils.postCache[postId]);
             }
         });
     }
@@ -342,7 +379,7 @@ class utils {
      */
     static wildTest(wildcard, str) {
         let w = wildcard.replace(/[.+^${}()|[\]\\]/g, '\\$&'); // regexp escape 
-        const re = new RegExp(`^${w.replace(/\*/g,'.*').replace(/\?/g,'.')}$`,'i');
+        const re = new RegExp(`^${w.replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
         return re.test(str); // remove last 'i' above to have case sensitive
-      }
+    }
 }

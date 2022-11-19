@@ -268,7 +268,7 @@
 
     // Apply CSS Variables
     /** @type {PreferenceUpdateCallback} */
-    function applyCssVariableGoCollapseSidebar() {
+    async function applyCssVariableGoCollapseSidebar() {
         utils.debugLog("Applying css variable .go-collapse-sidebar");
 
         /** @type {HTMLStyleElement} */
@@ -292,7 +292,7 @@
         `;
     }
     /** @type {PreferenceUpdateCallback} */
-    function applyCssVariableGoThumbnailEnlarge() {
+    async function applyCssVariableGoThumbnailEnlarge() {
         utils.debugLog("Applying css variable .go-thumbnail-enlarge");
 
         /** @type {HTMLStyleElement} */
@@ -311,7 +311,7 @@
         `;
     }
     /** @type {PreferenceUpdateCallback} */
-    function applyCssVariableGoThumbnailResize() {
+    async function applyCssVariableGoThumbnailResize() {
         utils.debugLog("Applying css variable .go-thumbnail-resize");
 
         /** @type {HTMLStyleElement} */
@@ -331,7 +331,7 @@
         `;
     }
     /** @type {PreferenceUpdateCallback} */
-    function applyCssVariableBlacklist() {
+    async function applyCssVariableBlacklist() {
         utils.debugLog("Applying css variable .go-blacklisted");
 
         /** @type {HTMLStyleElement} */
@@ -364,7 +364,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakCollapseSidebar(value) {
+     async function applyTweakCollapseSidebar(value) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying TweakCollapseSidebar state: ${String(value)}`);
@@ -383,7 +383,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value 
      */
-    function applyTweakPostFit(value) {
+     async function applyTweakPostFit(value) {
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostFit state: ${String(value)}`);
 
@@ -405,7 +405,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value 
      */
-    function applyTweakPostCenter(value) {
+    async function applyTweakPostCenter(value) {
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostCenter state: ${String(value)}`);
 
@@ -417,7 +417,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value 
      */
-    function applyTweakPostAutoScroll(value) {
+    async function applyTweakPostAutoScroll(value) {
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostAutoScroll state: ${String(value)}`);
 
@@ -430,7 +430,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value 
      */
-    function applyTweakPostOnNarrow(value) {
+    async function applyTweakPostOnNarrow(value) {
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostOnNarrow state: ${String(value)}`);
 
@@ -442,7 +442,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value 
      */
-    function applyTweakPostClickSwitchFit(value) {
+    async function applyTweakPostClickSwitchFit(value) {
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostClickSwitchFit state: ${String(value)}`);
 
@@ -467,7 +467,7 @@
     * @param {boolean} value
     * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakEnlargeOnHover(value, thumbs = null) {
+    async function applyTweakEnlargeOnHover(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying EnlargeOnHover state: ${String(value)}`);
@@ -490,7 +490,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakLoadHighRes(value) {
+    async function applyTweakLoadHighRes(value) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         // Dependencies check
@@ -517,7 +517,7 @@
     * @param {boolean} value
     * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakLoadingIndicator(value, thumbs = null) {
+    async function applyTweakLoadingIndicator(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         // Dependencies chec
@@ -538,7 +538,7 @@
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
     */
-    function applyTweakPreventOffScreen(value) {
+    async function applyTweakPreventOffScreen(value) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         // Dependencies check
@@ -560,7 +560,7 @@
     * @param {boolean} value
     * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakRoundCorners(value, thumbs = null) {
+    async function applyTweakRoundCorners(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying RoundCorners state: ${String(value)}`);
@@ -575,7 +575,7 @@
     * @param {boolean} value
     * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakRemoveTitle(value, thumbs = null) {
+    async function applyTweakRemoveTitle(value, thumbs = null) {
         if (utils.pageTypes.GALLERY != currentPageType) return;
 
         utils.debugLog(`Applying RemoveTitle state: ${String(value)}`);
@@ -596,7 +596,7 @@
     * @param {boolean} value
     * @param {HTMLImageElement[]} thumbs
     */
-    function applyTweakResizeThumbsGallery(value, thumbs = null) {
+    async function applyTweakResizeThumbsGallery(value, thumbs = null) {
         if (utils.pageTypes.GALLERY != currentPageType) return;
 
         utils.debugLog(`Applying ResizeThumbGallery state: ${String(value)}`);
@@ -611,7 +611,7 @@
     * @type {PreferenceUpdateCallback}
     * @param {boolean} value
     */
-    function applyTweakResizeThumbsMoreLikeThis(value) {
+    async function applyTweakResizeThumbsMoreLikeThis(value) {
         if (utils.pageTypes.POST != currentPageType) return;
 
         utils.debugLog(`Applying ResizeThumbMoreLikeThis state: ${String(value)}`);
@@ -626,7 +626,7 @@
      * @param {boolean} value
      * @param {HTMLImageElement[]} thumbs
      */
-    function applyTweakFastDL(value, thumbs = null) {
+    async function applyTweakFastDL(value, thumbs = null) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying FastDL state: ${String(value)}`);
@@ -644,7 +644,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakFastDLPost(value) {
+    async function applyTweakFastDLPost(value) {
         if (currentPageType != utils.pageTypes.POST) return;
 
         utils.debugLog(`Applying FastDLPost state: ${String(value)}`);
@@ -661,7 +661,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakInfiniteScroll(value) {
+    async function applyTweakInfiniteScroll(value) {
         if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
@@ -672,7 +672,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakPaginatorOnTop(value) {
+    async function applyTweakPaginatorOnTop(value) {
         if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
@@ -692,7 +692,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakGoToTop(value) {
+    async function applyTweakGoToTop(value) {
         if (currentPageType != utils.pageTypes.GALLERY) return;
 
         utils.debugLog(`Applying InfiniteScroll state: ${String(value)}`);
@@ -718,7 +718,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-    function applyTweakAdvancedBlacklist(value) {
+    async function applyTweakAdvancedBlacklist(value) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
         utils.debugLog(`Applying AdvancedBlacklist state: ${String(value)}`);
 
@@ -737,7 +737,7 @@
             document.addEventListener("DOMContentLoaded", () => func());
         }
     }
-    function registerConfigWindow() {
+    async function registerConfigWindow() {
 
         // config modal window
         let sDiv = buildSettingsWindow(configManager.config);
@@ -970,7 +970,7 @@
     /**
      * @param {MouseEvent} e
      */
-    function setImageHighResSource(e) {
+    async function setImageHighResSource(e) {
         /** @type {HTMLImageElement} */
         let img = e.target;
         utils.loadPostItem(Number(/id=([0-9]+)/.exec(img.parentElement.getAttribute("href"))[1]))
@@ -981,7 +981,7 @@
     /**
      * @param {MouseEvent} e
      */
-    function setImageLowResSource(e) {
+    async function setImageLowResSource(e) {
         /** @type {HTMLImageElement} */
         let img = e.target;
         if (img.complete)
