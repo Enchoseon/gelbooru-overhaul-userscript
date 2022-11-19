@@ -35,7 +35,7 @@
 
             this.scheduleCheckForThemeSwitch();
 
-            let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
+            let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a, #navbar a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
             darkModeButton.onclick = undefined;
             darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
             darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
