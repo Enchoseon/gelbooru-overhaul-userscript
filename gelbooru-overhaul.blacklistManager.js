@@ -31,6 +31,8 @@
      * @type {number[]}
      */
     totalHits;
+    /** @type {Number} */
+    totalPosts;
 
     constructor() {
         if (!this.blacklistItems || this.blacklistItems.length == 0) {
@@ -143,6 +145,9 @@
 
         if (titleSpan) {
             // update existing
+            //title
+            titleSpan.querySelector("b").textContent = `Blacklist ${this.totalHits.length}/${this.totalPosts}`;
+
             //select
             while (select.firstChild) select.firstChild.remove();
 
@@ -190,7 +195,7 @@
             titleSpan.appendChild(document.createElement("br"));
 
             let b = document.createElement("b");
-            b.textContent = "Blacklist";
+            b.textContent = `Blacklist ${this.totalHits.length}/${this.totalPosts}`;
             b.style = "margin-left: 15px;";
             titleSpan.appendChild(b);
 
@@ -284,6 +289,9 @@
         // clear blacklisted posts
         this.selectedBlacklistItem = this.blacklistItems.find(i => i.name == name);
 
+        this.totalHits = [];
+        this.totalPosts = 0;
+
         this.parseEntries();
         this.applyBlacklist();
     }
@@ -294,17 +302,16 @@
             this.updateSidebar();
         });
     }
-    async checkPosts(thumbs) {
-        let promises = Object.values(thumbs).map(t => {
+    async checkPosts(thumbs) {        
+        await Promise.all(Object.values(thumbs).map(async (t) => {
             let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
-            return utils.loadPostItem(id).then(i => i);
-        });
-
-        await Promise.all(promises).then(items => {
-            this.totalHits = [];
-
+            return await utils.loadPostItem(id).then(i => i);
+        })).then(items => {
             items.forEach(item => {
-                if (this.checkPost(item)) this.totalHits.push(item.id);
+                this.totalPosts++;
+                if (this.checkPost(item)) { 
+                    this.totalHits.push(item.id);
+                }
             });
         });
     }
