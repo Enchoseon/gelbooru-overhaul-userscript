@@ -1,7 +1,7 @@
 /**
      * @class Class that manages blacklist features
      */
- class BlacklistManager {
+class BlacklistManager {
     /**
      * @typedef  BlacklistEntry
      * @type     {Object}
@@ -45,6 +45,7 @@
             this.addUpdateBlacklist(item3);
         }
     }
+
     /**
      * @private
      * @returns {BlacklistItem[]} List of available blacklists
@@ -59,6 +60,7 @@
     set blacklistItems(value) {
         GM_setValue("blacklists", value);
     }
+
     /**
      * Adds/updates blacklist item to storage
      * @param {BlacklistItem} item 
@@ -80,7 +82,7 @@
 
         this.blacklistItems = items;
 
-        this.updateSidebar();
+        this.updateSidebarSelect();
     }
     /**
      * Removes blacklist item from storage
@@ -92,8 +94,9 @@
 
         this.blacklistItems.splice(index, 1);
 
-        this.updateSidebar();
+        this.updateSidebarSelect();
     }
+
     /**
      * Parse current blacklist item's entries
      */
@@ -132,124 +135,39 @@
 
         this.blacklistEntries = entries;
     }
+
     /**
-     * Updates blacklist sidebar placed above tags sidebar
+     * Creates blacklist sidebar placed above tags sidebar
      * @private
      */
-    updateSidebar() {
+    createSidebar() {
+        //title
+        let titleSpan = document.createElement("span");
+        titleSpan.id = "go-advBlacklistTitle";
+
+        let b = document.createElement("b");
+        b.textContent = `Blacklist`;
+
+        titleSpan.appendChild(document.createElement("br"));
+        titleSpan.appendChild(b);
+        titleSpan.appendChild(document.createElement("br"));
+        titleSpan.appendChild(document.createElement("br"));
+
+        //select
+        let select = document.createElement("select");
+        select.id = "go-advBlacklistSelect";
+        select.addEventListener("change", e => this.selectedBlacklistChanged(e.target.value));
+
+        //entries
+        let entries = document.createElement("ul");
+        entries.id = "go-advBlacklistEntries";
+        entries.className = "tag-list";
+
+        //insert elements
         let aside = document.querySelector(".aside");
-        
-        let titleSpan = aside.querySelector("#go-advBlacklistTitle");
-        let select = aside.querySelector("#go-advBlacklistSelect");
-        let entries = aside.querySelector("#go-advBlacklistEntries");
-
-        if (titleSpan) {
-            // update existing
-            //title
-            titleSpan.querySelector("b").textContent = `Blacklist ${this.totalHits.length}/${this.totalPosts}`;
-
-            //select
-            while (select.firstChild) select.firstChild.remove();
-
-            if (this.blacklistItems && this.blacklistItems.length > 0) {
-                this.blacklistItems.forEach(i => {
-                    let opt = document.createElement("option");
-                    opt.value = i.name;
-                    opt.textContent = i.name;
-                    select.appendChild(opt);
-                });
-            } else {
-                let opt = document.createElement("option");
-                opt.value = "There is no blacklists";
-                opt.textContent = "There is no blacklists";
-                select.appendChild(opt);
-                select.setAttribute("disabled", "");
-            }
-
-            if (this.selectedBlacklistItem) select.value = this.selectedBlacklistItem.name;
-
-            //entries
-            while (entries.firstChild) entries.firstChild.remove();
-            if (this.blacklistEntries)
-                this.blacklistEntries.forEach(i => {
-                    let li = document.createElement("li");
-                    li.className = "tag-type-general";
-
-                    let a_tag = document.createElement("a");
-                    a_tag.textContent = i.tag;
-
-                    let span = document.createElement("span");
-                    span.style.color = "#a0a0a0";
-                    span.textContent = String(i.hits.length);
-
-                    li.appendChild(a_tag);
-                    li.appendChild(span);
-                    entries.appendChild(li);
-                });
-        } else {
-            // create new
-            //title
-            titleSpan = document.createElement("span");
-            titleSpan.id = "go-advBlacklistTitle";
-
-            titleSpan.appendChild(document.createElement("br"));
-
-            let b = document.createElement("b");
-            b.textContent = `Blacklist ${this.totalHits.length}/${this.totalPosts}`;
-            b.style = "margin-left: 15px;";
-            titleSpan.appendChild(b);
-
-            titleSpan.appendChild(document.createElement("br"));
-            titleSpan.appendChild(document.createElement("br"));
-
-
-            //dropdown
-            select = document.createElement("select");
-            select.id = "go-advBlacklistSelect";
-
-            if (this.blacklistItems && this.blacklistItems.length > 0) {
-                this.blacklistItems.forEach(i => {
-                    let opt = document.createElement("option");
-                    opt.value = i.name;
-                    opt.textContent = i.name;
-                    select.appendChild(opt);
-                });
-            } else {
-                let opt = document.createElement("option");
-                opt.value = "There is no blacklists";
-                opt.textContent = "There is no blacklists";
-                select.appendChild(opt);
-                select.setAttribute("disabled", "");
-            }
-
-            select.addEventListener("change", e => this.selectedBlacklistChanged(e.target.value));
-
-            //entries
-            entries = document.createElement("ul");
-            entries.id = "go-advBlacklistEntries";
-            entries.className = "tag-list";
-
-            if (this.blacklistEntries)
-                this.blacklistEntries.forEach(i => {
-                    let li = document.createElement("li");
-                    li.className = "tag-type-general";
-
-                    let a_tag = document.createElement("a");
-                    a_tag.textContent = i.tag;
-
-                    let span = document.createElement("span");
-                    span.style.color = "#a0a0a0";
-                    span.textContent = String(i.hits.length);
-
-                    li.appendChild(a_tag);
-                    li.appendChild(span);
-                    entries.appendChild(li);
-                });
-            
-            aside.insertBefore(entries, aside.children[0])
-            aside.insertBefore(select, entries);
-            aside.insertBefore(titleSpan, select);
-        }
+        aside.insertBefore(entries, aside.children[0]);
+        aside.insertBefore(select, entries);
+        aside.insertBefore(titleSpan, select);
     }
     /**
      * Removes blacklist sidebar placed above tags sidebar
@@ -268,6 +186,64 @@
             entries.remove();
         }
     }
+    updateSidebarTitle() {
+        document.querySelector("#go-advBlacklistTitle").querySelector("b").textContent = `Blacklist ${this.totalHits.length}/${this.totalPosts}`;
+    }
+    updateSidebarSelect() {
+        /** @type {HTMLSelectElement} */
+        let select = document.querySelector("#go-advBlacklistSelect");
+
+        while (select.firstChild) select.firstChild.remove();
+
+        if (this.blacklistItems && this.blacklistItems.length > 0) {
+            this.blacklistItems.forEach(i => select.appendChild(buildBlacklistItem(i)));
+        } else {
+            select.appendChild(buildBlacklistItem(null));
+        }
+
+        if (this.selectedBlacklistItem) select.value = this.selectedBlacklistItem.name;
+
+        function buildBlacklistItem(i) {
+            let opt = document.createElement("option");
+
+            if (i == null) {
+                opt.value = "There is no blacklists";
+                opt.textContent = "There is no blacklists";
+                select.setAttribute("disabled", "");
+            } else {
+                opt.value = i.name;
+                opt.textContent = i.name;
+            }
+
+            return opt;
+        }
+    }
+    updateSidebarEntries() {
+        let entries = document.querySelector("#go-advBlacklistEntries");
+
+        while (entries.firstChild) entries.firstChild.remove();
+
+        if (this.blacklistEntries)
+            this.blacklistEntries.forEach(i => entries.appendChild(buildEntryItem(i)));
+
+        function buildEntryItem(i) {
+            let li = document.createElement("li");
+            li.className = "tag-type-general";
+
+            let a_tag = document.createElement("a");
+            a_tag.textContent = i.tag;
+
+            let span = document.createElement("span");
+            span.style.color = "#a0a0a0";
+            span.textContent = String(i.hits.length);
+
+            li.appendChild(a_tag);
+            li.appendChild(span);
+
+            return li;
+        }
+    }
+
     /**
      * Enable/disable blacklist manager
      * @param {boolean} value 
@@ -275,8 +251,9 @@
      */
     setupManager(value) {
         if (value) {
-            if(this.blacklistItems) this.selectedBlacklistChanged(this.blacklistItems[0].name);
-            else this.updateSidebar();
+            this.createSidebar();
+            if (this.blacklistItems) this.selectedBlacklistChanged(this.blacklistItems[0].name);
+            this.updateSidebarSelect();
         } else {
             this.removeSidebar();
         }
@@ -295,21 +272,24 @@
         this.parseEntries();
         this.applyBlacklist();
     }
+    
     applyBlacklist(thumbs = null) {
-        if(!thumbs) thumbs = utils.getThumbnails();
+        if (!thumbs) thumbs = utils.getThumbnails();
+
         this.checkPosts(thumbs).then(() => {
             this.hidePosts(thumbs);
-            this.updateSidebar();
+            this.updateSidebarTitle();
+            this.updateSidebarEntries();
         });
     }
-    async checkPosts(thumbs) {        
+    async checkPosts(thumbs) {
         await Promise.all(Object.values(thumbs).map(async (t) => {
             let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
             return await utils.loadPostItem(id).then(i => i);
         })).then(items => {
             items.forEach(item => {
                 this.totalPosts++;
-                if (this.checkPost(item)) { 
+                if (this.checkPost(item)) {
                     this.totalHits.push(item.id);
                 }
             });
@@ -336,7 +316,7 @@
                 isHit = true;
                 e.hits.push(item.id);
             }
-        })
+        });
 
         return isHit;
     }
@@ -354,10 +334,10 @@
 
         if (entry.isAnd) {
             let tags = entry.tag.split(/ AND | && /);
-            if (tags.every(t => postTags.some(tt => utils.wildTest(t, tt)) )) return true;
+            if (tags.every(t => postTags.some(tt => utils.wildTest(t, tt)))) return true;
         }
 
-        if (postTags.some(tt => utils.wildTest(entry.tag, tt) )) return true;
+        if (postTags.some(tt => utils.wildTest(entry.tag, tt))) return true;
 
         return false;
     }
