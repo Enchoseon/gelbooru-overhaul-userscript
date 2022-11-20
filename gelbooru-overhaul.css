@@ -20,6 +20,14 @@
     background: var(--background-color, white);
     opacity: var(--expanded-opacity, 1);
 }
+/* HIDE CONTENT */
+/* using universal selector in limited scope shouldn't affect performance too much */
+.go-collapse-sidebar * {
+    visibility: collapse;
+}
+.go-collapse-sidebar:hover * {
+    visibility: visible;
+}
 
 /* COLLAPSE SIDEBAR */
 /* TAG LIST BOTTOM PADDING */
