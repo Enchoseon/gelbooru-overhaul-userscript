@@ -290,6 +290,15 @@ input[type='submit']:hover {
 input[type='submit']:active {
     filter: brightness(140%);
 }
+/* SVG */
+.go-svg {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+    cursor: pointer;
+    height: 2em;
+    width: auto;
+}
 /* GENERAL */
 /* GALLERY THUMBS */
 article.go-thumbnail-resize {
@@ -318,4 +327,15 @@ img.go-blacklisted {
 img.go-blacklisted:hover {
     filter: brightness(var(--blacklist-hoverBlack, 0%)) blur(var(--blacklist-hoverBlur, 0));
     transition: 142ms;
+}
+/* BLACKLIST SIDEBAR */
+#go-advBlacklistTitle > b, #go-advBlacklistSelect, #go-advBlacklistEntries {
+    margin-left: 15px;
+}
+#go-advBlacklistSelect {
+    margin-bottom: 10px;
+    display: inline-block;
+}
+.go-advBlacklistDisabledEntry {
+    text-decoration: line-through;
 }

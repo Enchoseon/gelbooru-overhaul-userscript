@@ -135,6 +135,34 @@ class BlacklistManager {
 
         this.blacklistEntries = entries;
     }
+    /**
+     * 
+     * @param {BlacklistEntry} entry 
+     * @param {boolean} force 
+     */
+    toggleEntry(entry, force = undefined) {
+        if (force)
+            entry.isDisabled = force;
+        else
+            entry.isDisabled = !entry.isDisabled;
+
+        this.applyBlacklist();
+    }
+    /**
+     * 
+     * @param {BlacklistEntry[]} entries 
+     * @param {boolean} force 
+     */
+    toggleEntries(entries = undefined, force = undefined) {
+        if(!entries) entries = this.blacklistEntries;
+
+        if (force)
+            entries.forEach(e => e.isDisabled = force);
+        else
+            entries.forEach(e => e.isDisabled = !e.isDisabled);
+
+        this.applyBlacklist();
+    }
 
     /**
      * Creates blacklist sidebar placed above tags sidebar
@@ -158,16 +186,21 @@ class BlacklistManager {
         select.id = "go-advBlacklistSelect";
         select.addEventListener("change", e => this.selectedBlacklistChanged(e.target.value));
 
+        //select edit
+        let edit = document.createElement("svg");
+        edit.innerHTML = '<svg class="go-svg" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="currentColor" d="m19.3 8.925l-4.25-4.2l1.4-1.4q.575-.575 1.413-.575q.837 0 1.412.575l1.4 1.4q.575.575.6 1.388q.025.812-.55 1.387ZM17.85 10.4L7.25 21H3v-4.25l10.6-10.6Z"/></svg>';
+
         //entries
         let entries = document.createElement("ul");
         entries.id = "go-advBlacklistEntries";
         entries.className = "tag-list";
 
-        //insert elements
+        //insert elements (reverse order)
         let aside = document.querySelector(".aside");
-        aside.insertBefore(entries, aside.children[0]);
-        aside.insertBefore(select, entries);
-        aside.insertBefore(titleSpan, select);
+        aside.insertBefore(entries, aside.firstChild);
+        aside.insertBefore(edit, aside.firstChild);
+        aside.insertBefore(select, aside.firstChild);
+        aside.insertBefore(titleSpan, aside.firstChild);
     }
     /**
      * Removes blacklist sidebar placed above tags sidebar
@@ -223,22 +256,45 @@ class BlacklistManager {
 
         while (entries.firstChild) entries.firstChild.remove();
 
-        if (this.blacklistEntries)
-            this.blacklistEntries.forEach(i => entries.appendChild(buildEntryItem(i)));
-
-        function buildEntryItem(i) {
+        if (this.blacklistEntries) {
+            this.blacklistEntries.forEach(i => entries.appendChild(buildEntryItem(i, this)));
+            entries.appendChild(buildDisableAll(this));
+        }
+        /** @param {BlacklistManager} scope */
+        function buildEntryItem(i, scope = this) {
             let li = document.createElement("li");
             li.className = "tag-type-general";
 
             let a_tag = document.createElement("a");
             a_tag.textContent = i.tag;
+            a_tag.addEventListener("click", e => { scope.toggleEntry(i, e.target); });
+            a_tag.classList.toggle("go-advBlacklistDisabledEntry", i.isDisabled);
+            a_tag.href = "javascript:;";
+
+            let separator = document.createElement("a");
+            separator.textContent = " ";
 
             let span = document.createElement("span");
             span.style.color = "#a0a0a0";
             span.textContent = String(i.hits.length);
 
             li.appendChild(a_tag);
+            li.appendChild(separator);
             li.appendChild(span);
+
+            return li;
+        }
+        /** @param {BlacklistManager} scope */
+        function buildDisableAll(scope = this) {
+            let li = document.createElement("li");
+            li.className = "tag-type-general";
+
+            let a_tag = document.createElement("a");
+            a_tag.textContent = scope.blacklistEntries.every(e => e.isDisabled) ? "Enable all" : "Disable all";
+            a_tag.addEventListener("click", e => scope.toggleEntries());
+            a_tag.href = "javascript:;";
+
+            li.appendChild(a_tag);
 
             return li;
         }
@@ -272,9 +328,16 @@ class BlacklistManager {
         this.parseEntries();
         this.applyBlacklist();
     }
-    
+
     applyBlacklist(thumbs = null) {
-        if (!thumbs) thumbs = utils.getThumbnails();
+        if (!thumbs) {
+            thumbs = utils.getThumbnails();
+            this.totalPosts = Object.values(thumbs).length;
+            this.totalHits = [];
+            this.blacklistEntries.forEach(e => e.hits = []);
+        } else {
+            this.totalPosts += Object.values(thumbs).length;
+        }
 
         this.checkPosts(thumbs).then(() => {
             this.hidePosts(thumbs);
@@ -286,14 +349,7 @@ class BlacklistManager {
         await Promise.all(Object.values(thumbs).map(async (t) => {
             let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
             return await utils.loadPostItem(id).then(i => i);
-        })).then(items => {
-            items.forEach(item => {
-                this.totalPosts++;
-                if (this.checkPost(item)) {
-                    this.totalHits.push(item.id);
-                }
-            });
-        });
+        })).then(items => { items.forEach(item => { if (this.checkPost(item)) this.totalHits.push(item.id); }); });
     }
     hidePosts(thumbs) {
 
