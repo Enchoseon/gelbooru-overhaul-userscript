@@ -220,7 +220,8 @@ class utils {
             case utils.pageTypes.GALLERY:
                 return document.querySelectorAll(".thumbnail-preview > a > img");
             case utils.pageTypes.POST:
-                return document.querySelectorAll(".mainBodyPadding > div:last-of-type > a > img");
+                const text = "More Like This: (Beta Temporary Feature)";
+                return [...document.querySelectorAll(".mainBodyPadding > div > div")].filter(i => i.textContent == text)[0].parentElement.querySelectorAll("a > img");
             default:
                 return undefined;
         }
