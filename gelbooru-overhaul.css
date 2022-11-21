@@ -235,12 +235,18 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* PREFERENCE ITEM NAME */
 .go-config-window label {
     font-weight: bold;
+    display: block;
 }
 /* CONFIG WINDOW */
 /* PREFERENCE ITEM DESCRIPTION */
 .go-config-window p {
     font-size: 0.9em;
     opacity: 0.9;
+}
+.go-config-window textarea {
+    width: -webkit-fill-available;
+    height: 20vh;
+    font-size: 0.9em;
 }
 /* CONFIG WINDOW */
 /* INPUT TYPE SPECIFIC */

@@ -5,7 +5,8 @@ class BlacklistManager {
     /**
      * @typedef  BlacklistEntry
      * @type     {Object}
-     * @property {string}  tag        Blacklisted tag
+     * @property {string}  [tag]        Blacklisted tag
+     * @property {string[]} [tags]      Blacklisted tags if AND
      * @property {boolean} isAnd      Describes if entry includes multiple tags
      * @property {number[]}  hits     Post ids affected by this entry
      * @property {boolean} isDisabled Describes if entry is disabled
@@ -37,12 +38,9 @@ class BlacklistManager {
     constructor() {
         if (!this.blacklistItems || this.blacklistItems.length == 0) {
             let item = { name: "Safe mode", value: "rating:q*\nrating:e*" };
-            this.addUpdateBlacklist(item);
             let item2 = { name: "No blacklist", value: "" };
-            this.addUpdateBlacklist(item2);
 
-            let item3 = { name: "Test", value: "1girl" };
-            this.addUpdateBlacklist(item3);
+            this.blacklistItems = [item, item2];
         }
     }
 
@@ -82,7 +80,17 @@ class BlacklistManager {
 
         this.blacklistItems = items;
 
+        if (this.selectedBlacklistItem && this.selectedBlacklistItem.name) this.selectedBlacklistChanged(item.name);
         this.updateSidebarSelect();
+
+        let nameList = document.querySelector("#go-advBlacklistListNames");
+        while (nameList && nameList.firstChild) nameList.firstChild.remove();
+
+        this.blacklistItems.forEach(i => {
+            let option = document.createElement("option");
+            option.value = i.name;
+            nameList.appendChild(option);
+        });
     }
     /**
      * Removes blacklist item from storage
@@ -90,11 +98,147 @@ class BlacklistManager {
      * @private
      */
     removeBlacklist(item) {
+        if (item.name == "Safe mode" || item.name == "No blacklist") return;
+
         let index = this.blacklistItems.findIndex(i => i.name == item.name);
 
-        this.blacklistItems.splice(index, 1);
+        let items = this.blacklistItems;
+        items.splice(index, 1);
+        this.blacklistItems = items;
 
         this.updateSidebarSelect();
+
+        let nameList = document.querySelector("#go-advBlacklistListNames");
+        while (nameList.firstChild) nameList.firstChild.remove();
+
+        this.blacklistItems.forEach(i => {
+            let option = document.createElement("option");
+            option.value = i.name;
+            nameList.appendChild(option);
+        });
+    }
+    registerEditWinow() {
+        let eDiv = buildEditWindow(this);
+        document.querySelector("#container").appendChild(eDiv);
+
+        /** @param {BlacklistManager} scope*/
+        function buildEditWindow(scope = this) {
+            /** @type {HTMLDivElement} */
+            let sDiv = document.createElement("div");
+            sDiv.className = "go-config-window go-config-window-hidden";
+            sDiv.id = "goBlacklistEditWindow";
+
+            let header = document.createElement("header");
+            header.className = "topnav";
+            let headerA = document.createElement("a");
+            headerA.textContent = "Edit blacklist";
+            header.appendChild(headerA);
+
+            let mainContent = document.createElement("dl");
+            let textInputLI = document.createElement("li");
+            let nameInputLI = document.createElement("li");
+
+            let nameInputLabel = document.createElement("label");
+            nameInputLabel.textContent = "Blacklist name";
+            nameInputLabel.setAttribute("for", "NameInput");
+            let nameInputDescript = document.createElement("p");
+            nameInputDescript.textContent = "Input or select name (content will be replaced)";
+
+            let textInputLabel = document.createElement("label");
+            textInputLabel.textContent = "Blacklist entries";
+            let textInputDescript = document.createElement("p");
+            textInputDescript.style.whiteSpace = "pre";
+            textInputDescript.textContent = "Input blacklist entries\nEach item on new line\nSupports wildcards\nSupports AND, comments (//, #), not sensitive to ' ' and '_'";
+
+            let textInput = document.createElement("textarea");
+
+            let nameInput = document.createElement("input");
+            nameInput.setAttribute("list", "go-advBlacklistListNames");
+            nameInput.name = "NameInput";
+            nameInput.addEventListener("input", e => {
+                let foundItem = scope.blacklistItems.find(i => i.name == nameInput.value);
+
+                if (foundItem) textInput.value = foundItem.value;
+            });
+
+            let nameList = document.createElement("datalist");
+            nameList.setAttribute("id", "go-advBlacklistListNames");
+            scope.blacklistItems.forEach(i => {
+                let option = document.createElement("option");
+                option.value = i.name;
+                nameList.appendChild(option);
+            });
+
+            nameInputLI.appendChild(nameInputLabel);
+            nameInputLI.appendChild(nameInput);
+            nameInputLI.appendChild(nameInputDescript);
+
+            textInputLI.appendChild(textInputLabel);
+            textInputLI.appendChild(textInput);
+            textInputLI.appendChild(textInputDescript);
+
+            mainContent.appendChild(nameInputLI);
+            mainContent.appendChild(textInputLI);
+            mainContent.appendChild(nameList);
+
+            let footer = document.createElement("footer");
+            let submitClose = document.createElement("input");
+            submitClose.type = "submit";
+            submitClose.className = "searchList";
+            submitClose.value = "Close";
+            submitClose.title = "Close window without saving";
+            submitClose.addEventListener("click", () => {
+                sDiv.classList.add("go-config-window-hidden");
+            });
+
+            let submitSave = document.createElement("input");
+            submitSave.type = "submit";
+            submitSave.className = "searchList";
+            submitSave.value = "Save";
+            submitSave.title = "Add or update blacklist";
+            submitSave.addEventListener("click", () => {
+                if (nameInput.value == "") return;
+
+                /** @type {BlacklistItem} */
+                let foundItem = scope.blacklistItems.find(i => i.name == nameInput.value);
+
+                if (!foundItem) foundItem = { name: nameInput.value, value: textInput.value };
+                foundItem.value = textInput.value;
+
+                scope.addUpdateBlacklist(foundItem);
+
+                sDiv.classList.add("go-config-window-hidden");
+            });
+
+            let submitDelete = document.createElement("input");
+            submitDelete.type = "submit";
+            submitDelete.className = "searchList";
+            submitDelete.value = "Delete";
+            submitDelete.title = "Delete selected blacklist";
+            submitDelete.addEventListener("click", () => {
+                /** @type {BlacklistItem} */
+                let foundItem = scope.blacklistItems.find(i => i.name == nameInput.value);
+
+                if (!foundItem) return;
+
+                scope.removeBlacklist(foundItem);
+
+                sDiv.classList.add("go-config-window-hidden");
+            });
+
+            footer.appendChild(submitClose);
+            footer.appendChild(submitSave);
+            footer.appendChild(submitDelete);
+
+            sDiv.appendChild(header);
+            sDiv.appendChild(mainContent);
+            sDiv.appendChild(footer);
+
+            return sDiv;
+        }
+    }
+    removeEditWindow() {
+        document.querySelector("#container > #goBlacklistEditWindow").remove();
     }
 
     /**
@@ -123,14 +267,25 @@ class BlacklistManager {
         });
 
         let entries = lines.map((l) => {
-            /** @type {BlacklistEntry} */
-            let entry = {
-                tag: l.toLowerCase(),
-                isAnd: Boolean(l.match(/ AND | && /)),
-                hits: [],
-                isDisabled: false
-            };
-            return entry;
+            if (Boolean(l.match(/ AND | && /))) {
+                /** @type {BlacklistEntry} */
+                let entry = {
+                    tags: l.split(/ AND | && /).map(t => t.toLowerCase().replaceAll("_", " ")),
+                    isAnd: true,
+                    hits: [],
+                    isDisabled: false
+                };
+                return entry;
+            } else {
+                /** @type {BlacklistEntry} */
+                let entry = {
+                    tag: l.toLowerCase().replaceAll("_", " "),
+                    isAnd: false,
+                    hits: [],
+                    isDisabled: false
+                };
+                return entry;
+            }
         });
 
         this.blacklistEntries = entries;
@@ -146,6 +301,7 @@ class BlacklistManager {
         else
             entry.isDisabled = !entry.isDisabled;
 
+        if (!entry.isDisabled) entry.hits = [];
         this.applyBlacklist();
     }
     /**
@@ -154,12 +310,14 @@ class BlacklistManager {
      * @param {boolean} force 
      */
     toggleEntries(entries = undefined, force = undefined) {
-        if(!entries) entries = this.blacklistEntries;
+        if (!entries) entries = this.blacklistEntries;
 
         if (force)
             entries.forEach(e => e.isDisabled = force);
         else
             entries.forEach(e => e.isDisabled = !e.isDisabled);
+
+        if (!entries[0].isDisabled) entries.forEach(e => e.hits = []);
 
         this.applyBlacklist();
     }
@@ -189,7 +347,9 @@ class BlacklistManager {
         //select edit
         let edit = document.createElement("svg");
         edit.innerHTML = '<svg class="go-svg" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="currentColor" d="m19.3 8.925l-4.25-4.2l1.4-1.4q.575-.575 1.413-.575q.837 0 1.412.575l1.4 1.4q.575.575.6 1.388q.025.812-.55 1.387ZM17.85 10.4L7.25 21H3v-4.25l10.6-10.6Z"/></svg>';
-
+        edit.addEventListener("click", (e) => {
+            document.querySelector("#container > #goBlacklistEditWindow").classList.toggle("go-config-window-hidden");
+        });
         //entries
         let entries = document.createElement("ul");
         entries.id = "go-advBlacklistEntries";
@@ -256,18 +416,18 @@ class BlacklistManager {
 
         while (entries.firstChild) entries.firstChild.remove();
 
-        if (this.blacklistEntries) {
-            this.blacklistEntries.forEach(i => entries.appendChild(buildEntryItem(i, this)));
-            entries.appendChild(buildDisableAll(this));
+        if (this.blacklistEntries && this.blacklistEntries.length > 0) {
+            this.blacklistEntries.filter(i => i.hits.length > 0 || i.isDisabled).forEach(i => entries.appendChild(buildEntryItem(i, this)));
+            if (entries.childElementCount > 1) entries.appendChild(buildDisableAll(this));
         }
-        /** @param {BlacklistManager} scope */
+        /** @param {BlacklistManager} scope @param {BlacklistEntry} i*/
         function buildEntryItem(i, scope = this) {
             let li = document.createElement("li");
             li.className = "tag-type-general";
 
             let a_tag = document.createElement("a");
-            a_tag.textContent = i.tag;
-            a_tag.addEventListener("click", e => { scope.toggleEntry(i, e.target); });
+            a_tag.textContent = i.isAnd ? i.tags.join(" && ") : i.tag;
+            a_tag.addEventListener("click", e => { scope.toggleEntry(i); });
             a_tag.classList.toggle("go-advBlacklistDisabledEntry", i.isDisabled);
             a_tag.href = "javascript:;";
 
@@ -307,11 +467,14 @@ class BlacklistManager {
      */
     setupManager(value) {
         if (value) {
+            this.registerEditWinow();
+
             this.createSidebar();
             if (this.blacklistItems) this.selectedBlacklistChanged(this.blacklistItems[0].name);
             this.updateSidebarSelect();
         } else {
             this.removeSidebar();
+            this.removeEditWindow();
         }
     }
     /**
@@ -389,11 +552,10 @@ class BlacklistManager {
         postTags = postTags.concat([`rating:${post.rating}`]);
 
         if (entry.isAnd) {
-            let tags = entry.tag.split(/ AND | && /);
-            if (tags.every(t => postTags.some(tt => utils.wildTest(t, tt)))) return true;
+            if (entry.tags.every(t => postTags.some(tt => utils.wildTest(t, tt)))) return true;
+        } else {
+            if (postTags.some(tt => utils.wildTest(entry.tag, tt))) return true;
         }
-
-        if (postTags.some(tt => utils.wildTest(entry.tag, tt))) return true;
 
         return false;
     }
