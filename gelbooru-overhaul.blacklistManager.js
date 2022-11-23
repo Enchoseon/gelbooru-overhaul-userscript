@@ -10,7 +10,6 @@ class BlacklistManager {
      * @property {boolean} isAnd      Describes if entry includes multiple tags
      * @property {number[]}  hits     Post ids affected by this entry
      * @property {boolean} isDisabled Describes if entry is disabled
-     * @property {HTMLElement} [elem] Reference to displayed element
      * 
      * @typedef BlacklistItem
      * @type {Object}
@@ -266,11 +265,17 @@ class BlacklistManager {
             return l.replace(/^(?!rating:)(?:.+:)(.+)$/, "$1");
         });
 
+        // fix spaces and lowercase
+        lines = lines.map(l => l.replaceAll(" AND ", " && ").replaceAll("_", " ").toLowerCase());
+
+        // deduplicate
+        lines = [...new Set(lines)];
+
         let entries = lines.map((l) => {
-            if (Boolean(l.match(/ AND | && /))) {
+            if (Boolean(l.match(/ && /))) {
                 /** @type {BlacklistEntry} */
                 let entry = {
-                    tags: l.split(/ AND | && /).map(t => t.toLowerCase().replaceAll("_", " ")),
+                    tags: l.split(/ && /),
                     isAnd: true,
                     hits: [],
                     isDisabled: false
@@ -279,7 +284,7 @@ class BlacklistManager {
             } else {
                 /** @type {BlacklistEntry} */
                 let entry = {
-                    tag: l.toLowerCase().replaceAll("_", " "),
+                    tag: l,
                     isAnd: false,
                     hits: [],
                     isDisabled: false
@@ -295,7 +300,7 @@ class BlacklistManager {
      * @param {BlacklistEntry} entry 
      * @param {boolean} force 
      */
-    toggleEntry(entry, force = undefined) {
+    toggleEntry(entry, force = undefined, skipStorageSet = false) {
         if (force)
             entry.isDisabled = force;
         else
@@ -310,26 +315,30 @@ class BlacklistManager {
                     .some(e => e.hits.includes(id)))
 
                     Object.values(thumbs)
-                        .find(t => /id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1] == id.toString())
+                        .find(t => utils.getThumbPostId(t) == id)
                         .classList.toggle("go-blacklisted", false);
+
             });
         } else {
             entry.hits.forEach(id => {
                 Object.values(thumbs)
-                    .find(t => /id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1] == id.toString())
+                    .find(t => utils.getThumbPostId(t) == id)
                     .classList.toggle("go-blacklisted", true);
             });
         }
 
         this.updateSidebarTitle();
         this.updateSidebarEntries();
+
+        if (!skipStorageSet)
+            this.storageSetDisbledEntries(JSON.stringify(this.blacklistEntries.filter(e => e.isDisabled)));
     }
     /**
      * 
      * @param {BlacklistEntry[]} entries 
      * @param {boolean} force 
      */
-    toggleEntries(entries = undefined, force = undefined) {
+    toggleEntries(entries = undefined, force = undefined, skipStorageSet = false) {
         if (!entries) entries = this.blacklistEntries;
         if (entries.length < 1) return;
 
@@ -347,6 +356,9 @@ class BlacklistManager {
 
         this.updateSidebarTitle();
         this.updateSidebarEntries();
+
+        if (!skipStorageSet)
+            this.storageSetDisbledEntries(JSON.stringify(this.blacklistEntries.filter(e => e.isDisabled)));
     }
 
     /**
@@ -409,8 +421,8 @@ class BlacklistManager {
     updateSidebarTitle() {
         let thumbs = Object.values(utils.getThumbnails());
 
-        document.querySelector("#go-advBlacklistTitle").querySelector("b").textContent = 
-        `Blacklist ${thumbs.filter(e => e.classList.contains("go-blacklisted")).length}/${thumbs.length}`;
+        document.querySelector("#go-advBlacklistTitle").querySelector("b").textContent =
+            `Blacklist ${thumbs.filter(e => e.classList.contains("go-blacklisted")).length}/${thumbs.length}`;
     }
     updateSidebarSelect() {
         /** @type {HTMLSelectElement} */
@@ -500,9 +512,15 @@ class BlacklistManager {
     setupManager(value) {
         if (value) {
             this.registerEditWinow();
-
             this.createSidebar();
-            if (this.blacklistItems) this.selectedBlacklistChanged(this.blacklistItems[0].name);
+
+            if (this.blacklistItems) {
+                let stored = this.storageGetBlacklist();
+                if (stored)
+                    this.selectedBlacklistChanged(stored);
+                else
+                    this.selectedBlacklistChanged(this.blacklistItems[0].name);
+            }
             this.updateSidebarSelect();
         } else {
             this.removeSidebar();
@@ -513,30 +531,53 @@ class BlacklistManager {
      * Listeren for blacklist select onchange
      * @param {string} name 
      */
-    selectedBlacklistChanged(name) {
-        // clear blacklisted posts
+    async selectedBlacklistChanged(name) {
         this.selectedBlacklistItem = this.blacklistItems.find(i => i.name == name);
 
         this.totalHits = [];
         this.totalPosts = 0;
 
         this.parseEntries();
-        this.applyBlacklist();
+        await this.applyBlacklist().then(() => {
+            if (this.selectedBlacklistItem.name == this.storageGetBlacklist()) {
+                let entrStr = this.storageGetDisabledEntries();
+                if (entrStr == null || entrStr == "") return;
+
+                let entries = JSON.parse(entrStr);
+                entries.forEach(entry => {
+                    let found = this.blacklistEntries.find(e =>
+                        e.tag == entry.tag ||
+                        e.tags && entry.tags &&
+                        e.tags.every((v, i) => v == entry.tags[i]));
+                    if (found) this.toggleEntry(found, true, true);
+                });
+
+                this.updateSidebarTitle();
+                this.updateSidebarEntries();
+            } else {
+                this.storageSetBlacklist(this.selectedBlacklistItem.name);
+                this.storageSetDisbledEntries("[]");
+            }
+        });
     }
 
     applyBlacklist(thumbs = null) {
-        if (!thumbs) {
-            thumbs = utils.getThumbnails();
-            this.totalPosts = Object.values(thumbs).length;
-        } else {
-            this.totalPosts += Object.values(thumbs).length;
-        }
+        return new Promise(async (resolve) => {
+            if (!thumbs) {
+                thumbs = utils.getThumbnails();
+                this.totalPosts = Object.values(thumbs).length;
+            } else {
+                this.totalPosts += Object.values(thumbs).length;
+            }
 
 
-        this.checkPosts(thumbs).then(() => {
-            this.hidePosts(thumbs);
-            this.updateSidebarTitle();
-            this.updateSidebarEntries();
+            await this.checkPosts(thumbs).then(() => {
+                this.hidePosts(thumbs);
+                this.updateSidebarTitle();
+                this.updateSidebarEntries();
+            });
+
+            resolve();
         });
     }
     async checkPosts(thumbs) {
@@ -551,7 +592,10 @@ class BlacklistManager {
     }
     hidePosts(thumbs) {
         Object.values(thumbs).forEach(t => {
-            t.classList.toggle("go-blacklisted", this.totalHits.includes(utils.getThumbPostId(t)));
+            if (this.blacklistEntries.filter(e => !e.isDisabled && e.hits.length > 0).some(e => e.hits.includes(utils.getThumbPostId(t))))
+                t.classList.toggle("go-blacklisted", true);
+            else
+                t.classList.toggle("go-blacklisted", false);
         });
     }
     /**
@@ -563,7 +607,7 @@ class BlacklistManager {
         // O(post count * blacklist entries count)
         return new Promise(async resolve => {
             let isHit = false;
-            
+
             await Promise.all(this.blacklistEntries.map(async e => await this.checkEntryHit(item, e)))
                 .then(retarr => {
                     retarr.forEach(ret => {
@@ -597,5 +641,20 @@ class BlacklistManager {
 
             resolve({ entry, isHit: false });
         });
+    }
+
+    storageSetBlacklist(name) {
+        localStorage.setItem("go-blacklist", name);
+    }
+    storageGetBlacklist() {
+        let name = localStorage.getItem("go-blacklist");
+
+        return name;
+    }
+    storageSetDisbledEntries(entries) {
+        sessionStorage.setItem("go-blacklist-disabled", entries);
+    }
+    storageGetDisabledEntries() {
+        return sessionStorage.getItem("go-blacklist-disabled");
     }
 }
