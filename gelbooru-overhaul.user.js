@@ -202,9 +202,10 @@
         infiniteScrolling = new InfiniteScrolling();
 
         configManager.addUpdateListener("advancedBlacklist.enable", applyTweakAdvancedBlacklist);
-        configManager.addUpdateListener("advancedBlacklist.hideBlack", applyCssVariableBlacklist);
-        configManager.addUpdateListener("advancedBlacklist.hideBlur", applyCssVariableBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.hideMode", applyCssVariableBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.hideFilter", applyCssVariableBlacklist);
         configManager.addUpdateListener("advancedBlacklist.showOnHover", applyCssVariableBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.enlargeOnHover", applyCssVariableBlacklist);
 
         configManager.addUpdateListener("collapsibleSidebar.enable", applyTweakCollapseSidebar);
         configManager.addUpdateListener("collapsibleSidebar.width", applyCssVariableGoCollapseSidebar);
@@ -343,17 +344,18 @@
             document.body.appendChild(style);
         }
 
-        let black = configManager.findValueByKey("advancedBlacklist.hideBlack") ? "0%" : "100%";
-        let blur = configManager.findValueByKey("advancedBlacklist.hideBlur");
+        let filter = configManager.findValueByKey("advancedBlacklist.hideFilter");
+        let collapse = configManager.findValueByKey("advancedBlacklist.hideMode");
         let show = configManager.findValueByKey("advancedBlacklist.showOnHover");
+        let disableHover = configManager.findValueByKey("advancedBlacklist.enlargeOnHover");
 
         style.innerHTML = `
         .go-blacklisted {
-            --blacklist-black: ${black};
-            --blacklist-blur: ${blur};
+            --blacklist-filter: ${filter};
+            --blacklist-visibility: ${collapse == "Collapse" ? "none" : ""};
 
-            --blacklist-hoverBlack: ${show ? "100%" : black};
-            --blacklist-hoverBlur: ${show ? "0" : blur};
+            --blacklist-hoverFilter: ${show ? "100%" : filter};
+            ${disableHover ? "" : "--disable-blacklist-enlarge: 1;"}
         }
         `;
     }
@@ -364,7 +366,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value
      */
-     async function applyTweakCollapseSidebar(value) {
+    async function applyTweakCollapseSidebar(value) {
         if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
 
         utils.debugLog(`Applying TweakCollapseSidebar state: ${String(value)}`);
@@ -383,7 +385,7 @@
      * @type {PreferenceUpdateCallback}
      * @param {boolean} value 
      */
-     async function applyTweakPostFit(value) {
+    async function applyTweakPostFit(value) {
         if (currentPageType != utils.pageTypes.POST) return;
         utils.debugLog(`Applying PostFit state: ${String(value)}`);
 
@@ -910,6 +912,35 @@
                 case "string":
                 case "number":
                     li.className = "text-input";
+                    if (pref[1].values) {
+                        let labelText = document.createElement("label");
+                        labelText.htmlFor = pref[1].name;
+                        labelText.textContent = pref[1].name;
+
+                        let inputSelect = document.createElement("select");
+                        inputSelect.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
+                        inputSelect.name = pref[1].name;
+                        inputSelect.value = String(pref[1].value);
+                        inputSelect.disabled = pref[1].locked;
+
+                        pref[1].values.forEach(i => {
+                            let opt = document.createElement("option");
+                            opt.value = i;
+                            opt.textContent = i;
+                            inputSelect.appendChild(opt);
+                        });
+
+                        let debouncedUpdate = utils.debounce(updatePreferenceItem, 300);
+                        inputSelect.addEventListener("input", /** @param {InputEvent} e */ e => debouncedUpdate(e, pref[1]));
+
+                        let pText = document.createElement("p");
+                        pText.textContent = pref[1].description;
+
+                        li.appendChild(labelText);
+                        li.appendChild(inputSelect);
+                        li.appendChild(pText);
+                        break;
+                    }
 
                     let labelText = document.createElement("label");
                     labelText.htmlFor = pref[1].name;
@@ -922,7 +953,7 @@
                     inputText.value = String(pref[1].value);
                     inputText.disabled = pref[1].locked;
 
-                    let debouncedUpdate = utils.debounce(updatePreferenceItem, 3000);
+                    let debouncedUpdate = utils.debounce(updatePreferenceItem, 300);
                     inputText.addEventListener("input", /** @param {InputEvent} e */ e => debouncedUpdate(e, pref[1]));
 
                     let pText = document.createElement("p");

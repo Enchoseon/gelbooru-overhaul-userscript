@@ -122,7 +122,7 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* THUMBNAIL ENLARGE*/
 /* MAIN HOVER */
 .go-thumbnail-enlarge:hover {
-    transform: scale(var(--enlarge-scale, 2));
+    transform: scale(var(--disable-blacklist-enlarge, var(--enlarge-scale, 2) ));
     transition-delay: 142ms;
     z-index: 420690;
     position: relative;
@@ -265,6 +265,17 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 }
 /* CONFIG WINDOW */
 /* INPUT TYPE SPECIFIC */
+.text-input select {
+    display: block;
+    margin-left: 4px;
+    margin-bottom: 6px;
+    padding: 0 6px;
+    width: -webkit-fill-available;
+    width: -moz-available;
+    height: 1.5em;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
 .checkbox-input p {
     margin-left: 18px;
 }
@@ -324,12 +335,15 @@ div a img.go-thumbnail-resize {
 
 
 /* BLACKLIST */
-img.go-blacklisted {
-    filter: brightness(var(--blacklist-black, 0%)) blur(var(--blacklist-blur, 0));
+.go-blacklisted {
+    display: var(--blacklist-visibility);
+}
+.go-blacklisted img {
+    filter: var(--blacklist-filter, 0%);
     transition: 142ms;
 }
-img.go-blacklisted:hover {
-    filter: brightness(var(--blacklist-hoverBlack, 0%)) blur(var(--blacklist-hoverBlur, 0));
+.go-blacklisted img:hover {
+    filter: var(--blacklist-hoverFilter, 0%);
     transition: 142ms;
 }
 /* BLACKLIST SIDEBAR */

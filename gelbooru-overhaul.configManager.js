@@ -6,6 +6,7 @@ class ConfigManager {
      * @typedef  PreferenceItem
      * @type     {Object}
      * @property {number | string | boolean} value          Value of preference
+     * @property {string[]}                  [values]       Values for select preference
      * @property {string}                    name           Displayed name in config window
      * @property {string}                    description    Description displayed in config window
      * @property {boolean}                   [locked=false] Determines if preference should be available for editing
@@ -220,15 +221,21 @@ class ConfigManager {
                         description: "Enable advanced mulipreset danbooru-like blacklist",
                         value: true
                     },
-                    hideBlack: {
-                        name: "Blacklout hidden images",
-                        description: "Makes blacklisted images pitch black",
-                        value: false
+                    hideMode: {
+                        name: "Hiding mode",
+                        description: "Hiding mode for blacklisted images",
+                        values: ["Apply Filter", "Collapse"],
+                        value: "Apply Filter"
                     },
-                    hideBlur: {
-                        name: "Blur hidden images",
-                        description: "Makes blacklisted images blurry. Set 0 to disable",
-                        value: "8px"
+                    hideFilter: {
+                        name: "Hiding filter",
+                        description: "Input css filter for blacklisted images",
+                        value: "blur(8px) brightness(80%)"
+                    },
+                    enlargeOnHover: {
+                        name: "Enlarge hidden images on hover",
+                        description: "Allow to enlarge blacklisted images if post enlarge enabled",
+                        value: false
                     },
                     showOnHover: {
                         name: "Show hidden images on hover",

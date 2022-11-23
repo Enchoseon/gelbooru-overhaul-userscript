@@ -594,9 +594,9 @@ class BlacklistManager {
     hidePosts(thumbs) {
         Object.values(thumbs).forEach(t => {
             if (this.blacklistEntries.filter(e => !e.isDisabled && e.hits.length > 0).some(e => e.hits.includes(utils.getThumbPostId(t))))
-                t.classList.toggle("go-blacklisted", true);
+                t.parentElement.parentElement.classList.toggle("go-blacklisted", true);
             else
-                t.classList.toggle("go-blacklisted", false);
+                t.parentElement.parentElement.classList.toggle("go-blacklisted", false);
         });
     }
     /**
