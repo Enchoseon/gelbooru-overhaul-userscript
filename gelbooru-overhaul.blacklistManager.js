@@ -238,7 +238,8 @@ class BlacklistManager {
         }
     }
     removeEditWindow() {
-        document.querySelector("#container > #goBlacklistEditWindow").remove();
+        let elem = document.querySelector("#container > #goBlacklistEditWindow");
+        if (elem) elem.remove();
     }
 
     /**
@@ -313,18 +314,20 @@ class BlacklistManager {
             entry.hits.forEach(id => {
                 if (!this.blacklistEntries
                     .filter(e => !(e.hits.length == 0 || e.isDisabled || e == entry))
-                    .some(e => e.hits.includes(id)))
+                    .some(e => e.hits.includes(id))) {
+                    let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
 
-                    Object.values(thumbs)
-                        .find(t => utils.getThumbPostId(t) == id)
-                        .classList.toggle("go-blacklisted", false);
+                    thumb.parentElement.parentElement.classList.toggle("go-blacklisted", false);
+                    thumb.classList.toggle("go-blacklisted", false);
+                }
 
             });
         } else {
             entry.hits.forEach(id => {
-                Object.values(thumbs)
-                    .find(t => utils.getThumbPostId(t) == id)
-                    .classList.toggle("go-blacklisted", true);
+                let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
+
+                thumb.parentElement.parentElement.classList.toggle("go-blacklisted", true);
+                thumb.classList.toggle("go-blacklisted", true);
             });
         }
 
@@ -350,9 +353,10 @@ class BlacklistManager {
         let thumbs = utils.getThumbnails();
 
         this.totalHits.forEach(id => {
-            Object.values(thumbs)
-                .find(t => /id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1] == id.toString())
-                .classList.toggle("go-blacklisted", !force);
+            let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
+
+            thumb.parentElement.parentElement.classList.toggle("go-blacklisted", !force);
+            thumb.classList.toggle("go-blacklisted", !force);
         });
 
         this.updateSidebarTitle();
@@ -386,6 +390,7 @@ class BlacklistManager {
 
         //select edit
         let edit = document.createElement("svg");
+        edit.id = "go-advBlacklistEdit";
         edit.innerHTML = '<svg class="go-svg" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="currentColor" d="m19.3 8.925l-4.25-4.2l1.4-1.4q.575-.575 1.413-.575q.837 0 1.412.575l1.4 1.4q.575.575.6 1.388q.025.812-.55 1.387ZM17.85 10.4L7.25 21H3v-4.25l10.6-10.6Z"/></svg>';
         edit.addEventListener("click", (e) => {
             document.querySelector("#container > #goBlacklistEditWindow").classList.toggle("go-config-window-hidden");
@@ -410,12 +415,14 @@ class BlacklistManager {
         let aside = document.querySelector(".aside");
         let title = aside.querySelector("#go-advBlacklistTitle");
         let select = aside.querySelector("#go-advBlacklistSelect");
+        let edit = aside.querySelector("#go-advBlacklistEdit");
         let entries = aside.querySelector("#go-advBlacklistEntries");
 
 
         if (title) {
             title.remove();
             select.remove();
+            edit.remove();
             entries.remove();
         }
     }
@@ -512,6 +519,8 @@ class BlacklistManager {
      */
     setupManager(value) {
         if (value) {
+            this.removeEditWindow();
+            this.removeSidebar();
             this.registerEditWinow();
             this.createSidebar();
 
@@ -593,10 +602,14 @@ class BlacklistManager {
     }
     hidePosts(thumbs) {
         Object.values(thumbs).forEach(t => {
-            if (this.blacklistEntries.filter(e => !e.isDisabled && e.hits.length > 0).some(e => e.hits.includes(utils.getThumbPostId(t))))
+            if (this.blacklistEntries.filter(e => !e.isDisabled && e.hits.length > 0).some(e => e.hits.includes(utils.getThumbPostId(t)))) {
                 t.parentElement.parentElement.classList.toggle("go-blacklisted", true);
-            else
+                t.classList.toggle("go-blacklisted", true);
+            }
+            else {
                 t.parentElement.parentElement.classList.toggle("go-blacklisted", false);
+                t.classList.toggle("go-blacklisted", false);
+            }
         });
     }
     /**

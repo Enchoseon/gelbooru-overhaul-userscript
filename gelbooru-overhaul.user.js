@@ -352,7 +352,7 @@
         style.innerHTML = `
         .go-blacklisted {
             --blacklist-filter: ${filter};
-            --blacklist-visibility: ${collapse == "Collapse" ? "none" : ""};
+            --blacklist-visibility: ${collapse == "Collapse" ? "none" : "flex"};
 
             --blacklist-hoverFilter: ${show ? "100%" : filter};
             ${disableHover ? "" : "--disable-blacklist-enlarge: 1;"}
