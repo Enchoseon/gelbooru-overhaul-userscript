@@ -235,7 +235,6 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* PREFERENCE ITEM NAME */
 .go-config-window label {
     font-weight: bold;
-    display: block;
 }
 /* CONFIG WINDOW */
 /* PREFERENCE ITEM DESCRIPTION */
@@ -251,7 +250,6 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
 /* CONFIG WINDOW */
 /* INPUT TYPE SPECIFIC */
 .text-input label {
-    display: inline-block;
     margin-bottom: 8px;
 }
 /* CONFIG WINDOW */

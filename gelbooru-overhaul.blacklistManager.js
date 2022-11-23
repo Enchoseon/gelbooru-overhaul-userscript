@@ -136,6 +136,7 @@ class BlacklistManager {
             let mainContent = document.createElement("dl");
             let textInputLI = document.createElement("li");
             let nameInputLI = document.createElement("li");
+            nameInputLI.className = "text-input";
 
             let nameInputLabel = document.createElement("label");
             nameInputLabel.textContent = "Blacklist name";
