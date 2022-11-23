@@ -1067,8 +1067,7 @@
 
         e.preventDefault();
 
-        let postId = Number(/id=([0-9]+)/.exec(e.target.parentElement.getAttribute("href"))[1]);
-        utils.downloadPostById(postId);
+        utils.downloadPostById(utils.getThumbPostId(e.target));
     }
     /**
      * FastDL contextmenu event listener

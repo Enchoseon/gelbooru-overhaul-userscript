@@ -257,12 +257,12 @@ class BlacklistManager {
         });
 
         // clear inline comments and trim spaces
-        lines.map((l) => {
+        lines = lines.map((l) => {
             return l.replace(/([\/\/|#].*)/, "").trim();
         });
 
         // clear namespace excep rating:
-        lines.map(l => {
+        lines = lines.map(l => {
             return l.replace(/^(?!rating:)(?:.+:)(.+)$/, "$1");
         });
 
@@ -301,8 +301,28 @@ class BlacklistManager {
         else
             entry.isDisabled = !entry.isDisabled;
 
-        if (!entry.isDisabled) entry.hits = [];
-        this.applyBlacklist();
+        let thumbs = utils.getThumbnails();
+
+        if (entry.isDisabled) {
+            entry.hits.forEach(id => {
+                if (!this.blacklistEntries
+                    .filter(e => !(e.hits.length == 0 || e.isDisabled || e == entry))
+                    .some(e => e.hits.includes(id)))
+
+                    Object.values(thumbs)
+                        .find(t => /id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1] == id.toString())
+                        .classList.toggle("go-blacklisted", false);
+            });
+        } else {
+            entry.hits.forEach(id => {
+                Object.values(thumbs)
+                    .find(t => /id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1] == id.toString())
+                    .classList.toggle("go-blacklisted", true);
+            });
+        }
+
+        this.updateSidebarTitle();
+        this.updateSidebarEntries();
     }
     /**
      * 
@@ -311,15 +331,22 @@ class BlacklistManager {
      */
     toggleEntries(entries = undefined, force = undefined) {
         if (!entries) entries = this.blacklistEntries;
+        if (entries.length < 1) return;
 
-        if (force)
-            entries.forEach(e => e.isDisabled = force);
-        else
-            entries.forEach(e => e.isDisabled = !e.isDisabled);
+        if (force == undefined) force = !entries[0].isDisabled;
 
-        if (!entries[0].isDisabled) entries.forEach(e => e.hits = []);
+        entries.forEach(e => e.isDisabled = force);
 
-        this.applyBlacklist();
+        let thumbs = utils.getThumbnails();
+
+        this.totalHits.forEach(id => {
+            Object.values(thumbs)
+                .find(t => /id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1] == id.toString())
+                .classList.toggle("go-blacklisted", !force);
+        });
+
+        this.updateSidebarTitle();
+        this.updateSidebarEntries();
     }
 
     /**
@@ -380,7 +407,10 @@ class BlacklistManager {
         }
     }
     updateSidebarTitle() {
-        document.querySelector("#go-advBlacklistTitle").querySelector("b").textContent = `Blacklist ${this.totalHits.length}/${this.totalPosts}`;
+        let thumbs = Object.values(utils.getThumbnails());
+
+        document.querySelector("#go-advBlacklistTitle").querySelector("b").textContent = 
+        `Blacklist ${thumbs.filter(e => e.classList.contains("go-blacklisted")).length}/${thumbs.length}`;
     }
     updateSidebarSelect() {
         /** @type {HTMLSelectElement} */
@@ -417,7 +447,7 @@ class BlacklistManager {
         while (entries.firstChild) entries.firstChild.remove();
 
         if (this.blacklistEntries && this.blacklistEntries.length > 0) {
-            this.blacklistEntries.filter(i => i.hits.length > 0 || i.isDisabled).forEach(i => entries.appendChild(buildEntryItem(i, this)));
+            this.blacklistEntries.filter(i => i.hits.length > 0).forEach(i => entries.appendChild(buildEntryItem(i, this)));
             if (entries.childElementCount > 1) entries.appendChild(buildDisableAll(this));
         }
         /** @param {BlacklistManager} scope @param {BlacklistEntry} i*/
@@ -449,9 +479,11 @@ class BlacklistManager {
             let li = document.createElement("li");
             li.className = "tag-type-general";
 
+            let state = scope.blacklistEntries.every(e => e.isDisabled);
+
             let a_tag = document.createElement("a");
-            a_tag.textContent = scope.blacklistEntries.every(e => e.isDisabled) ? "Enable all" : "Disable all";
-            a_tag.addEventListener("click", e => scope.toggleEntries());
+            a_tag.textContent = state ? "Enable all" : "Disable all";
+            a_tag.addEventListener("click", e => scope.toggleEntries(scope.blacklistEntries, !state));
             a_tag.href = "javascript:;";
 
             li.appendChild(a_tag);
@@ -496,11 +528,10 @@ class BlacklistManager {
         if (!thumbs) {
             thumbs = utils.getThumbnails();
             this.totalPosts = Object.values(thumbs).length;
-            this.totalHits = [];
-            this.blacklistEntries.forEach(e => e.hits = []);
         } else {
             this.totalPosts += Object.values(thumbs).length;
         }
+
 
         this.checkPosts(thumbs).then(() => {
             this.hidePosts(thumbs);
@@ -509,54 +540,62 @@ class BlacklistManager {
         });
     }
     async checkPosts(thumbs) {
-        await Promise.all(Object.values(thumbs).map(async (t) => {
-            let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
-            return await utils.loadPostItem(id).then(i => i);
-        })).then(items => { items.forEach(item => { if (this.checkPost(item)) this.totalHits.push(item.id); }); });
+        await Promise.all(Object.values(thumbs).map(async (t) => await utils.loadPostItem(utils.getThumbPostId(t)).then(i => i)))
+            .then(async items => {
+                await Promise.all(items.map(async item => {
+                    await this.checkPost(item).then(result => {
+                        if (result) this.totalHits.push(item.id);
+                    });
+                }));
+            });
     }
     hidePosts(thumbs) {
-
-        thumbs.forEach(t => {
-            let id = Number(/id=([0-9]+)/.exec(t.parentElement.getAttribute("href"))[1]);
-
-            t.classList.toggle("go-blacklisted", this.totalHits.includes(id));
+        Object.values(thumbs).forEach(t => {
+            t.classList.toggle("go-blacklisted", this.totalHits.includes(utils.getThumbPostId(t)));
         });
     }
     /**
      * 
      * @param {PostItem} item 
-     * @returns {boolean} Is post was hit by any entry
+     * @returns {Promise<boolean>} Is post was hit by any entry
      */
     checkPost(item) {
-        let isHit = false;
-
-        this.blacklistEntries.forEach(e => {
-            if (this.checkEntryHit(item, e)) {
-                isHit = true;
-                e.hits.push(item.id);
-            }
+        // O(post count * blacklist entries count)
+        return new Promise(async resolve => {
+            let isHit = false;
+            
+            await Promise.all(this.blacklistEntries.map(async e => await this.checkEntryHit(item, e)))
+                .then(retarr => {
+                    retarr.forEach(ret => {
+                        if (ret.isHit) {
+                            ret.entry.hits.push(item.id);
+                            isHit = true;
+                        }
+                    });
+                })
+                .then(() => {
+                    resolve(isHit);
+                });
         });
-
-        return isHit;
     }
     /**
      * 
      * @param {PostItem} post 
      * @param {BlacklistEntry} entry 
-     * @returns {boolean} Is post was hit with given entry
+     * @returns {Promise<{entry:BlacklistEntry, isHit:boolean}>} Is post was hit with given entry
      */
     checkEntryHit(post, entry) {
-        if (entry.isDisabled) return false;
+        return new Promise(resolve => {
+            let postTags = post.tags.artist.concat(post.tags.character, post.tags.copyright, post.tags.general, post.tags.metadata);
+            postTags = postTags.concat([`rating:${post.rating}`]);
 
-        let postTags = post.tags.artist.concat(post.tags.character, post.tags.copyright, post.tags.general, post.tags.metadata);
-        postTags = postTags.concat([`rating:${post.rating}`]);
+            if (entry.isAnd) {
+                if (entry.tags.every(t => postTags.some(tt => utils.wildTest(t, tt)))) resolve({ entry, isHit: true });
+            } else {
+                if (postTags.some(tt => utils.wildTest(entry.tag, tt))) resolve({ entry, isHit: true });
+            }
 
-        if (entry.isAnd) {
-            if (entry.tags.every(t => postTags.some(tt => utils.wildTest(t, tt)))) return true;
-        } else {
-            if (postTags.some(tt => utils.wildTest(entry.tag, tt))) return true;
-        }
-
-        return false;
+            resolve({ entry, isHit: false });
+        });
     }
 }

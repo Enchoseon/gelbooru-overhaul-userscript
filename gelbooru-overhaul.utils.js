@@ -226,6 +226,14 @@ class utils {
                 return undefined;
         }
     }
+    /**
+     * 
+     * @param {HTMLImageElement} thumb 
+     * @returns {number}
+     */
+    static getThumbPostId(thumb) {
+        return Number(/id=([0-9]+)/.exec(thumb.parentElement.getAttribute("href"))[1]);
+    }
     /** 
      * @typedef PostItem
      * @property {string} highResThumb - high resolution thumb url (image/animated gif/video preview)
@@ -294,19 +302,16 @@ class utils {
                         let score = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Score: ")).children[0].textContent;
                         let rating = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Rating: ")).textContent.substring(8).toLowerCase();
 
-                        try {
-                            utils.postCache[postId] = {
-                                highResThumb: highResThumb,
-                                download: fileLink,
-                                tags: tags,
-                                md5: md5,
-                                id: postId,
-                                score: Number(score),
-                                rating: rating
-                            };
-                        } catch (error) {
-                            console.log(utils.postCache);
-                        }
+                        utils.postCache[postId] = {
+                            highResThumb: highResThumb,
+                            download: fileLink,
+                            tags: tags,
+                            md5: md5,
+                            id: postId,
+                            score: Number(score),
+                            rating: rating
+                        };
+                        
                         resolve(utils.postCache[postId]);
                         utils.postCacheSave();
                     })
@@ -379,8 +384,12 @@ class utils {
      * @returns {boolean} If str matches wildcard
      */
     static wildTest(wildcard, str) {
-        let w = wildcard.replace(/[.+^${}()|[\]\\]/g, '\\$&'); // regexp escape 
-        const re = new RegExp(`^${w.replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
-        return re.test(str); // remove last 'i' above to have case sensitive
+        if (wildcard.includes("*") || wildcard.includes("?")) {
+            let w = wildcard.replace(/[.+^${}()|[\]\\]/g, '\\$&'); // regexp escape 
+            const re = new RegExp(`^${w.replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
+            return re.test(str); // remove last 'i' above to have case sensitive
+        } else {
+            return str == wildcard;
+        }
     }
 }
