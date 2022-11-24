@@ -36,7 +36,7 @@
             this.scheduleCheckForThemeSwitch();
 
             if (context.pageType != utils.pageTypes.UNDEFINED) {
-                let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a, #navbar a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
+                let darkModeButton = document.querySelector('#myTopnav a[onclick*="darkModeToggle(); return false;"], #navbar a[onclick*="darkModeToggle(); return false;"]')
                 darkModeButton.onclick = undefined;
                 darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
                 darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
