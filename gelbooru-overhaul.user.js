@@ -35,11 +35,13 @@
 
             this.scheduleCheckForThemeSwitch();
 
-            let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a, #navbar a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
-            darkModeButton.onclick = undefined;
-            darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
-            darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
-            darkModeButton.addEventListener("contextmenu", e => this.clearForceSessionMode());
+            if (context.pageType != utils.pageTypes.UNDEFINED) {
+                let darkModeButton = Object.values(document.querySelectorAll("#myTopnav a, #navbar a")).filter(i => i.getAttribute("href").includes("javascript:;"))[0];
+                darkModeButton.onclick = undefined;
+                darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
+                darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
+                darkModeButton.addEventListener("contextmenu", e => this.clearForceSessionMode());
+            }
         }
         /**
          * @private
@@ -254,8 +256,10 @@
         utils.debugLog("Registering styles");
         GM_addStyle(GM_getResourceText("css"));
 
-        utils.debugLog("Registering config window");
-        registerConfigWindow();
+        if (currentPageType != utils.pageTypes.UNDEFINED) {
+            utils.debugLog("Registering config window");
+            registerConfigWindow();
+        }
 
         blackoutStyle.remove();
     }
