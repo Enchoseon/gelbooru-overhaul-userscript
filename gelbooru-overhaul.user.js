@@ -916,55 +916,45 @@
                 case "string":
                 case "number":
                     li.className = "text-input";
-                    if (pref[1].values) {
-                        let labelText = document.createElement("label");
-                        labelText.htmlFor = pref[1].name;
-                        labelText.textContent = pref[1].name;
-
-                        let inputSelect = document.createElement("select");
-                        inputSelect.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
-                        inputSelect.name = pref[1].name;
-                        inputSelect.value = String(pref[1].value);
-                        inputSelect.disabled = pref[1].locked;
-
-                        pref[1].values.forEach(i => {
-                            let opt = document.createElement("option");
-                            opt.value = i;
-                            opt.textContent = i;
-                            inputSelect.appendChild(opt);
-                        });
-
-                        let debouncedUpdate = utils.debounce(updatePreferenceItem, 300);
-                        inputSelect.addEventListener("input", /** @param {InputEvent} e */ e => debouncedUpdate(e, pref[1]));
-
-                        let pText = document.createElement("p");
-                        pText.textContent = pref[1].description;
-
-                        li.appendChild(labelText);
-                        li.appendChild(inputSelect);
-                        li.appendChild(pText);
-                        break;
-                    }
 
                     let labelText = document.createElement("label");
                     labelText.htmlFor = pref[1].name;
                     labelText.textContent = pref[1].name;
 
-                    let inputText = document.createElement("input");
-                    inputText.type = "text";
-                    inputText.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
-                    inputText.name = pref[1].name;
-                    inputText.value = String(pref[1].value);
-                    inputText.disabled = pref[1].locked;
+                    let input;
+
+                    if (pref[1].values) {
+                        input = document.createElement("select");
+                        input.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
+                        input.name = pref[1].name;
+                        input.disabled = pref[1].locked;
+                        
+                        pref[1].values.forEach(i => {
+                            let opt = document.createElement("option");
+                            opt.value = i;
+                            opt.textContent = i;
+                            input.appendChild(opt);
+                        });
+                        
+                        input.value = String(pref[1].value);
+                        console.log(input.value);
+                    } else {
+                        input = document.createElement("input");
+                        input.type = "text";
+                        input.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
+                        input.name = pref[1].name;
+                        input.value = String(pref[1].value);
+                        input.disabled = pref[1].locked;
+                    }
 
                     let debouncedUpdate = utils.debounce(updatePreferenceItem, 300);
-                    inputText.addEventListener("input", /** @param {InputEvent} e */ e => debouncedUpdate(e, pref[1]));
+                    input.addEventListener("input", /** @param {InputEvent} e */ e => debouncedUpdate(e, pref[1]));
 
                     let pText = document.createElement("p");
                     pText.textContent = pref[1].description;
 
                     li.appendChild(labelText);
-                    li.appendChild(inputText);
+                    li.appendChild(input);
                     li.appendChild(pText);
                     break;
                 default:
@@ -979,6 +969,7 @@
                         i.checked = Boolean(configManager.findValueByKey(i.id));
                         break;
 
+                    case "select":
                     case "text":
                         i.value = String(configManager.findValueByKey(i.id));
                         break;
