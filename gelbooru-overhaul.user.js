@@ -36,7 +36,7 @@
             this.scheduleCheckForThemeSwitch();
 
             if (context.pageType != utils.pageTypes.UNDEFINED) {
-                let darkModeButton = document.querySelector('#myTopnav a[onclick*="darkModeToggle(); return false;"], #navbar a[onclick*="darkModeToggle(); return false;"]')
+                let darkModeButton = document.querySelector('#myTopnav a[onclick*="darkModeToggle(); return false;"], #navbar a[onclick*="darkModeToggle(); return false;"]');
                 darkModeButton.onclick = undefined;
                 darkModeButton.setAttribute("title", "Click to force switch dark mode for current session\nRight click to clear force mode");
                 darkModeButton.addEventListener("click", e => this.switchForceSessionMode());
@@ -592,8 +592,10 @@
                 i.setAttribute("data-title", i.getAttribute("title"));
                 i.removeAttribute("title");
             } else {
-                i.setAttribute("title", i.getAttribute("data-title"));
-                i.removeAttribute("data-title");
+                if (i.hasAttribute("data-title")) {
+                    i.setAttribute("title", i.getAttribute("data-title"));
+                    i.removeAttribute("data-title");
+                }
             }
         });
     }
@@ -928,14 +930,14 @@
                         input.id = utils.findPath(configManager.config, pref[0], pref[1]).substring(1).replace(".items", "");
                         input.name = pref[1].name;
                         input.disabled = pref[1].locked;
-                        
+
                         pref[1].values.forEach(i => {
                             let opt = document.createElement("option");
                             opt.value = i;
                             opt.textContent = i;
                             input.appendChild(opt);
                         });
-                        
+
                         input.value = String(pref[1].value);
                         console.log(input.value);
                     } else {

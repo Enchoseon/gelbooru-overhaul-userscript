@@ -622,7 +622,7 @@ class BlacklistManager {
         return new Promise(async resolve => {
             let isHit = false;
 
-            await Promise.all(this.blacklistEntries.map(async e => await this.checkEntryHit(item, e)))
+            Promise.all(this.blacklistEntries.map(async e => await this.checkEntryHit(item, e)))
                 .then(retarr => {
                     retarr.forEach(ret => {
                         if (ret.isHit) {
