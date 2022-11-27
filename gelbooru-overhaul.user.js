@@ -251,6 +251,10 @@
                 blacklistManager.applyBlacklist(e);
         });
 
+        if (configManager.findValueByKey("advancedBlacklist.enable")) {
+            blacklistManager.addAppliedListener(() =>  blackoutStyle.remove());
+        }
+
         configManager.applyConfig();
 
         utils.debugLog("Registering styles");
@@ -261,7 +265,9 @@
             registerConfigWindow();
         }
 
-        blackoutStyle.remove();
+        if (!configManager.findValueByKey("advancedBlacklist.enable")) {
+            blackoutStyle.remove();
+        }
     }
 
     // lazy fix for the back button, don't want to deal with HTML5 stuff

@@ -42,6 +42,21 @@ class BlacklistManager {
             this.blacklistItems = [item, item2];
         }
     }
+    /**
+     * Stores all the dispatch handlers
+     * @private
+     * @type {function[]}
+     */
+    dispatchHandlers = [];
+    /**
+     * Registers an event listener
+     * @public
+     * @param {function} handler 
+     * @returns {number} Number of listeners
+     */
+    addAppliedListener(handler) {
+        return this.dispatchHandlers.push(handler);
+    }
 
     /**
      * @private
@@ -587,6 +602,7 @@ class BlacklistManager {
                 this.updateSidebarEntries();
             });
 
+            this.dispatchHandlers.forEach(h => h());
             resolve();
         });
     }
