@@ -86,10 +86,14 @@ class InfiniteScrolling {
             }
 
             let newThumbs = Object.values(newThumbContainer.children).map(thpr => thpr.querySelector("a > img"));
-            this.dispatchHandlers.forEach(h => h(newThumbs));
+            //this.dispatchHandlers.forEach(h => h(newThumbs));
 
             Object.values(newThumbContainer.children).forEach(t => {
                 oldThumbContainer.appendChild(t);
+                Promise.all(this.dispatchHandlers.map(h => new Promise(() => {
+                    h([t.children[0].children[0]]);
+                    Promise.resolve();
+                })));
             });
 
             let newPaginator = htmlDocument.querySelector(".pagination");

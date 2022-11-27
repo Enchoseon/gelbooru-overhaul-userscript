@@ -249,7 +249,7 @@ class utils {
      * @property {string} md5 - md5 for file (0's for video)
      * @property {number} id - post id
      */
-    static GM_setValueThrottle = utils.throttle((v) => GM_setValue("postCache", v), 100);
+    static GM_setValueThrottle = utils.throttle((v) => GM_setValue("postCache", v), 1000);
     /** @type {Object<number, PostItem>} */
     static localPostCache;
     /** @returns {Object<number, PostItem>} */
@@ -275,32 +275,30 @@ class utils {
                 utils.postCache = {};
 
             if (!utils.postCache[postId]) {
-                fetch("https://" + window.location.host + "/index.php?page=post&s=view&id=" + postId)
+                fetch("https://" + window.location.host + "/index.php?page=dapi&s=post&q=index&json=1&id=" + postId)
                     .then(response => {
                         if (!response.ok) throw Error(response.statusText);
-                        return response.text();
+                        return response.json();
                     })
-                    .then(text => {
-                        let parser = new DOMParser();
-                        let htmlDocument = parser.parseFromString(text, "text/html");
+                    .then(async json => {
+                        let post = json.post[0];
 
-                        let fileLink = htmlDocument.querySelector("meta[property='og:image']").content;
-                        let highResThumb = htmlDocument.querySelector("video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
-                        let md5 = htmlDocument.querySelector("video") ? "0".repeat(32) : htmlDocument.querySelector("section.image-container").getAttribute("data-md5");
-                        // video have highRes thumbnail but does not have md5
+                        let fileLink = post.file_url;
+                        let highResThumb = fileLink.startsWith("https://video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
+                        let md5 = post.md5;
 
                         if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
 
                         let tags = {
-                            artist: [...htmlDocument.querySelectorAll(".tag-type-artist       > a")].map(i => i.text),
-                            character: [...htmlDocument.querySelectorAll(".tag-type-character > a")].map(i => i.text),
-                            copyright: [...htmlDocument.querySelectorAll(".tag-type-copyright > a")].map(i => i.text),
-                            metadata: [...htmlDocument.querySelectorAll(".tag-type-metadata   > a")].map(i => i.text),
-                            general: [...htmlDocument.querySelectorAll(".tag-type-general     > a")].map(i => i.text),
+                            artist: [],
+                            character: [],
+                            copyright: [],
+                            metadata: [],
+                            general: post.tags.split(" "),
                         };
 
-                        let score = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Score: ")).children[0].textContent;
-                        let rating = Object.values(htmlDocument.querySelectorAll("li")).find(i => i.textContent.startsWith("Rating: ")).textContent.substring(8).toLowerCase();
+                        let score = post.score;
+                        let rating = post.rating;
 
                         utils.postCache[postId] = {
                             highResThumb: highResThumb,
@@ -311,7 +309,7 @@ class utils {
                             score: Number(score),
                             rating: rating
                         };
-                        
+
                         resolve(utils.postCache[postId]);
                         utils.postCacheSave();
                     })
