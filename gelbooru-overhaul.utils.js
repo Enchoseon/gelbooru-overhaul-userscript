@@ -294,7 +294,7 @@ class utils {
                             character: [],
                             copyright: [],
                             metadata: [],
-                            general: post.tags.split(" "),
+                            general: post.tags.split(" ").map(t => t.replaceAll("_", " ")),
                         };
 
                         let score = post.score;
