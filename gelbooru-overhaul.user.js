@@ -252,7 +252,7 @@
         });
 
         if (configManager.findValueByKey("advancedBlacklist.enable")) {
-            blacklistManager.addAppliedListener(() =>  blackoutStyle.remove());
+            blacklistManager.addAppliedListener(() => { if (blackoutStyle) blackoutStyle.remove();});
         }
 
         configManager.applyConfig();
@@ -265,8 +265,8 @@
             registerConfigWindow();
         }
 
-        if (!configManager.findValueByKey("advancedBlacklist.enable")) {
-            blackoutStyle.remove();
+        if (!configManager.findValueByKey("advancedBlacklist.enable") || currentPageType == utils.pageTypes.UNDEFINED) {
+            if (blackoutStyle) blackoutStyle.remove();
         }
     }
 
