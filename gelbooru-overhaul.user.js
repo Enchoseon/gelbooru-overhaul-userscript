@@ -769,8 +769,16 @@
             settingsButton.text = "Overhaul";
             settingsButton.style.cursor = "pointer";
 
+            settingsButton.title = "Click to open Gelbooru Overhaul config\nRight click to force clear post item cache";
+
             settingsButton.addEventListener("click", (e) => {
                 settingsElem.classList.toggle("go-config-window-hidden");
+            });
+            settingsButton.addEventListener("contextmenu", e => {
+                if (e.shiftKey) return;
+
+                e.preventDefault();
+                GM_setValue("postCache", {});
             });
             let observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
