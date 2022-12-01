@@ -173,7 +173,7 @@ class ConfigManager {
                     },
                     maxCache: {
                         value: 420,
-                        name: "Max cahed post items",
+                        name: "Max cached post items",
                         description: "How many posts to keep in the cache to make fewer requests (does not apply to image cache)"
                     }
                 }
