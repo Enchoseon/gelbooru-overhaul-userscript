@@ -187,7 +187,11 @@
 
     let blackoutStyle = GM_addStyle(`body { visibility: hidden; }`);
 
-    onDOMReady(main);
+    try {
+        onDOMReady(main);
+    } catch (error) {
+        alert(error);
+    }
 
     function main() {
         currentPageType = utils.getPageType();

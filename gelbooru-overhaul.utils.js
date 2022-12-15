@@ -2,6 +2,119 @@ class context {
     static configManager;
     static pageType;
 }
+/**
+ * @class Wrapper for Fetch method to make it more reliable
+ * @link Inspired by (mostly borrowed) https://github.com/evan-liu/fetch-queue
+ */
+class RepeatFetchQueue {
+    /**
+     * @typedef {Object} QueueItem
+     * @property {string} Url
+     * @property {Function} Resolve
+     * @property {Function} Reject
+     * @property {string} State
+     * @property {number} Retries
+     */
+    ItemStates = { Pending: "Pending", Active: "Active", Succeeded: "Succeeded", Failed: "Failed" };
+
+    /** @type {number} */
+    parallelRequests;
+    /** @type {number} */
+    maxRetryCount;
+
+    /** @type {QueueItem[]} */
+    pendingItems;
+    /** @type {QueueItem[]} */
+    activeItems;
+
+    constructor(parallelRequests = 5, maxRetryCount = 5) {
+        this.parallelRequests = parallelRequests;
+        this.maxRetryCount = maxRetryCount;
+
+        this.pendingItems = [];
+        this.activeItems = [];
+    }
+
+    /**
+     * Main method to enqueue Fetch request
+     * @param {string} url 
+     * @returns {Promise}
+     */
+    Fetch(url) {
+        /** @type {QueueItem} */
+        let item;
+
+        const promise = new Promise((resolve, reject) => {
+            item = {
+                Url: url,
+                Resolve: resolve,
+                Reject: reject,
+                State: this.ItemStates.Pending,
+                Retries: this.maxRetryCount
+            };
+            this.pendingItems.push(item);
+        });
+        this.checkNext();
+
+        return promise;
+    }
+
+    /**
+     * @private
+     */
+    checkNext() {
+        while (this.pendingItems.length > 0 && this.activeItems.length < this.parallelRequests) {
+            const item = this.pendingItems.shift();
+            this.activeItems.push(item);
+            item.State = this.ItemStates.Active;
+
+            fetch(item.Url).then(
+                (response) => {
+                    if (response.ok) this.handleResult(item, this.ItemStates.Succeeded, response);
+                    else this.reQueueItem(item, response.statusText);
+                },
+                (reason) => this.reQueueItem(item, reason)
+            );
+        }
+    }
+    /**
+     * @private
+     * @param {QueueItem} item
+     * @param {string} state
+     * @param {any} result
+     */
+    handleResult(item, state, result) {
+        this.activeItems = this.activeItems.filter((i) => i != item);
+        if (item.State == this.ItemStates.Active) {
+            item.State = state;
+
+            if (state == this.ItemStates.Succeeded) item.Resolve(result);
+            else item.Reject(result);
+        }
+
+        this.checkNext();
+    }
+
+    /**
+     * 
+     * @param {QueueItem} item 
+     * @param {any} reason 
+     */
+    reQueueItem(item, reason) {
+        item.Retries--;
+
+        if (item.Retries > 0) {
+            item.State = this.ItemStates.Pending;
+            this.pendingItems.push(item);
+            this.activeItems = this.activeItems.filter(i => i != item);
+
+            if (this.pendingItems.length == 1) this.checkNext(); // fix cycle stops when last pendingItem fails
+        }
+        else if (item.Retries == 0) {
+            this.handleResult(item, this.ItemStates.Failed, reason);
+        }
+    }
+}
 class utils {
     /** @var {Object.<string, string>} Enum with available page types */
     static pageTypes = Object.freeze({ GALLERY: "gallery", POST: "post", WIKI_VIEW: "wiki_view", POOL_VIEW: "pool_view", UNDEFINED: "undefined" });
@@ -263,61 +376,57 @@ class utils {
     static postCacheSave() {
         utils.GM_setValueThrottle(utils.postCache);
     }
+    /** @type {RepeatFetchQueue} */
+    static fetchQueue = new RepeatFetchQueue(12, 5);
     /**
      * Cache and return post item
      * @param {number} postId 
      * @returns {Promise<PostItem>}
      */
     static async loadPostItem(postId) {
-        return new Promise((resolve, reject) => {
-            // just clear postCache if exceeded limit
-            if (Object.keys(utils.postCache).length > context.configManager.findValueByKey("general.maxCache"))
-                utils.postCache = {};
+        // just clear postCache if exceeded limit
+        if (Object.keys(utils.postCache).length > context.configManager.findValueByKey("general.maxCache"))
+            utils.postCache = {};
 
-            if (!utils.postCache[postId]) {
-                fetch("https://" + window.location.host + "/index.php?page=dapi&s=post&q=index&json=1&id=" + postId)
-                    .then(response => {
-                        if (!response.ok) throw Error(response.statusText);
-                        return response.json();
-                    })
-                    .then(async json => {
-                        let post = json.post[0];
+        if (!utils.postCache[postId]) {
+            return this.fetchQueue.Fetch("https://" + window.location.host + "/index.php?page=dapi&s=post&q=index&json=1&id=" + postId)
+                .then(response => response.json())
+                .then(json => {
+                    let post = json.post[0];
 
-                        let fileLink = post.file_url;
-                        let highResThumb = fileLink.startsWith("https://video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
-                        let md5 = post.md5;
+                    let fileLink = post.file_url;
+                    let highResThumb = fileLink.startsWith("https://video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
+                    let md5 = post.md5;
 
-                        if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
+                    if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
 
-                        let tags = {
-                            artist: [],
-                            character: [],
-                            copyright: [],
-                            metadata: [],
-                            general: post.tags.split(" ").map(t => t.replaceAll("_", " ")),
-                        };
+                    let tags = {
+                        artist: [],
+                        character: [],
+                        copyright: [],
+                        metadata: [],
+                        general: post.tags.split(" ").map(t => t.replaceAll("_", " ")),
+                    };
 
-                        let score = post.score;
-                        let rating = post.rating;
+                    let score = post.score;
+                    let rating = post.rating;
 
-                        utils.postCache[postId] = {
-                            highResThumb: highResThumb,
-                            download: fileLink,
-                            tags: tags,
-                            md5: md5,
-                            id: postId,
-                            score: Number(score),
-                            rating: rating
-                        };
+                    utils.postCache[postId] = {
+                        highResThumb: highResThumb,
+                        download: fileLink,
+                        tags: tags,
+                        md5: md5,
+                        id: postId,
+                        score: Number(score),
+                        rating: rating
+                    };
 
-                        resolve(utils.postCache[postId]);
-                        utils.postCacheSave();
-                    })
-                    .catch(error => reject(error));
-            } else {
-                resolve(utils.postCache[postId]);
-            }
-        });
+                    utils.postCacheSave();
+                    return utils.postCache[postId];
+                })
+                .catch(error => Promise.reject(error));
+        } else
+            return utils.postCache[postId];
     }
     /**
      * 

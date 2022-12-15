@@ -587,7 +587,7 @@ class BlacklistManager {
     }
 
     applyBlacklist(thumbs = null) {
-        return new Promise(async (resolve) => {
+        return new Promise(async () => {
             if (!thumbs) {
                 thumbs = utils.getThumbnails();
                 this.totalPosts = Object.values(thumbs).length;
@@ -595,28 +595,23 @@ class BlacklistManager {
                 this.totalPosts += Object.values(thumbs).length;
             }
 
+            await this.checkPosts(thumbs);
+            await this.hidePosts(thumbs);
 
-            await this.checkPosts(thumbs).then(() => {
-                this.hidePosts(thumbs);
-                this.updateSidebarTitle();
-                this.updateSidebarEntries();
-            });
+            this.updateSidebarTitle();
+            this.updateSidebarEntries();
 
             this.dispatchHandlers.forEach(h => h());
-            resolve();
         });
     }
     async checkPosts(thumbs) {
-        await Promise.all(Object.values(thumbs).map(async (t) => await utils.loadPostItem(utils.getThumbPostId(t)).then(i => i)))
-            .then(async items => {
-                await Promise.all(items.map(async item => {
-                    await this.checkPost(item).then(result => {
-                        if (result) this.totalHits.push(item.id);
-                    });
-                }));
-            });
+        await Promise.all(
+            Object.values(thumbs).map(async t => {
+                let item = await utils.loadPostItem(utils.getThumbPostId(t))
+                this.checkPost(item).then(isHit => { if (isHit) this.totalHits.push(item.id); });
+            }));
     }
-    hidePosts(thumbs) {
+    async hidePosts(thumbs) {
         Object.values(thumbs).forEach(t => {
             if (this.blacklistEntries.filter(e => !e.isDisabled && e.hits.length > 0).some(e => e.hits.includes(utils.getThumbPostId(t)))) {
                 t.parentElement.parentElement.classList.toggle("go-blacklisted", true);
@@ -633,24 +628,21 @@ class BlacklistManager {
      * @param {PostItem} item 
      * @returns {Promise<boolean>} Is post was hit by any entry
      */
-    checkPost(item) {
+    async checkPost(item) {
         // O(post count * blacklist entries count)
-        return new Promise(async resolve => {
-            let isHit = false;
+        let isHit = false;
 
-            Promise.all(this.blacklistEntries.map(async e => await this.checkEntryHit(item, e)))
-                .then(retarr => {
-                    retarr.forEach(ret => {
-                        if (ret.isHit) {
-                            ret.entry.hits.push(item.id);
-                            isHit = true;
-                        }
-                    });
-                })
-                .then(() => {
-                    resolve(isHit);
+        Promise.all(this.blacklistEntries.map(e => this.checkEntryHit(item, e)))
+            .then(retarr => {
+                retarr.forEach(ret => {
+                    if (ret.isHit) {
+                        ret.entry.hits.push(item.id);
+                        isHit = true;
+                    }
                 });
-        });
+            });
+
+        return isHit;
     }
     /**
      * 
