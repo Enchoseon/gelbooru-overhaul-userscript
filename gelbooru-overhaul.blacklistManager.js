@@ -35,8 +35,6 @@ class BlacklistManager {
     totalPosts;
     /** @type {boolean} */
     orderEntriesByHitCount = false;
-    /** @type {boolean} Use different parent element for 'more like this' thumbs */
-    isMoreLikeThis = context.pageType == utils.pageTypes.POST;
 
     constructor() {
         if (!this.blacklistItems || this.blacklistItems.length == 0) {
