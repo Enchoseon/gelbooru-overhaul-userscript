@@ -35,6 +35,8 @@ class BlacklistManager {
     totalPosts;
     /** @type {boolean} */
     orderEntriesByHitCount = false;
+    /** @type {boolean} Use different parent element for 'more like this' thumbs */
+    isMoreLikeThis = context.pageType == utils.pageTypes.POST;
 
     constructor() {
         if (!this.blacklistItems || this.blacklistItems.length == 0) {
@@ -320,19 +322,19 @@ class BlacklistManager {
                 if (!this.blacklistEntries                                                               // from all the current blacklist entries
                     .filter(e => !(e.hits.length == 0 || e.isDisabled || e == entry))   // filter other entries that has hits and not disabled
                     .some(e => e.hits.includes(id))) {                                  // if there are none entries which also hits current post
-                    let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
+                    let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);     // find img element for given post id
 
-                    thumb.parentElement.parentElement.classList.toggle("go-blacklisted", false);        // find img element for given post id
-                    thumb.classList.toggle("go-blacklisted", false);                                    // disable blacklist class
+                    thumb.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", false);
+                    thumb.parentElement.classList.toggle("go-blacklisted", false);                                    // disable blacklist class
                 }
 
             });
         } else {                                                                                        // if entry was enabled
             entry.hits.forEach(id => {                                                         // for each its hit
-                let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
+                let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id); // find img element for given post id
 
-                thumb.parentElement.parentElement.classList.toggle("go-blacklisted", true);             // find img element for given post id
-                thumb.classList.toggle("go-blacklisted", true);                                         // enable blacklist class
+                thumb.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", true);
+                thumb.parentElement.classList.toggle("go-blacklisted", true);                                // enable blacklist class
             });
         }
 
@@ -361,8 +363,8 @@ class BlacklistManager {
         this.totalHits.forEach(id => {
             let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
 
-            thumb.parentElement.parentElement.classList.toggle("go-blacklisted", !force);
-            thumb.classList.toggle("go-blacklisted", !force);
+            thumb.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", !force);
+            thumb.parentElement.classList.toggle("go-blacklisted", !force);
         });
 
         this.updateSidebarTitle();
@@ -611,12 +613,13 @@ class BlacklistManager {
                 if (!this.blacklistEntries                                                                   // from all the current blacklist entries
                     .filter(e => !(e.isDisabled || e.hits.length == 0))                     // filter entries that has hits and not disabled
                     .some(e => e.hits.includes(utils.getThumbPostId(t)))) {                 // if there are none entries which also hits current post
-                    t.parentElement.parentElement.classList.toggle("go-blacklisted", false);                // find img element for given post id
-                    t.classList.toggle("go-blacklisted", false);                                            // disable blacklist class
+                    
+                    t.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", false);             // find img element for given post id
+                    t.parentElement.classList.toggle("go-blacklisted", false);                              // disable blacklist class                                           
                 }
                 else {                                                                                      // if there are entries which hits current post
-                    t.parentElement.parentElement.classList.toggle("go-blacklisted", true);
-                    t.classList.toggle("go-blacklisted", true);                                             // enable blacklist class
+                    t.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", true);
+                    t.parentElement.classList.toggle("go-blacklisted", true);                               // enable blacklist class
                 }
             })
         );
