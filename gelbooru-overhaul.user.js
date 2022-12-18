@@ -744,6 +744,7 @@
         blacklistManager.setupManager(value);
     }
     function applyVariableBlacklist(value) {
+        if (![utils.pageTypes.GALLERY, utils.pageTypes.POST].includes(currentPageType)) return;
         blacklistManager.orderEntriesByHitCount = value;
         blacklistManager.updateSidebarEntries();
     }
