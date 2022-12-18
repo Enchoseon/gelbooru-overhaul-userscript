@@ -33,6 +33,8 @@ class BlacklistManager {
     totalHits;
     /** @type {Number} */
     totalPosts;
+    /** @type {boolean} */
+    orderEntriesByHitCount = false;
 
     constructor() {
         if (!this.blacklistItems || this.blacklistItems.length == 0) {
@@ -94,17 +96,9 @@ class BlacklistManager {
 
         this.blacklistItems = items;
 
-        if (this.selectedBlacklistItem && this.selectedBlacklistItem.name) this.selectedBlacklistChanged(item.name);
+        if (this.selectedBlacklistItem && this.selectedBlacklistItem.name)
+            this.selectedBlacklistChanged(item.name);
         this.updateSidebarSelect();
-
-        let nameList = document.querySelector("#go-advBlacklistListNames");
-        while (nameList && nameList.firstChild) nameList.firstChild.remove();
-
-        this.blacklistItems.forEach(i => {
-            let option = document.createElement("option");
-            option.value = i.name;
-            nameList.appendChild(option);
-        });
     }
     /**
      * Removes blacklist item from storage
@@ -265,12 +259,8 @@ class BlacklistManager {
 
         let text = this.selectedBlacklistItem.value;
         let lines = text.split(/[\n|\r\n]/);
-        lines = lines.filter((l) => {
-            if (["", " ", "\n", "\r\n"].includes(l)) return false; // empty, space or newline
-            if (l.startsWith("#") || l.startsWith("//")) return false; // comments
-
-            return true;
-        });
+        lines = lines.filter((l) => !(["", " ", "\n", "\r\n"].includes(l) || l.startsWith("#") || l.startsWith("//"))); // empty, space or newline, comments
+        
 
         // clear inline comments and trim spaces
         lines = lines.map((l) => {
@@ -325,24 +315,24 @@ class BlacklistManager {
 
         let thumbs = utils.getThumbnails();
 
-        if (entry.isDisabled) {
-            entry.hits.forEach(id => {
-                if (!this.blacklistEntries
-                    .filter(e => !(e.hits.length == 0 || e.isDisabled || e == entry))
-                    .some(e => e.hits.includes(id))) {
+        if (entry.isDisabled) {                                                                          // if this entry was disabled
+            entry.hits.forEach(id => {                                                          // for each post its hits
+                if (!this.blacklistEntries                                                               // from all the current blacklist entries
+                    .filter(e => !(e.hits.length == 0 || e.isDisabled || e == entry))   // filter other entries that has hits and not disabled
+                    .some(e => e.hits.includes(id))) {                                  // if there are none entries which also hits current post
                     let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
 
-                    thumb.parentElement.parentElement.classList.toggle("go-blacklisted", false);
-                    thumb.classList.toggle("go-blacklisted", false);
+                    thumb.parentElement.parentElement.classList.toggle("go-blacklisted", false);        // find img element for given post id
+                    thumb.classList.toggle("go-blacklisted", false);                                    // disable blacklist class
                 }
 
             });
-        } else {
-            entry.hits.forEach(id => {
+        } else {                                                                                        // if entry was enabled
+            entry.hits.forEach(id => {                                                         // for each its hit
                 let thumb = Object.values(thumbs).find(t => utils.getThumbPostId(t) == id);
 
-                thumb.parentElement.parentElement.classList.toggle("go-blacklisted", true);
-                thumb.classList.toggle("go-blacklisted", true);
+                thumb.parentElement.parentElement.classList.toggle("go-blacklisted", true);             // find img element for given post id
+                thumb.classList.toggle("go-blacklisted", true);                                         // enable blacklist class
             });
         }
 
@@ -353,7 +343,8 @@ class BlacklistManager {
             this.storageSetDisbledEntries(JSON.stringify(this.blacklistEntries.filter(e => e.isDisabled)));
     }
     /**
-     * 
+     * this function CAN'T toggle an arbitary array of entries
+     * designed only for making changes on all entries but needs it as an arg because will be invoked from a local function
      * @param {BlacklistEntry[]} entries 
      * @param {boolean} force 
      */
@@ -482,8 +473,11 @@ class BlacklistManager {
         while (entries.firstChild) entries.firstChild.remove();
 
         if (this.blacklistEntries && this.blacklistEntries.length > 0) {
-            this.blacklistEntries.filter(i => i.hits.length > 0).forEach(i => entries.appendChild(buildEntryItem(i, this)));
-            if (entries.childElementCount > 1) entries.appendChild(buildDisableAll(this));
+            let displayEntries = this.blacklistEntries.filter(i => i.hits.length > 0);
+            if(this.orderEntriesByHitCount) displayEntries = displayEntries.sort((e1, e2) => e2.hits.length - e1.hits.length);
+            
+            displayEntries.forEach(i => entries.appendChild(buildEntryItem(i, this)));
+            if (displayEntries.length > 1) entries.appendChild(buildDisableAll(this));
         }
         /** @param {BlacklistManager} scope @param {BlacklistEntry} i*/
         function buildEntryItem(i, scope = this) {
@@ -514,7 +508,7 @@ class BlacklistManager {
             let li = document.createElement("li");
             li.className = "tag-type-general";
 
-            let state = scope.blacklistEntries.every(e => e.isDisabled);
+            let state = scope.blacklistEntries.filter(e => e.hits.length > 0).every(e => e.isDisabled);
 
             let a_tag = document.createElement("a");
             a_tag.textContent = state ? "Enable all" : "Disable all";
@@ -556,72 +550,76 @@ class BlacklistManager {
      * Listeren for blacklist select onchange
      * @param {string} name 
      */
-    async selectedBlacklistChanged(name) {
+    selectedBlacklistChanged(name) {
         this.selectedBlacklistItem = this.blacklistItems.find(i => i.name == name);
 
         this.totalHits = [];
         this.totalPosts = 0;
 
         this.parseEntries();
-        await this.applyBlacklist().then(() => {
-            if (this.selectedBlacklistItem.name == this.storageGetBlacklist()) {
-                let entrStr = this.storageGetDisabledEntries();
-                if (entrStr == null || entrStr == "") return;
+        this.applyBlacklist();
 
-                let entries = JSON.parse(entrStr);
-                entries.forEach(entry => {
-                    let found = this.blacklistEntries.find(e =>
-                        e.tag == entry.tag ||
-                        e.tags && entry.tags &&
-                        e.tags.every((v, i) => v == entry.tags[i]));
-                    if (found) this.toggleEntry(found, true, true);
-                });
+        if (this.selectedBlacklistItem.name == this.storageGetBlacklist()) {        // if current blacklist name was found as saved in the storage
+            let entrStr = this.storageGetDisabledEntries();                         // load disabled entries from the storage
+            if (entrStr == null || entrStr == "") return;                           // check if it wasn't broken
 
-                this.updateSidebarTitle();
-                this.updateSidebarEntries();
-            } else {
-                this.storageSetBlacklist(this.selectedBlacklistItem.name);
-                this.storageSetDisbledEntries("[]");
-            }
-        });
-    }
+            let entries = JSON.parse(entrStr);                                      // parse json to array
+            entries.forEach(entry => {                                        // foreach stored disabled entry
+                let found = this.blacklistEntries.find(e =>
+                    e.tag == entry.tag ||
+                    e.tags && entry.tags &&
+                    e.tags.every((v, i) => v == entry.tags[i]));    // try to find it by its tags
 
-    applyBlacklist(thumbs = null) {
-        return new Promise(async () => {
-            if (!thumbs) {
-                thumbs = utils.getThumbnails();
-                this.totalPosts = Object.values(thumbs).length;
-            } else {
-                this.totalPosts += Object.values(thumbs).length;
-            }
-
-            await this.checkPosts(thumbs);
-            await this.hidePosts(thumbs);
+                if (found) this.toggleEntry(found, true, true);                     // if entry was found, disable it
+            });
 
             this.updateSidebarTitle();
             this.updateSidebarEntries();
+        } else {                                                                    // if current bl wasn't found in the storage
+            this.storageSetBlacklist(this.selectedBlacklistItem.name);              // write current blacklist name
+            this.storageSetDisbledEntries("[]");                                    // with no disabled entries
+        }
+    }
 
-            this.dispatchHandlers.forEach(h => h());
-        });
+    async applyBlacklist(thumbs = null) {
+        if (!thumbs) {
+            thumbs = utils.getThumbnails();
+            this.totalPosts = Object.values(thumbs).length;
+        } else {
+            this.totalPosts += Object.values(thumbs).length;
+        }
+
+        await this.checkPosts(thumbs);
+        await this.hidePosts(thumbs);
+
+        this.updateSidebarTitle();
+        this.updateSidebarEntries();
+
+        this.dispatchHandlers.forEach(h => h());
     }
     async checkPosts(thumbs) {
-        await Promise.all(
-            Object.values(thumbs).map(async t => {
-                let item = await utils.loadPostItem(utils.getThumbPostId(t))
-                this.checkPost(item).then(isHit => { if (isHit) this.totalHits.push(item.id); });
+        await Promise.all(                                                                                  // wait until all
+            Object.values(thumbs).map(async t => {                                                    // map each thumb to an promise
+                let item = await utils.loadPostItem(utils.getThumbPostId(t));                                // load post item for current post
+                let isHit = await this.checkPost(item);                                                     // check every entry for hits on current post
+                if (isHit) this.totalHits.push(item.id);                                                    // if it's any hits, push post to total hits array
             }));
     }
     async hidePosts(thumbs) {
-        Object.values(thumbs).forEach(t => {
-            if (this.blacklistEntries.filter(e => !e.isDisabled && e.hits.length > 0).some(e => e.hits.includes(utils.getThumbPostId(t)))) {
-                t.parentElement.parentElement.classList.toggle("go-blacklisted", true);
-                t.classList.toggle("go-blacklisted", true);
-            }
-            else {
-                t.parentElement.parentElement.classList.toggle("go-blacklisted", false);
-                t.classList.toggle("go-blacklisted", false);
-            }
-        });
+        Promise.all(
+            Object.values(thumbs).map(async t => {                                                     // map each thumb to an promise
+                if (!this.blacklistEntries                                                                   // from all the current blacklist entries
+                    .filter(e => !(e.isDisabled || e.hits.length == 0))                     // filter entries that has hits and not disabled
+                    .some(e => e.hits.includes(utils.getThumbPostId(t)))) {                 // if there are none entries which also hits current post
+                    t.parentElement.parentElement.classList.toggle("go-blacklisted", false);                // find img element for given post id
+                    t.classList.toggle("go-blacklisted", false);                                            // disable blacklist class
+                }
+                else {                                                                                      // if there are entries which hits current post
+                    t.parentElement.parentElement.classList.toggle("go-blacklisted", true);
+                    t.classList.toggle("go-blacklisted", true);                                             // enable blacklist class
+                }
+            })
+        );
     }
     /**
      * 
@@ -632,37 +630,39 @@ class BlacklistManager {
         // O(post count * blacklist entries count)
         let isHit = false;
 
-        Promise.all(this.blacklistEntries.map(e => this.checkEntryHit(item, e)))
-            .then(retarr => {
-                retarr.forEach(ret => {
-                    if (ret.isHit) {
-                        ret.entry.hits.push(item.id);
-                        isHit = true;
-                    }
+        await Promise.all(this.blacklistEntries.map(e => this.checkEntryHit(item, e)))    // map every entry to check hit on given post item
+            .then(retarr => {                                     // then
+                retarr.forEach(ret => {                             // for each entry
+                    if (ret) isHit = true;                                    // if it hits set isHit for current post item
                 });
             });
 
+        if (isHit) console.log("?");
         return isHit;
     }
     /**
      * 
      * @param {PostItem} post 
      * @param {BlacklistEntry} entry 
-     * @returns {Promise<{entry:BlacklistEntry, isHit:boolean}>} Is post was hit with given entry
+     * @returns {boolean} Is post was hit with given entry
      */
     checkEntryHit(post, entry) {
-        return new Promise(resolve => {
-            let postTags = post.tags.artist.concat(post.tags.character, post.tags.copyright, post.tags.general, post.tags.metadata);
-            postTags = postTags.concat([`rating:${post.rating}`]);
+        let postTags = post.tags.artist.concat(post.tags.character, post.tags.copyright, post.tags.general, post.tags.metadata);    // concat all the tags to avoid intercategory mis hits
+        postTags.push(`rating:${post.rating}`);                                                                                     // push post rating as a tag
 
-            if (entry.isAnd) {
-                if (entry.tags.every(t => postTags.some(tt => utils.wildTest(t, tt)))) resolve({ entry, isHit: true });
-            } else {
-                if (postTags.some(tt => utils.wildTest(entry.tag, tt))) resolve({ entry, isHit: true });
+        if (entry.isAnd) {                                                                                                            // there are different ways for And and non And bl entries
+            if (entry.tags.every(entryTag => postTags.some(postTag => utils.wildTest(entryTag, postTag)))) {        // if all the And tags hits any off post tags each
+                entry.hits.push(post.id);                                                                                             // push the post to the entry
+                return true;                                                                                                          // report hit
             }
+        } else {
+            if (postTags.some(postTag => utils.wildTest(entry.tag, postTag))) {                                            // if any post tag hits entry tag
+                entry.hits.push(post.id);                                                                                           // push the post to the entry
+                return true;                                                                                                        // report hit
+            }
+        }
 
-            resolve({ entry, isHit: false });
-        });
+        return false;                                                                                             // report no hit
     }
 
     storageSetBlacklist(name) {

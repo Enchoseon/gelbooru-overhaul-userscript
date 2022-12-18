@@ -212,6 +212,7 @@
         configManager.addUpdateListener("advancedBlacklist.hideFilter", applyCssVariableBlacklist);
         configManager.addUpdateListener("advancedBlacklist.showOnHover", applyCssVariableBlacklist);
         configManager.addUpdateListener("advancedBlacklist.enlargeOnHover", applyCssVariableBlacklist);
+        configManager.addUpdateListener("advancedBlacklist.entriesOrder", applyVariableBlacklist);
 
         configManager.addUpdateListener("collapsibleSidebar.enable", applyTweakCollapseSidebar);
         configManager.addUpdateListener("collapsibleSidebar.width", applyCssVariableGoCollapseSidebar);
@@ -741,6 +742,10 @@
         utils.debugLog(`Applying AdvancedBlacklist state: ${String(value)}`);
 
         blacklistManager.setupManager(value);
+    }
+    function applyVariableBlacklist(value) {
+        blacklistManager.orderEntriesByHitCount = value;
+        blacklistManager.updateSidebarEntries();
     }
     // Functions
     //      Script

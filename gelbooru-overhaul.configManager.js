@@ -221,6 +221,11 @@ class ConfigManager {
                         description: "Enable advanced mulipreset danbooru-like blacklist",
                         value: true
                     },
+                    entriesOrder: {
+                        name: "Entries order by hit count",
+                        description: "Order entries by hit count instead of original order",
+                        value: false
+                    },
                     hideMode: {
                         name: "Hiding mode",
                         description: "Hiding mode for blacklisted images",
