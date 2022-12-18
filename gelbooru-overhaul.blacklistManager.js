@@ -637,7 +637,6 @@ class BlacklistManager {
                 });
             });
 
-        if (isHit) console.log("?");
         return isHit;
     }
     /**
