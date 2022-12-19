@@ -436,7 +436,7 @@ class BlacklistManager {
         let thumbs = Object.values(utils.getThumbnails());
 
         document.querySelector("#go-advBlacklistTitle").querySelector("b").textContent =
-            `Blacklist ${thumbs.filter(e => e.classList.contains("go-blacklisted")).length}/${thumbs.length}`;
+            `Blacklist ${thumbs.filter(e => e.parentElement.classList.contains("go-blacklisted")).length}/${thumbs.length}`;
     }
     updateSidebarSelect() {
         /** @type {HTMLSelectElement} */
