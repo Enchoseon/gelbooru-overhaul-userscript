@@ -81,10 +81,15 @@ class RepeatFetchQueue {
             fetch(item.Url).then(
                 (response) => {
                     if (response.ok) this.handleResult(item, this.ItemStates.Succeeded, response);
-                    else this.reQueueItem(item, response.statusText);
+                    else if (response.status == 429) {
+                        utils.debugLog("Hit rate limit, waiting 15 seconds");
+                        setTimeout(() => { this.reQueueItem(item, response.statusText); }, 15000);
+                    } else
+                        this.reQueueItem(item, response.statusText);
                 },
                 (reason) => this.reQueueItem(item, reason)
             );
+            console.log(this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
         }
     }
     /**
@@ -112,17 +117,17 @@ class RepeatFetchQueue {
      */
     reQueueItem(item, reason) {
         item.Retries--;
+        console.log(null, this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
 
         if (item.Retries > 0) {
             item.State = this.ItemStates.Pending;
             this.pendingItems.push(item);
             this.activeItems = this.activeItems.filter(i => i != item);
-
-            if (this.pendingItems.length == 1) this.checkNext(); // fix cycle stops when last pendingItem fails
         }
         else if (item.Retries == 0) {
             this.handleResult(item, this.ItemStates.Failed, reason);
         }
+        this.checkNext();
     }
 }
 class utils {
