@@ -513,7 +513,7 @@ class ConfigManager {
             settingsButton.title = "Click to open Gelbooru Overhaul config\nRight click to force clear post item cache";
 
             settingsButton.addEventListener("click", (e) => {
-                settingsElem.classList.add("go-config-window-hidden");
+                settingsElem.classList.remove("go-config-window-hidden");
             });
             settingsButton.addEventListener("contextmenu", e => {
                 if (e.shiftKey) return;
