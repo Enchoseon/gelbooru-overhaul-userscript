@@ -12,6 +12,11 @@ class InfiniteScrolling {
      */
     isInfiniteScrollHitLastPage = false;
     /**
+     * prevent same page appended twice on slow connections
+     * @type {boolean}
+     */
+    isBusy = false;
+    /**
      * throttled/debounced (idk) apply function
      * 
      * 
@@ -50,7 +55,7 @@ class InfiniteScrolling {
     check(e) {
         const threshold = Number(context.configManager.findValueByKey("infiniteScroll.threshold"));
 
-        if (document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
+        if (!isBusy && document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
             this.throttledApply();
         }
     }
@@ -59,58 +64,61 @@ class InfiniteScrolling {
      * @private
      */
     apply() {
-    if (this.isInfiniteScrollHitLastPage) return;
+        if (this.isInfiniteScrollHitLastPage) return;
 
-    let params = new URLSearchParams(document.URL.split('?')[1]);
-    params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
-    let nextPage = document.location.pathname + "?" + params;
-    
-    utils.debugLog(`InfScrolling to pid ${params.get("pid")}`);
+        this.isBusy = true;
 
-    fetch(nextPage)
-        .then(response => {
-            if (!response.ok) throw Error(response.statusText);
-            return response.text();
-        })
-        .then(text => {
-            let parser = new DOMParser();
-            let htmlDocument = parser.parseFromString(text, "text/html");
+        let params = new URLSearchParams(document.URL.split('?')[1]);
+        params.has("pid") ? params.set("pid", String(Number(params.get("pid")) + 42)) : params.set("pid", String(42));
+        let nextPage = document.location.pathname + "?" + params;
 
-            let newThumbContainer = htmlDocument.querySelector(".thumbnail-container");
-            let oldThumbContainer = document.querySelector(".thumbnail-container");
+        utils.debugLog(`InfScrolling to pid ${params.get("pid")}`);
 
-            if (!newThumbContainer || !newThumbContainer.childElementCount) {
-                utils.debugLog("InfScrolling hit last page");
-                this.isInfiniteScrollHitLastPage = true;
-                return;
-            }
+        fetch(nextPage)
+            .then(response => {
+                if (!response.ok) throw Error(response.statusText);
+                return response.text();
+            })
+            .then(text => {
+                let parser = new DOMParser();
+                let htmlDocument = parser.parseFromString(text, "text/html");
 
-            let newThumbs = Object.values(newThumbContainer.children).map(thpr => thpr.querySelector("a > img"));
-            //this.dispatchHandlers.forEach(h => h(newThumbs));
+                let newThumbContainer = htmlDocument.querySelector(".thumbnail-container");
+                let oldThumbContainer = document.querySelector(".thumbnail-container");
 
-            Object.values(newThumbContainer.children).forEach(t => {
-                oldThumbContainer.appendChild(t);
-                Promise.all(this.dispatchHandlers.map(h => new Promise(() => {
-                    h([t.children[0].children[0]]);
-                    Promise.resolve();
-                })));
+                if (!newThumbContainer || !newThumbContainer.childElementCount) {
+                    utils.debugLog("InfScrolling hit last page");
+                    this.isInfiniteScrollHitLastPage = true;
+                    return;
+                }
+
+                let newThumbs = Object.values(newThumbContainer.children).map(thpr => thpr.querySelector("a > img"));
+                //this.dispatchHandlers.forEach(h => h(newThumbs));
+
+                Object.values(newThumbContainer.children).forEach(t => {
+                    oldThumbContainer.appendChild(t);
+                    Promise.all(this.dispatchHandlers.map(h => new Promise(() => {
+                        h([t.children[0].children[0]]);
+                        Promise.resolve();
+                    })));
+                });
+
+                let newPaginator = htmlDocument.querySelector(".pagination");
+                let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
+                oldPaginator.replaceWith(newPaginator);
+
+                let oldTopPaginator = document.querySelector(".top-pagination");
+                if (oldTopPaginator) {
+                    /** @type {HTMLElement} */
+                    let newTopPaginator = newPaginator.cloneNode(true);
+                    newTopPaginator.classList.add("top-pagination");
+                    oldTopPaginator.replaceWith(newTopPaginator);
+                }
+
+                window.history.pushState(nextPage, htmlDocument.title, nextPage);
+                history.scrollRestoration = 'manual';
+                document.title = htmlDocument.title;
             });
-
-            let newPaginator = htmlDocument.querySelector(".pagination");
-            let oldPaginator = document.querySelector(".pagination:not(.top-pagination)");
-            oldPaginator.replaceWith(newPaginator);
-
-            let oldTopPaginator = document.querySelector(".top-pagination");
-            if (oldTopPaginator) {
-                /** @type {HTMLElement} */
-                let newTopPaginator = newPaginator.cloneNode(true);
-                newTopPaginator.classList.add("top-pagination");
-                oldTopPaginator.replaceWith(newTopPaginator);
-            }
-
-            window.history.pushState(nextPage, htmlDocument.title, nextPage);
-            history.scrollRestoration = 'manual';
-            document.title = htmlDocument.title;
-        });
-}
+        this.isBusy = false;
+    }
 }
