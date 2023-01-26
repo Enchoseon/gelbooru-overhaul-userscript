@@ -55,7 +55,7 @@ class InfiniteScrolling {
     check(e) {
         const threshold = Number(context.configManager.findValueByKey("infiniteScroll.threshold"));
 
-        if (!isBusy && document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
+        if (!this.isBusy && document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
             this.throttledApply();
         }
     }
