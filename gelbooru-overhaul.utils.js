@@ -1,5 +1,15 @@
 class context {
+    /** @type {ConfigManager} */
     static configManager;
+    /** @type {BlacklistManager} */
+    static blacklistManager;
+    /** @type {ThemeManager} */
+    static themeManager;
+    /** @type {InfiniteScrolling} */
+    static infiniteScrolling;
+    /** 
+     * @see {utils.pageTypes}
+     * @type {string} */
     static pageType;
 }
 /**
@@ -122,6 +132,17 @@ class utils {
      * Current page type (see {@link utils.pageTypes})
      * @returns {string}
      */
+    /**
+     * Runs func when document is ready
+     * @param {function} func 
+    */
+    static onDOMReady(func) {
+        if (document.readyState == "interactive" || document.readyState == "complete") {
+            func();
+        } else {
+            document.addEventListener("DOMContentLoaded", () => func());
+        }
+    }
     static getPageType() {
         let params = new URLSearchParams(document.URL.split('?')[1]);
 
