@@ -80,12 +80,12 @@ class ThemeManager {
         let forceSession = this.forceSessionMode;
         if (this.forceSessionMode != undefined) return forceSession;
 
-        if (configManager.findValueByKey("darkMode.force")) {
+        if (context.configManager.findValueByKey("darkMode.force")) {
             return true;
-        } else if (configManager.findValueByKey("darkMode.auto")) {
-            if (configManager.findValueByKey("darkMode.forceTime") || !this.isMatchMediaSupported) {
+        } else if (context.configManager.findValueByKey("darkMode.auto")) {
+            if (context.configManager.findValueByKey("darkMode.forceTime") || !this.isMatchMediaSupported) {
                 let hours = new Date().getHours();
-                return hours >= configManager.findValueByKey("darkMode.timeStart") || hours <= configManager.findValueByKey("darkMode.timeEnd");
+                return hours >= context.configManager.findValueByKey("darkMode.timeStart") || hours <= context.configManager.findValueByKey("darkMode.timeEnd");
             } else {
                 return window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
