@@ -1,0 +1,359 @@
+/* COLLAPSE SIDEBAR */
+/* MAIN */
+.go-collapse-sidebar {
+    position: fixed;
+    width: var(--collapsed-width, 5px);
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--collapsed-color, red);
+    transition: 142ms;
+    font-size: 1em;
+    z-index: 690420;
+}
+.go-collapse-sidebar:hover {
+    position: fixed;
+    width: min-content;
+    height: 100%;
+    padding-right: 12px;
+    overflow-y: scroll;
+    background: var(--background-color, white);
+    opacity: var(--expanded-opacity, 1);
+}
+/* HIDE CONTENT */
+/* using universal selector in limited scope shouldn't affect performance too much */
+.go-collapse-sidebar * {
+    visibility: collapse;
+}
+.go-collapse-sidebar:hover * {
+    visibility: visible;
+}
+
+/* COLLAPSE SIDEBAR */
+/* TAG LIST BOTTOM PADDING */
+#tag-list.go-tag-list-top-bottom-padding {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+/* COLLAPSE SIDEBAR */
+/* FIX CONTAINER GRID */
+#container.go-collapse-sidebar-container-tweak {
+    grid-template-columns: var(--collapsed-width, 5px) auto;
+}
+@media only screen and (max-width: 850px) {
+    #container.go-collapse-sidebar-container-tweak {
+        grid-template-columns: auto;
+    }
+}
+/* COLLAPSE SIDEBAR */
+/* FIX TAG COUNT WRAPING */
+ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
+    width: max-content !important; /* fuck !important */
+    display: block;
+}
+/* COLLAPSE SIDEBAR */
+/* FIX TAG CATEGORY HIDING ON NARROW */
+@media only screen and (max-width: 850px) {
+    .go-sm-unhidden {
+        display: inline;
+    }
+}
+/* COLLAPSE SIDEBAR */
+/* FIX SPACING ON NARROW */
+.go-mobile-unspacing {
+    margin-right: 0;
+}
+
+
+
+/* POST FIT TWEAKS */
+/* FIT VERTICALLY */
+.go-fit-height {
+    max-height: 95vh;
+    max-width: 95vw;
+    width: auto;
+    height: auto;
+}
+.go-fit-width {
+    max-width: 95vw;
+    max-height: none;
+    height: auto;
+    width: auto;
+}
+/* POST FIT TWEAKS */
+/* CENTER POST*/
+.go-center {
+    display: block;
+    margin: 0 auto;
+}
+/* POST FIT TWEAKS */
+/* CENTER NOTE CONTAINER */
+.note-container.go-center {
+    display: table;
+}
+/* POST FIT TWEAKS */
+/* FIT HORIZONTALLY ON NARROW */
+@media only screen and (max-width: 850px) {
+    .go-fit-width-on-narrow {
+        max-width: 90vw;
+        max-height: none;
+        height: auto;
+        width: auto;
+    }
+}
+/* POST FIT TWEAKS */
+/* ZOOM CURSORS */
+.go-cursor-zoom-in {
+    cursor: zoom-in;
+}
+.go-cursor-zoom-out {
+    cursor: zoom-out;
+}
+
+
+
+/* THUMBNAIL ENLARGE*/
+/* MAIN */
+.go-thumbnail-enlarge {
+    transform: scale(1);
+    transition: transform 169ms;
+    display: inline-block;
+}
+/* THUMBNAIL ENLARGE*/
+/* MAIN HOVER */
+.go-thumbnail-enlarge:hover {
+    transform: scale(var(--disable-blacklist-enlarge, var(--enlarge-scale, 2) ));
+    transition-delay: 142ms;
+    z-index: 420690;
+    position: relative;
+}
+/* THUMBNAIL ENLARGE*/
+/* CORNER RADIUS FOR THUMBNAILS */
+.go-thumbnail-corners {
+    border-radius: 3%;
+}
+
+/* THUMBNAIL ENLARGE*/
+/* LOADER CONTAINER */
+.go-loader {
+    position: relative;
+}
+/* THUMBNAIL ENLARGE*/
+/* LOADER MAIN */
+.go-loader:before {
+    content: "loading";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: yellow;
+    color: red;
+    pointer-events: none;
+}
+
+
+
+/* CONFIG WINDOW */
+/* APPEARANCE */
+.go-config-window {
+    background: var(--background-color, white);
+    font-size: 1.2em;
+    box-shadow: 0 0 0.2rem 1px;
+}
+/* CONFIG WINDOW */
+/* LAYOUT */
+.go-config-window {
+    min-width: 45%;
+    min-height: 30%;
+    max-width: 80%;
+    max-height: 70%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+/* CONFIG WINDOW */
+/* POSITION */
+.go-config-window {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 39013901;
+}
+/* CONFIG WINDOW */
+/* HIDING */
+.go-config-window-hidden {
+    visibility: hidden;
+}
+
+/* CONFIG WINDOW */
+/* HEADER */
+.go-config-window header a {
+    font-weight: bold;
+    font-size: 1.4em;
+    pointer-events: none;
+}
+/* CONFIG WINDOW */
+/* HEADER OVERFLOW FIX */
+.go-config-window header {
+    overflow: visible;
+}
+/* CONFIG WINDOW */
+/* FOOTER BUTTONS */
+.go-config-window footer input {
+    border: 1px solid;
+    margin: 0 8px;
+}
+
+/* CONFIG WINDOW */
+/* PREFERENCES */
+.go-config-window dl {
+    padding: 18px;
+    overflow-y: scroll;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE CATEGORY NAME */
+.go-config-window dt {
+    border-bottom: 1px solid;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE CATEGORY ITEMS */
+.go-config-window dd {
+    margin-left: 16px;
+    margin-bottom: 14px;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE CATEGORY ITEM */
+.go-config-window li {
+    list-style-type: none;
+    margin-bottom: 12px;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE ITEM NAME */
+.go-config-window label {
+    font-weight: bold;
+}
+/* CONFIG WINDOW */
+/* PREFERENCE ITEM DESCRIPTION */
+.go-config-window p {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+.go-config-window textarea {
+    width: -webkit-fill-available;
+    height: 20vh;
+    font-size: 0.9em;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.text-input label {
+    margin-bottom: 8px;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.text-input input {
+    display: block;
+    margin-left: 4px;
+    margin-bottom: 6px;
+    padding: 0 6px;
+    width: -webkit-fill-available;
+    width: -moz-available;
+    height: 1.5em;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.text-input select {
+    display: block;
+    margin-left: 4px;
+    margin-bottom: 6px;
+    padding: 0 6px;
+    width: -webkit-fill-available;
+    width: -moz-available;
+    height: 1.5em;
+}
+/* CONFIG WINDOW */
+/* INPUT TYPE SPECIFIC */
+.checkbox-input p {
+    margin-left: 18px;
+}
+/* INFINITE SCROLL */
+/* GO TOP BUTTON */
+#go-top {
+    position: fixed;
+    right: 1vw;
+    bottom: 1vh;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+
+/* GENERAL */
+/* BUTTONS */
+input[type='submit'] {
+    cursor: pointer;
+}
+/* GENERAL */
+/* BUTTONS HOVER*/
+input[type='submit']:hover {
+    filter: brightness(120%);
+}
+/* GENERAL */
+/* BUTTONS ACTIVE*/
+input[type='submit']:active {
+    filter: brightness(140%);
+}
+/* SVG */
+.go-svg {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+    cursor: pointer;
+    height: 2em;
+    width: auto;
+}
+/* GENERAL */
+/* GALLERY THUMBS */
+article.go-thumbnail-resize {
+    margin: 10px 0;
+    width: calc(var(--thumb-gallery-size, 175px) * 1.15);
+    height: calc(var(--thumb-gallery-size, 175px) * 1.1);
+}
+article.thumbnail-preview img.go-thumbnail-resize {
+    max-width: var(--thumb-gallery-size, 175px) !important;
+    max-height: var(--thumb-gallery-size, 175px) !important;
+}
+/* GENERAL */
+/* MORE LIKE THIS THUMBS */
+div a img.go-thumbnail-resize {
+    max-width: var(--thumb-morelikethis-size, 175px);
+    max-height: var(--thumb-morelikethis-size, 175px) !important;
+    height: auto;
+}
+
+
+/* BLACKLIST */
+.go-blacklisted {
+    display: var(--blacklist-visibility);
+}
+.go-blacklisted img {
+    filter: var(--blacklist-filter, 0%);
+    transition: 142ms;
+}
+.go-blacklisted img:hover {
+    filter: var(--blacklist-hoverFilter, 0%);
+    transition: 142ms;
+}
+/* BLACKLIST SIDEBAR */
+#go-advBlacklistTitle > b, #go-advBlacklistSelect, #go-advBlacklistEntries {
+    margin-left: 15px;
+}
+#go-advBlacklistSelect {
+    margin-bottom: 10px;
+    display: inline-block;
+}
+.go-advBlacklistDisabledEntry {
+    text-decoration: line-through;
+}
