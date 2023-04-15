@@ -11,13 +11,13 @@
 // @grant       GM_download
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
-// @resource    css 	https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.css
-// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.utils.js
-// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.configManager.js
-// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.tweaks.js
-// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.themeManager.js
-// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.blacklistManager.js
-// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/refactoring/gelbooru-overhaul.infiniteScrolling.js
+// @resource    css 	https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.css
+// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.utils.js
+// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.configManager.js
+// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.tweaks.js
+// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.themeManager.js
+// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.blacklistManager.js
+// @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.infiniteScrolling.js
 // ==/UserScript==
 
 (function () {
