@@ -1,38 +1,25 @@
 # Gelbooru Overhaul Userscript
+
 Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 
-![example a](https://enchoseon.com/assets/enhanced-demo.gif)
+<!--![Gif of Gelbooru Overhaul Userscript in Action](./doc/demo.gif)-->
 
-# [Convenient Install Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
+# [Installation Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.user.js)
 
-Be sure to have a [userscript manager](https://en.wikipedia.org/wiki/Userscript_manager) installed in your web browser first. Note that the `Right Click Download` feature uses GM_download which; AFAIK, is a [Tampermonkey](https://www.tampermonkey.net/)-only feature.
+This script has been tested with [Tampermonkey](https://www.tampermonkey.net/) and *may* rely on Tampermonkey-only features. If you use a different userscript manager, caveat emptor.
 
 # Features
-|    General   |      Post      |             Gallery            |       Download       |
-|:------------:|:--------------:|:------------------------------:|:--------------------:|
-| Amoled       | Fit Vertically | Remove Title                   | Block Unknown Artist |
-| Sexy Sidebar |                | Enlarge Flexbox                | Missing Artist Text  |
-|              |                | Advanced Blacklist             |                      |
-|              |                | Right Click Download           |                      |
-|              |                | Enlarge Thumbnails on Hover    |                      |
-|              |                | Higher Res Thumbnails on Hover |                      |
 
+| Dark Mode         | Advanced Blacklist                       | Collapsible Sidebar                | Post Page                        | Thumbnails                          | Fast Download                         | Infinite Scroll   |
+|:-----------------:|:----------------------------------------:|:----------------------------------:|:--------------------------------:|:-----------------------------------:|:-------------------------------------:|:-----------------:|
+| Automatic/force   | Multipreset Danbooru-like blacklist      | Customize Width, Color, Opacity    | Center content                   | Resize gallery thumbnails           | RMB to download from post/thumbnail   | Top paginator     |
+| Amoled            | Reorder entries by hit count             |                                    | Fit image by height and weight   | Resize "more like this" thumbnails  | File name pattern                     | Goto top button   |
+|                   | Hide by custom CSS filter or collapse    |                                    | Switch fit on click              | Enlarge on hover                    | Tag saving                            |                   |
+|                   | Temporarily reveal or enlarge on hover   |                                    | Auto scroll to content           |   Display high res                  |                                       |                   |
+|                   |                                          |                                    |                                  |   Display loading indicator         |                                       |                   |
+|                   |                                          |                                    |                                  |   Remove title                      |                                       |                   |
+|                   |                                          |                                    |                                  |   Rounded corners                   |                                       |                   |
 
-# Jankiness
-The userscript is pretty stable, until you resize the viewport—so just don't; or, disable some settings, namely: `Enlarge Flexbox` & `Enlarge Thumbnails on Hover`.
+# Extra Special Thanks
 
-# Feature Brainstorm
-Some wishful thinking.
-
-- Infinite Scroll
-- Theming
-  - Material Design
-- Advanced Blacklisting
-  - ~~AND Logic Operators~~
-  - Blocking Based on Tag Type (e.g. `tag=type-artist`)
-  - Multiple Toggleable Blacklists
-  - Display-But-Flag Suspicious Images (e.g. `tag_me`)
-- More Right-Click Context Menu Settings
-  - Rev-Image Search in Imgops, SauceNao, IQDB, etc.
-  - Migrate Sidebar Settings (namely: `Options`, `History`, & `Related Posts`) Here
-- Apply Gallery Tweaks to `More Like This` Area
+PetrK39, for creating practically the entire userscript.
