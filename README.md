@@ -4,7 +4,7 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 
 <!--![Gif of Gelbooru Overhaul Userscript in Action](./doc/demo.gif)-->
 
-# [Installation Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/src/gelbooru-overhaul.user.js)
+# [Installation Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
 
 This script has been tested with [Tampermonkey](https://www.tampermonkey.net/) and *may* rely on Tampermonkey-only features. If you use a different userscript manager, caveat emptor.
 
