@@ -2,7 +2,7 @@
 
 Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 
-<!--![Gif of Gelbooru Overhaul Userscript in Action](./doc/demo.gif)-->
+![Gif of Userscript in Use](./images/preview.gif)
 
 # [Installation Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
 
