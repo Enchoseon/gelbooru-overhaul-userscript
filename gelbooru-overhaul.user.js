@@ -18,6 +18,7 @@
 // @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul.themeManager.js
 // @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul.blacklistManager.js
 // @require     https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul.infiniteScrolling.js
+// @inject-into content
 // ==/UserScript==
 
 (function () {
