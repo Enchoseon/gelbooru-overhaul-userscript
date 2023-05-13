@@ -698,7 +698,7 @@ class ConfigManager {
                         });
 
                         input.value = String(pref[1].value);
-                        console.log(input.value);
+                        utils.debugLog(input.value);
                     } else {
                         input = document.createElement("input");
                         input.type = "text";

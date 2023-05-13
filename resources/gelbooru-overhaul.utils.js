@@ -89,7 +89,7 @@ class RepeatFetchQueue {
                 },
                 (reason) => this.reQueueItem(item, reason)
             );
-            console.log(this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
+            utils.debugLog(this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
         }
     }
     /**
@@ -117,7 +117,7 @@ class RepeatFetchQueue {
      */
     reQueueItem(item, reason) {
         item.Retries--;
-        console.log(null, this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
+        utils.debugLog(null, this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
 
         if (item.Retries > 0) {
             item.State = this.ItemStates.Pending;

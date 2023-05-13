@@ -85,7 +85,7 @@
         configManager.addUpdateListener("infiniteScroll.paginatorOnTop", applyTweakPaginatorOnTop);
         configManager.addUpdateListener("infiniteScroll.goToTop", applyTweakGoToTop);
 
-        infiniteScrolling.addUpdateListener(e => {
+        infiniteScrolling.addUpdateListener(e => { 
             applyTweakEnlargeOnHover(Boolean(configManager.findValueByKey("thumbs.enlargeOnHover")), e);
             applyTweakLoadingIndicator(Boolean(configManager.findValueByKey("thumbs.loader")), e);
             applyTweakRoundCorners(Boolean(configManager.findValueByKey("thumbs.roundCorners")), e);

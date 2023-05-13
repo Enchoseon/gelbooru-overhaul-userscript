@@ -52,7 +52,7 @@ class InfiniteScrolling {
      * @public
      * @param {Event} e 
      */
-    check(e) {
+    check() {
         const threshold = Number(context.configManager.findValueByKey("infiniteScroll.threshold"));
 
         if (!this.isBusy && document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
@@ -92,7 +92,7 @@ class InfiniteScrolling {
                     return;
                 }
 
-                let newThumbs = Object.values(newThumbContainer.children).map(thpr => thpr.querySelector("a > img"));
+                // let newThumbs = Object.values(newThumbContainer.children).map(thpr => thpr.querySelector("a > img"));
                 //this.dispatchHandlers.forEach(h => h(newThumbs));
 
                 Object.values(newThumbContainer.children).forEach(t => {
