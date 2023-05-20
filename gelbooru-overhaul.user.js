@@ -23,8 +23,6 @@
 (function () {
     "use strict";
 
-    let blackoutStyle = GM_addStyle(`body { visibility: hidden; }`);
-
     try {
         utils.onDOMReady(main);
     } catch (error) {
@@ -92,22 +90,16 @@
             applyTweakFastDL(Boolean(configManager.findValueByKey("fastDL.thumbs")), e);
 
             applyTweakResizeThumbsGallery(Boolean(configManager.findValueByKey("thumbs.resizeGallery")), e);
-            if (configManager.findValueByKey("advancedBlacklist.enable"))
+            if (configManager.findValueByKey("advancedBlacklist.enable")) {
+                e.forEach(e => e.parentElement.classList.add("go-blacklisted-pending"))
                 blacklistManager.applyBlacklist(e);
+            }
         });
-
-        if (configManager.findValueByKey("advancedBlacklist.enable")) {
-            blacklistManager.addAppliedListener(() => { if (blackoutStyle) blackoutStyle.remove(); });
-        }
 
         configManager.applyConfig();
 
         utils.debugLog("Registering styles");
         GM_addStyle(GM_getResourceText("css"));
-
-        if (!configManager.findValueByKey("advancedBlacklist.enable") || context.pageType == utils.pageTypes.UNDEFINED) {
-            if (blackoutStyle) blackoutStyle.remove();
-        }
     }
 
     // lazy fix for the back button, don't want to deal with HTML5 stuff

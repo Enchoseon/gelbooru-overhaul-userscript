@@ -357,3 +357,20 @@ div a img.go-thumbnail-resize {
 .go-advBlacklistDisabledEntry {
     text-decoration: line-through;
 }
+.go-blacklisted-pending {
+    position: relative;
+}
+.go-blacklisted-pending > img {
+    filter: opacity(0);
+}
+.go-blacklisted-pending:before {
+    content: "checking";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: yellow;
+    color: red;
+    pointer-events: none;
+}
