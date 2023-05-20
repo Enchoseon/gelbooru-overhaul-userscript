@@ -96,6 +96,11 @@
             }
         });
 
+        if (configManager.findValueByKey("advancedBlacklist.enable")) {
+            let thumbs = utils.getThumbnails();
+            if (thumbs != undefined) thumbs.forEach(e => e.parentElement.classList.add("go-blacklisted-pending"))
+        }
+
         configManager.applyConfig();
 
         utils.debugLog("Registering styles");
