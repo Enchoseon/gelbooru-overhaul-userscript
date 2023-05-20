@@ -89,7 +89,6 @@ class RepeatFetchQueue {
                 },
                 (reason) => this.reQueueItem(item, reason)
             );
-            console.log(this.pendingItems.length > 0, this.activeItems.length < this.parallelRequests);
         }
     }
     /**
