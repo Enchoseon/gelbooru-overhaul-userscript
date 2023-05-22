@@ -191,9 +191,9 @@ class ThemeManager {
 
                         --a-foreground-color: #fff;
 
-                        --input-background-color: #333 !important;
-                        --input-foreground-color: #eee !important;
-                        --input-border: 1px solid #555 !important;
+                        --input-background-color: #333;
+                        --input-foreground-color: #eee;
+                        --input-border: 1px solid #555;
 
                         --alert-info-background-color: #555;
                         --alert-info-border: 1px solid #333;
@@ -247,7 +247,7 @@ class ThemeManager {
                         --ui-widget-content-foreground: #444;
 
                         --searcharea-background: #151515;
-                        --searchlist-background: #666;
+                        --searchlist-background: #333;
 
                         --invert-filter: invert(100%);
 
@@ -293,9 +293,9 @@ class ThemeManager {
 
                         --a-foreground-color: #fff;
 
-                        --input-background-color: #333 !important;
-                        --input-foreground-color: #eee !important;
-                        --input-border: 1px solid #555 !important;
+                        --input-background-color: #333;
+                        --input-foreground-color: #eee;
+                        --input-border: 1px solid #555;
 
                         --alert-info-border: 1px solid #333;
                         --alert-info-foreground-color: #fff;
@@ -346,7 +346,7 @@ class ThemeManager {
                         --ui-widget-content-foreground: #444;
 
                         --searcharea-background: #151515;
-                        --searchlist-background: #666;
+                        --searchlist-background: #333;
 
                         --invert-filter: invert(100%);
 
