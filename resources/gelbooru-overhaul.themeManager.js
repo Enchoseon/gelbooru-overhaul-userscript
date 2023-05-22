@@ -347,7 +347,7 @@ class ThemeManager {
                         --navsubmenu-background: #000;
 
                         --ui-widget-content-border: 1px solid #666;
-                        --ui-widget-content-background: #1f1f1f;
+                        --ui-widget-content-background: #111;
                         --ui-widget-content-foreground: #444;
 
                         --searcharea-background: #151515;

@@ -37,9 +37,9 @@
     }
 
     .ui-widget-content {
-        border: var(--ui-widget-content-border);
-        background: var(--ui-widget-content-background);
-        color: var(--ui-widget-content-foreground);
+        border: var(--ui-widget-content-border) !important;
+        background: var(--ui-widget-content-background) !important;
+        color: var(--ui-widget-content-foreground) !important;
     }
 
     .invert {
