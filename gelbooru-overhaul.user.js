@@ -83,6 +83,8 @@
         configManager.addUpdateListener("infiniteScroll.paginatorOnTop", applyTweakPaginatorOnTop);
         configManager.addUpdateListener("infiniteScroll.goToTop", applyTweakGoToTop);
 
+        configManager.addUpdateListener("darkMode.amoled", () => {themeManager.checkForThemeSwitch();});
+
         infiniteScrolling.addUpdateListener(e => {
             applyTweakEnlargeOnHover(Boolean(configManager.findValueByKey("thumbs.enlargeOnHover")), e);
             applyTweakLoadingIndicator(Boolean(configManager.findValueByKey("thumbs.loader")), e);

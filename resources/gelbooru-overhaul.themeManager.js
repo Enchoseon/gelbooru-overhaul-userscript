@@ -51,10 +51,13 @@ class ThemeManager {
     }
     /**
      * Checks if darkmode needs to be switched
-     * @private
      */
     checkForThemeSwitch() {
-        this.isDarkModeRequired ? this.applyDefaultDarkMode() : this.applyDefaultLightMode();
+        this.isDarkModeRequired 
+            ? (context.configManager.findValueByKey("darkMode.amoled") 
+                ? this.applyAmoledDarkMode() 
+                : this.applyDefaultDarkMode()) 
+            : this.applyDefaultLightMode();
     }
     /**
      * Switch cookie for force darkmode
@@ -71,13 +74,6 @@ class ThemeManager {
     clearForceSessionMode() {
         this.forceSessionMode = undefined;
         this.checkForThemeSwitch();
-    }
-    /**
-     * @private
-     * @returns {boolean} Checks cookie for current darkmode
-     */
-    get isCurrentPageModeDark() {
-        return Boolean(utils.getCookie("dark_mode"));
     }
     /**
      * @private
@@ -271,6 +267,106 @@ class ThemeManager {
         `;
 
         utils.setCookie("dark_mode", "1");
+    }
+    /**
+     * applies amoled dark mode
+     */
+    applyAmoledDarkMode() {
+        utils.debugLog("Applying amoled dark mode");
+
+        /** @type {HTMLStyleElement} */
+        let style = document.querySelector("#goThemeVariables");
+
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "goThemeVariables";
+            document.body.appendChild(style);
+        }
+
+        style.innerHTML = `
+                    :root {
+                        --background-color: #000;
+                        --foreground-color: #fff;
+
+                        --a-foreground-color: #fff;
+
+                        --input-background-color: #333 !important;
+                        --input-foreground-color: #eee !important;
+                        --input-border: 1px solid #555 !important;
+
+                        --alert-info-background-color: #555;
+                        --alert-info-border: 1px solid #333;
+                        --alert-info-foreground-color: #fff;
+
+                        --alert-success-a-foreground-color: #333;
+                        --alert-info-a-foreground-color: #fff;
+
+                        --notice-not-error-background-color: #111;
+                        --notice-not-error-border: 1px solid #333;
+                        --notice-not-error-foreground-color: #fff;
+
+	                    --thread-title-background-color: #303030;
+
+                        --topnav-a-active-foreground-color: #000;
+
+                        --inbox-self-background-color: #ffffff1a;
+
+                        --thread-container-item-border: 1px solid #333;
+
+                        --comment-body-foreground-color: #eee;
+                        --comment-box-background: #111;
+                        --comment-box-border: 1px solid #222;
+                        --comment-user-thumbnail: #333;
+
+                        --quote-foreground: #fff;
+                        --quote-backgroung: #333 url('./layout/quote.png') no-repeat top right;
+                        --quot-border: 1px solid #444;
+
+                        --note-body-foreground: #000;
+
+                        --td-border: 1px solid #333;
+                        --th-background: #303030;
+
+                        --select-foreground: #fff;
+                        --select-background: #000;
+
+                        --table-tr-pending-tag-background: #000;
+                        --table-tr-rejected-tag-background: #000;
+
+                        --textarea-border: 1px solid #666;
+                        --textarea-background: #303030;
+                        --textarea-foreground: #fff;
+
+                        --navsubmenu-background: #000;
+
+                        --ui-widget-content-border: 1px solid #666;
+                        --ui-widget-content-background: #1f1f1f;
+                        --ui-widget-content-foreground: #444;
+
+                        --searcharea-background: #151515;
+                        --searchlist-background: #666;
+
+                        --invert-filter: invert(100%);
+
+                        --header-background: #000;
+
+                        --active-foreground: #000;
+
+                        --aside-border: 1px solid #333;
+                        --aside-border2: 1px solid #333;
+
+                        --paginator-foreground: #fff;
+                        --paginator-border: 1px solid #555;
+
+                        --paginator-a-hover-background: #555;
+                        --paginator-b: #c4c4c4;
+
+                        --footer-backround: #000;
+                        --footer-foreground: #fff;
+                    }
+        `;
+
+        utils.setCookie("dark_mode", "1");        
     }
     scheduleCheckForThemeSwitch() {
         let date = new Date();

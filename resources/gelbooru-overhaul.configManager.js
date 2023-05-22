@@ -727,12 +727,12 @@ class ConfigManager {
             document.querySelectorAll("#goConfigWindow input:not([type='submit'])").forEach(/** @param {HTMLInputElement} i */ i => {
                 switch (i.type) {
                     case "checkbox":
-                        i.checked = Boolean(confMan.findValueByKey(i.id));
+                        i.checked = Boolean(context.configManager.findValueByKey(i.id));
                         break;
 
                     case "select":
                     case "text":
-                        i.value = String(confMan.findValueByKey(i.id));
+                        i.value = String(context.configManager.findValueByKey(i.id));
                         break;
                 }
             });
