@@ -514,6 +514,7 @@ class ConfigManager {
 
             settingsButton.addEventListener("click", (e) => {
                 settingsElem.classList.remove("go-config-window-hidden");
+                updateInputValues();
             });
             settingsButton.addEventListener("contextmenu", e => {
                 if (e.shiftKey) return;
@@ -748,7 +749,7 @@ class ConfigManager {
         let value = e.target.type == "checkbox" ? e.target.checked : e.target.value;
         utils.debugLog("Updating prefItem with value", { pref, value });
 
-        pref.value = value;
+        context.configManager.findItemByKey(e.target.id).value = value;
         context.configManager.onUpdate(e.target.id, value);
     }
 }

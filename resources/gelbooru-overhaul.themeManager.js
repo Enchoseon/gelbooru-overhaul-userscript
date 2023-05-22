@@ -52,11 +52,10 @@ class ThemeManager {
     /**
      * Checks if darkmode needs to be switched
      */
-    checkForThemeSwitch() {
+    checkForThemeSwitch(isAmoled = undefined) {
+        if (isAmoled == undefined) isAmoled = context.configManager.findValueByKey("darkMode.amoled");
         this.isDarkModeRequired 
-            ? (context.configManager.findValueByKey("darkMode.amoled") 
-                ? this.applyAmoledDarkMode() 
-                : this.applyDefaultDarkMode()) 
+            ? (isAmoled ? this.applyAmoledDarkMode() : this.applyDefaultDarkMode()) 
             : this.applyDefaultLightMode();
     }
     /**
@@ -121,6 +120,8 @@ class ThemeManager {
                         --alert-info-background-color: #d9edf7;
                         --alert-info-border: 2px solid #bce8f1;
                         --alert-info-foreground-color: #31708f;
+
+                        --alert-success-background: #dff0d8;
 
                         --notice-not-error-background-color: #FFFBBF;
                         --notice-not-error-border: 1px solid #CCC999;
@@ -198,7 +199,9 @@ class ThemeManager {
                         --alert-info-border: 1px solid #333;
                         --alert-info-foreground-color: #fff;
 
-                        --alert-success-a-foreground-color: #333;
+                        --alert-success-background: #242;
+
+                        --alert-success-a-foreground-color: #fff;
                         --alert-info-a-foreground-color: #fff;
 
                         --notice-not-error-background-color: #111;
@@ -286,7 +289,7 @@ class ThemeManager {
         style.innerHTML = `
                     :root {
                         --background-color: #000;
-                        --foreground-color: #fff;
+                        --foreground-color: #999;
 
                         --a-foreground-color: #fff;
 
@@ -294,11 +297,10 @@ class ThemeManager {
                         --input-foreground-color: #eee !important;
                         --input-border: 1px solid #555 !important;
 
-                        --alert-info-background-color: #555;
                         --alert-info-border: 1px solid #333;
                         --alert-info-foreground-color: #fff;
 
-                        --alert-success-a-foreground-color: #333;
+                        --alert-success-a-foreground-color: #90cf80;
                         --alert-info-a-foreground-color: #fff;
 
                         --notice-not-error-background-color: #111;

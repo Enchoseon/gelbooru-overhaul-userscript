@@ -480,7 +480,7 @@
 	}
 
 	.alert-success {
-	    background: #dff0d8;
+	    background: var(--alert-success-background);
 	    border: 2px solid #d6e9c6;
 	    color: #3c763d;
 	}
