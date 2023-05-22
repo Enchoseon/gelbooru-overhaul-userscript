@@ -154,6 +154,7 @@ class ThemeManager {
                         --navsubmenu-background: #444444;
 
                         --searcharea-background: #fff;
+                        --searchlist-background: #0773fb;
 
                         --header-background: linear-gradient(#328dfe, #0773fb);
 
