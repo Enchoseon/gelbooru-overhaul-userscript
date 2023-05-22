@@ -182,6 +182,10 @@ ul.tag-list li.go-collapse-sidebar-tags-list-tweak {
     }
 }
 
+/* GO TO TOP */
+#go-top > svg {
+    fill: var(--go-top-fill);
+}
 
 /* CONFIG WINDOW */
 /* APPEARANCE */

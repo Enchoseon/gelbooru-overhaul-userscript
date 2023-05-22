@@ -165,6 +165,8 @@ class ThemeManager {
                         --paginator-a-hover-background: #006ffa;
 
                         --footer-backround: linear-gradient(#328dfe, #0773fb);
+
+                        --go-top-fill: #006ffa;
                     }
         `;
 
@@ -267,6 +269,8 @@ class ThemeManager {
 
                         --footer-backround: #333;
                         --footer-foreground: #fff;
+
+                        --go-top-fill: #fff;
                     }
         `;
 
@@ -366,6 +370,8 @@ class ThemeManager {
 
                         --footer-backround: #000;
                         --footer-foreground: #fff;
+
+                        --go-top-fill: #fff;
                     }
         `;
 
