@@ -588,9 +588,9 @@
 	    font-weight: bold;
 	    width: 105px;
 	    padding: 7px 15px;
-	    border: 0px;
-	    color: #ffffff;
-	    background: var(--searchlist-background);
+	    border: 0px !important;
+	    color: #ffffff !important;
+	    background: var(--searchlist-background) !important;
 	}
 
 	.tag-type-tag>a,
