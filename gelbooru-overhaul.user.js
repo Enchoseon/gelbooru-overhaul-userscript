@@ -4,7 +4,7 @@
 // @version     0.9.9
 // @description Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 // @author      Enchoseon
-// @include     *gelbooru.com*
+// @match       https://*.gelbooru.com/*
 // @run-at      document-start
 // @grant       GM_getValue
 // @grant       GM_setValue
