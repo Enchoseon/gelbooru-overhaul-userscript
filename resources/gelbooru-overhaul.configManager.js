@@ -121,9 +121,9 @@ class ConfigManager {
     loadConfig() {
         let cfg = GM_getValue("config", undefined);
 
-        let unpackPreferences = this.unpackPreferences(cfg);
-        this.config = unpackPreferences.preferences;
-        if (unpackPreferences.isShouldBeSaved) this.saveConfig();
+        let unpacked = this.unpackPreferences(cfg);
+        this.config = unpacked.preferences;
+        if (unpacked.isShouldBeSaved) this.saveConfig();
     }
     /**
      * Saves current config to the userscript storage
