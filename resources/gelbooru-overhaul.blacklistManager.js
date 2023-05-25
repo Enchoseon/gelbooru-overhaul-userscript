@@ -619,6 +619,7 @@ class BlacklistManager {
                     t.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", true);
                     t.parentElement.classList.toggle("go-blacklisted", true);                               // enable blacklist class
                 }
+                t.parentElement.classList.remove("go-blacklisted-pending");
             })
         );
     }

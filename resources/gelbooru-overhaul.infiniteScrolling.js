@@ -35,8 +35,8 @@ class InfiniteScrolling {
      * @param {boolean} value 
      */
     setup(value) {
-        if (value) document.addEventListener("scroll", e => this.check(e));
-        else document.removeEventListener("scroll", e => this.check(e));
+        if (value) document.addEventListener("scroll", this.check);
+        else document.removeEventListener("scroll", this.check);
     }
     /**
      * Registers an event listener
@@ -50,13 +50,12 @@ class InfiniteScrolling {
     /**
      * Infinite scroll event listener
      * @public
-     * @param {Event} e 
      */
-    check(e) {
+    check() {
         const threshold = Number(context.configManager.findValueByKey("infiniteScroll.threshold"));
 
-        if (!this.isBusy && document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
-            this.throttledApply();
+        if (!context.infiniteScrolling.isBusy && document.scrollingElement.scrollTop + document.scrollingElement.clientHeight >= document.scrollingElement.scrollHeight - threshold) {
+            context.infiniteScrolling.throttledApply();
         }
     }
     /**
@@ -92,15 +91,9 @@ class InfiniteScrolling {
                     return;
                 }
 
-                let newThumbs = Object.values(newThumbContainer.children).map(thpr => thpr.querySelector("a > img"));
-                //this.dispatchHandlers.forEach(h => h(newThumbs));
-
                 Object.values(newThumbContainer.children).forEach(t => {
                     oldThumbContainer.appendChild(t);
-                    Promise.all(this.dispatchHandlers.map(h => new Promise(() => {
-                        h([t.children[0].children[0]]);
-                        Promise.resolve();
-                    })));
+                    this.dispatchHandlers.map(h => h([t.children[0].children[0]]));
                 });
 
                 let newPaginator = htmlDocument.querySelector(".pagination");
