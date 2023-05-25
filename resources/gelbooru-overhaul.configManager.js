@@ -489,7 +489,7 @@ class ConfigManager {
             throw new Error("There is no migrations yet. Something went wrong on packed config loading");
         }
         else {
-            return { preferences: utils.mergeRecursive(this.getDefaultConfig(), json), isShouldBeSaved: false };
+            return { preferences: utils.mergeRecursive(json, this.getDefaultConfig()), isShouldBeSaved: false };
         }
     }
     registerConfigWindow() {
