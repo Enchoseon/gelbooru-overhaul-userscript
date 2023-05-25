@@ -523,4 +523,21 @@ class utils {
             return str == wildcard;
         }
     }
+    /**
+     * Set/create innerHTML of a <style> elem by its id
+     * @param {string} id
+     * @param {string} css
+     */
+    static setDynamicStyle(id, css) {
+        /** @type {HTMLStyleElement} */
+        let styleElem = document.getElementById(id);
+        if (!styleElem) {
+            GM_addElement("style", {
+                id: id,
+                innerHTML: css
+            });
+        } else {
+            styleElem.innerHTML = css
+        }
+    }
 }

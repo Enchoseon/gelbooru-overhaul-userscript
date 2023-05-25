@@ -10,6 +10,7 @@
 // @grant       GM_setValue
 // @grant       GM_download
 // @grant       GM_addStyle
+// @grant       GM_addElement
 // @grant       GM_getResourceText
 // @resource    css 	    https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul.css
 // @resource    css-common 	https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul-common.css
