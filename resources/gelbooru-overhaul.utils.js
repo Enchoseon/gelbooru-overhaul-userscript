@@ -531,10 +531,10 @@ class utils {
         if (!styleElem) {
             GM_addElement("style", {
                 id: id,
-                innerHTML: css
+                textContent: css
             });
         } else {
-            styleElem.innerHTML = css
+            styleElem.textContent = css
         }
     }
 }
