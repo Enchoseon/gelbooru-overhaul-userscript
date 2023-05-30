@@ -1,6 +1,4 @@
-# FOR DEVELOPERS
-
-## SERVING LOCAL FILES THROUGH A HTTP SERVER
+# SERVING LOCAL FILES THROUGH A HTTP SERVER
 
 The general advice you'll find online for editing userscripts in Violentmonkey as local files in your IDE of choice is to disable some Content-Security-Policies and allow CORS.
 

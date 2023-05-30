@@ -1,18 +1,8 @@
 // Apply CSS Variables
 /** @type {PreferenceUpdateCallback} */
 async function applyCssVariableGoCollapseSidebar() {
-    utils.debugLog("Applying css variable .go-collapse-sidebar");
-
-    /** @type {HTMLStyleElement} */
-    let style = document.querySelector("#goCollapseSidebarVariables");
-
-    if (!style) {
-        style = document.createElement("style");
-        style.id = "goCollapseSidebarVariables";
-        document.body.appendChild(style);
-    }
-
-    style.innerHTML = `
+    utils.debugLog("Applying css variable #goCollapseSidebarVariables");
+    utils.setDynamicStyle("goCollapseSidebarVariables", `
         .go-collapse-sidebar {
             --collapsed-width: ${context.configManager.findValueByKey("collapsibleSidebar.width")};
             --collapsed-color: ${context.configManager.findValueByKey("collapsibleSidebar.color")};
@@ -21,66 +11,37 @@ async function applyCssVariableGoCollapseSidebar() {
         .go-collapse-sidebar-container-tweak {
             --collapsed-width: ${context.configManager.findValueByKey("collapsibleSidebar.width")};
         }
-        `;
+    `);
 }
 /** @type {PreferenceUpdateCallback} */
 async function applyCssVariableGoThumbnailEnlarge() {
-    utils.debugLog("Applying css variable .go-thumbnail-enlarge");
-
-    /** @type {HTMLStyleElement} */
-    let style = document.querySelector("#goThumbnailEnlargeVariables");
-
-    if (!style) {
-        style = document.createElement("style");
-        style.id = "goThumbnailEnlargeVariables";
-        document.body.appendChild(style);
-    }
-
-    style.innerHTML = `
+    utils.debugLog("Applying css variable #goThumbnailEnlargeVariables");
+    utils.setDynamicStyle("goThumbnailEnlargeVariables", `
         .go-thumbnail-enlarge {
             --enlarge-scale: ${context.configManager.findValueByKey("thumbs.scale")};
         }
-        `;
+    `);
 }
 /** @type {PreferenceUpdateCallback} */
 async function applyCssVariableGoThumbnailResize() {
-    utils.debugLog("Applying css variable .go-thumbnail-resize");
-
-    /** @type {HTMLStyleElement} */
-    let style = document.querySelector("#goThumbnailResizeVariables");
-
-    if (!style) {
-        style = document.createElement("style");
-        style.id = "goThumbnailResizeVariables";
-        document.body.appendChild(style);
-    }
-
-    style.innerHTML = `
+    utils.debugLog("Applying css variable #goThumbnailResizeVariables");
+    utils.setDynamicStyle("goThumbnailResizeVariables", `
         .go-thumbnail-resize {
             --thumb-gallery-size: ${context.configManager.findValueByKey("thumbs.resizeGallerySize")};
             --thumb-morelikethis-size: ${context.configManager.findValueByKey("thumbs.resizeMoreLikeThisSize")};
         }
-        `;
+    `);
 }
 /** @type {PreferenceUpdateCallback} */
 async function applyCssVariableBlacklist() {
     utils.debugLog("Applying css variable .go-blacklisted");
-
-    /** @type {HTMLStyleElement} */
-    let style = document.querySelector("#goBlacklistVariables");
-
-    if (!style) {
-        style = document.createElement("style");
-        style.id = "goBlacklistVariables";
-        document.body.appendChild(style);
-    }
 
     let filter = context.configManager.findValueByKey("advancedBlacklist.hideFilter");
     let collapse = context.configManager.findValueByKey("advancedBlacklist.hideMode");
     let show = context.configManager.findValueByKey("advancedBlacklist.showOnHover");
     let disableHover = context.configManager.findValueByKey("advancedBlacklist.enlargeOnHover");
 
-    style.innerHTML = `
+    utils.setDynamicStyle("goBlacklistVariables", `
         .go-blacklisted {
             --blacklist-filter: ${filter};
             ${collapse == "Collapse" ? "--blacklist-visibility: none;" : ""}
@@ -88,7 +49,7 @@ async function applyCssVariableBlacklist() {
             --blacklist-hoverFilter: ${show ? "100%" : filter};
             ${disableHover ? "" : "--disable-blacklist-enlarge: 1;"}
         }
-        `;
+    `);
 }
 
 // Apply Tweak

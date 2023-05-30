@@ -212,27 +212,24 @@ class utils {
         return matchingPath;
     }
     /**
-     * Recursive merge obj2 into obj1
-     * @link https://stackoverflow.com/a/383245/19972602
-     * @param {*} obj1 
-     * @param {*} obj2 
-     * @returns {*} obj2 merged into obj1
+     * Recursive merge source into target—changes source.
+     * @link https://gist.github.com/ahtcx/0cd94e62691f539160b32ecda18af3d6?permalink_comment_id=3889214#gistcomment-3889214
+     * @param {Object} source 
+     * @param {Object} target 
+     * @returns {*} source merged into target
      */
-    static mergeRecursive(obj1, obj2) {
-        for (var p in obj2) {
-            try {
-                // Property in destination object set; update its value.
-                if (obj2[p].constructor == Object) {
-                    obj1[p] = utils.mergeRecursive(obj1[p], obj2[p]);
-                } else {
-                    obj1[p] = obj2[p];
+    static mergeRecursive(source, target) {
+        for (const [key, val] of Object.entries(source)) {
+            if (val !== null && typeof val === `object`) {
+                if (target[key] === undefined) {
+                    target[key] = new val.__proto__.constructor();
                 }
-            } catch (e) {
-                // Property in destination object not set; create it and set its value.
-                obj1[p] = obj2[p];
+                utils.mergeRecursive(val, target[key]);
+            } else {
+                target[key] = val;
             }
         }
-        return obj1;
+        return target; // we're replacing in-situ, so this is more for chaining than anything else
     }
     /**
      * Find property in object using string path
@@ -521,6 +518,23 @@ class utils {
             return re.test(str); // remove last 'i' above to have case sensitive
         } else {
             return str == wildcard;
+        }
+    }
+    /**
+     * Set/create innerHTML of a <style> elem by its id
+     * @param {string} id
+     * @param {string} css
+     */
+    static setDynamicStyle(id, css) {
+        /** @type {HTMLStyleElement} */
+        let styleElem = document.getElementById(id);
+        if (!styleElem) {
+            GM_addElement("style", {
+                id: id,
+                textContent: css
+            });
+        } else {
+            styleElem.textContent = css
         }
     }
 }

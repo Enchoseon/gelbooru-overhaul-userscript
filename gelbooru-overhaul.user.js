@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gelbooru Overhaul
 // @namespace   https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js
-// @version     0.9.9
+// @version     1.0.0
 // @description Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 // @author      Enchoseon
 // @match       https://*.gelbooru.com/*
@@ -10,6 +10,7 @@
 // @grant       GM_setValue
 // @grant       GM_download
 // @grant       GM_addStyle
+// @grant       GM_addElement
 // @grant       GM_getResourceText
 // @resource    css 	    https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul.css
 // @resource    css-common 	https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/resources/gelbooru-overhaul-common.css

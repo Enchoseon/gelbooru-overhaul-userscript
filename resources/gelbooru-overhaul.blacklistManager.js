@@ -535,7 +535,7 @@ class BlacklistManager {
 
             if (this.blacklistItems) {
                 let stored = this.storageGetBlacklist();
-                if (stored)
+                if (stored && this.blacklistItems.some(i => i.name == stored))
                     this.selectedBlacklistChanged(stored);
                 else
                     this.selectedBlacklistChanged(this.blacklistItems[0].name);

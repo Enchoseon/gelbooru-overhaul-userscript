@@ -6,7 +6,7 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 
 # [Installation Link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js)
 
-This script has been tested with [Tampermonkey](https://www.tampermonkey.net/) and *may* rely on Tampermonkey-only features. If you use a different userscript manager, caveat emptor.
+This script uses the Greasemonkey (`GM_*`) API. It has been developed/tested on [Tampermonkey](https://www.tampermonkey.net/) and [Violentmonkey](https://github.com/violentmonkey/violentmonkey).
 
 # Features
 
