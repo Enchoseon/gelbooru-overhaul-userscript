@@ -535,7 +535,7 @@ class BlacklistManager {
 
             if (this.blacklistItems) {
                 let stored = this.storageGetBlacklist();
-                if (stored)
+                if (stored && this.blacklistItems.some(i => i.name == stored))
                     this.selectedBlacklistChanged(stored);
                 else
                     this.selectedBlacklistChanged(this.blacklistItems[0].name);
@@ -619,6 +619,7 @@ class BlacklistManager {
                     t.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", true);
                     t.parentElement.classList.toggle("go-blacklisted", true);                               // enable blacklist class
                 }
+                t.parentElement.classList.remove("go-blacklisted-pending");
             })
         );
     }

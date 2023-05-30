@@ -121,9 +121,9 @@ class ConfigManager {
     loadConfig() {
         let cfg = GM_getValue("config", undefined);
 
-        let unpackPreferences = this.unpackPreferences(cfg);
-        this.config = unpackPreferences.preferences;
-        if (unpackPreferences.isShouldBeSaved) this.saveConfig();
+        let unpacked = this.unpackPreferences(cfg);
+        this.config = unpacked.preferences;
+        if (unpacked.isShouldBeSaved) this.saveConfig();
     }
     /**
      * Saves current config to the userscript storage
@@ -166,18 +166,18 @@ class ConfigManager {
                     configVersion: {
                         value: 1,
                         name: "Config Version",
-                        description: "Debug info of current config version",
+                        description: "Current config version (internal value for debugging)",
                         locked: true
                     },
                     debug: {
                         value: false,
                         name: "Debug",
-                        description: "Enable debugging information in the console",
+                        description: "Enable debugging output in the console",
                     },
                     maxCache: {
                         value: 420,
-                        name: "Max cached post items",
-                        description: "How many posts to keep in the cache to make fewer requests (does not apply to image cache)"
+                        name: "Max Cached Post Items",
+                        description: "How many posts to keep in the cache to reduce the number of requests (note: does not apply to the browser image cache)"
                     }
                 }
             },
@@ -187,7 +187,7 @@ class ConfigManager {
                     auto: {
                         value: true,
                         name: "Auto Dark Mode",
-                        description: "Enable automatic dark theme switching",
+                        description: "Enable dark mode based on the browser's preferred color scheme (light/dark)",
                     },
                     force: {
                         value: false,
@@ -197,22 +197,22 @@ class ConfigManager {
                     amoled: {
                         value: false,
                         name: "Amoled Dark",
-                        description: "Make dark theme darker"
+                        description: "Make the dark theme even darker"
                     },
                     forceTime: {
                         value: false,
                         name: "Force Time Dark Mode",
-                        description: "Force the use of a dark theme at a certain time, regardless of system preferences"
+                        description: "Force the use of a dark theme at a certain time, regardless of browser light/dark preferences"
                     },
                     timeStart: {
                         value: 18,
                         name: "Dark Mode Time Start Hour",
-                        description: "Set the start time of the dark theme if 'Force Time Dark Mode' is enabled or system preference cannot be detected"
+                        description: "The start time of the dark theme if 'Force Time Dark Mode' is enabled or browser preference cannot be detected"
                     },
                     timeEnd: {
                         value: 6,
                         name: "Dark Mode Time End Hour",
-                        description: "Set the end time of the dark theme if 'Force Time Dark Mode' is enabled or system preference cannot be detected"
+                        description: "The end time of the dark theme if 'Force Time Dark Mode' is enabled or browser preference cannot be detected"
                     }
                 }
             },
@@ -221,32 +221,32 @@ class ConfigManager {
                 items: {
                     enable: {
                         name: "Enable",
-                        description: "Enable advanced mulipreset danbooru-like blacklist",
+                        description: "Enable advanced multipreset Danbooru-like blacklist",
                         value: true
                     },
                     entriesOrder: {
-                        name: "Entries order by hit count",
+                        name: "Entries Order by Hit Count",
                         description: "Order entries by hit count instead of original order",
                         value: false
                     },
                     hideMode: {
-                        name: "Hiding mode",
+                        name: "Hiding Mode",
                         description: "Hiding mode for blacklisted images",
                         values: ["Apply Filter", "Collapse"],
                         value: "Apply Filter"
                     },
                     hideFilter: {
-                        name: "Hiding filter",
-                        description: "Input css filter for blacklisted images",
+                        name: "Hiding Filter",
+                        description: "Css filter for blacklisted images",
                         value: "blur(8px) brightness(80%)"
                     },
                     enlargeOnHover: {
-                        name: "Enlarge hidden images on hover",
-                        description: "Allow to enlarge blacklisted images if post enlarge enabled",
+                        name: "Enlarge Hidden Images on Hover",
+                        description: "Allow enlarging blacklisted image if post enlarge is enabled",
                         value: false
                     },
                     showOnHover: {
-                        name: "Show hidden images on hover",
+                        name: "Show Hidden Images on Hover",
                         description: "Temporarily show blacklisted image when you hover over it",
                         value: true
                     }
@@ -262,23 +262,23 @@ class ConfigManager {
                     },
                     width: {
                         value: "5px",
-                        name: "Collapsed width",
+                        name: "Collapsed Width",
                         description: "Width of collapsed sidebar"
                     },
                     color: {
                         value: "red",
-                        name: "Collapsed color",
+                        name: "Collapsed Color",
                         description: "Color of collapsed sidebar"
                     },
                     opacity: {
                         value: "90%",
-                        name: "Expanded opacity",
+                        name: "Expanded Opacity",
                         description: "Opacity of expanded sidebar"
                     }
                 }
             },
             post: {
-                name: "Post page",
+                name: "Post Page",
                 items: {
                     center: {
                         value: true,
@@ -292,17 +292,17 @@ class ConfigManager {
                     },
                     fitHorizontallyOnNarrow: {
                         value: true,
-                        name: "Fit Horizontally on narrow",
+                        name: "Fit Horizontally on Narrow",
                         description: "Fit image by width when tab is too narrow (<850px)"
                     },
                     switchFitOnClick: {
                         value: true,
-                        name: "Switch fit on click",
+                        name: "Switch Fit on Click",
                         description: "Click on image to switch fit mode (zoom in/zoom out)"
                     },
                     autoScroll: {
                         value: true,
-                        name: "Auto scroll",
+                        name: "Auto Scroll",
                         description: "Scroll to post content itself when it loads, can be annoying and agressive"
                     }
                 }
@@ -312,58 +312,58 @@ class ConfigManager {
                 items: {
                     resizeGallery: {
                         value: true,
-                        name: "Resize gallery thumbnails",
-                        description: "Allows to set custom thumbnail size using value below."
+                        name: "Resize Gallery Thumbnails",
+                        description: "Change the size of thumbnails in the gallery to the value below"
                     },
                     resizeGallerySize: {
                         value: "175px",
-                        name: "Max size of gallery thumbnail",
-                        description: "Keep in mind that images are 250x250px. There is no point in a greater number."
+                        name: "Max Size of Gallery Thumbnail",
+                        description: "Keep in mind that images are 250x250px, so larger values may look worse"
                     },
                     resizeMoreLikeThis: {
                         value: true,
                         name: "Resize 'More Like This' thumbnails",
-                        description: "Allows to set custom thumbnail size using value below."
+                        description: "Change the size of thumbnails in the 'More Like This' section to the value below"
                     },
                     resizeMoreLikeThisSize: {
                         value: "175px",
                         name: "Max size of 'More Like This' thumbnail",
-                        description: "Keep in mind that images are 250x250px. There is no point in a greater number."
+                        description: "Keep in mind that images are 250x250px, so larger values may look worse"
                     },
                     enlargeOnHover: {
                         value: true,
-                        name: "Enlarge on hover",
-                        description: "Hover over the thumbnail to enlarge in"
+                        name: "Enlarge on Hover",
+                        description: "Hover over the thumbnail to enlarge it"
                     },
                     scale: {
                         value: 3,
-                        name: "Enlarge scale",
-                        description: "The scale value is applied when zooming in"
+                        name: "Enlarge Scale",
+                        description: "The scale value to apply when enlarging"
                     },
                     highRes: {
                         value: true,
-                        name: "Display high res",
-                        description: "Load high resolution image/video preview/animated gif when thumbnail is enlarged"
+                        name: "Display High Res",
+                        description: "Load high resolution image, video preview, or animated gif when thumbnail is enlarged"
                     },
                     loader: {
                         value: true,
-                        name: "Display loading indicator",
-                        description: "Show loading indicator until the high res version for the thumbnail being loaded"
+                        name: "Display Loading Indicator",
+                        description: "Show loading indicator on the thumbnail while loading the higher resolution image"
                     },
                     removeTitle: {
                         value: true,
-                        name: "Remove title",
+                        name: "Remove Title",
                         description: "Remove popup hint for thumbnails to get rid of flicker and make viewing less annoying"
                     },
                     preventOffScreen: {
                         value: true,
-                        name: "Prevent off screen enlarging",
-                        description: "The images on the sides of the screen will not extend beyond"
+                        name: "Prevent Off Screen Enlarging",
+                        description: "Prevent images on the sides of the screen extending beyond the edges of the screen"
                     },
                     roundCorners: {
                         value: true,
-                        name: "Round corners",
-                        description: "Add tiny corner round to the thumbnails"
+                        name: "Round Corners",
+                        description: "Add round corners to the thumbnails"
                     }
                 }
             },
@@ -372,32 +372,32 @@ class ConfigManager {
                 items: {
                     thumbs: {
                         value: false,
-                        name: "For thumbnails",
+                        name: "For Thumbnails",
                         description: "RMB on thumbnail to download post (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress"
                     },
                     post: {
                         value: false,
-                        name: "For post",
-                        description: "RMB on post image to download it (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress"
+                        name: "For Post",
+                        description: "RMB on image in individual post view to download it (Shift + RMB to open context menu). Set 'Download Mode' to 'Browser API' in userscript manager advanced config to see downloading progress"
                     },
                     saveAs: {
                         value: true,
                         name: "Use 'Save as'",
-                        description: "Request a download location (May not work for everyone)"
+                        description: "Request a download location on every save (dependent on browser download settings)"
                     },
                     pattern: {
                         value: "%postId% - %artist%",
-                        name: "File name pattern",
-                        description: "Simple name pattern for saved post. Available: %postId% %artist% %character% %copyright% %md5% (videos does not have md5)"
+                        name: "File Name Pattern",
+                        description: "Simple name pattern for saved post. Available: %postId% %artist% %character% %copyright% %md5% (note: videos do not have a %md5% hash)"
                     },
                     separator: {
                         value: ", ",
-                        name: "File name pattern list separator",
+                        name: "File Name Pattern List Separator",
                         description: "Which sequence of characters separates multiple tag values"
                     },
                     saveTags: {
                         value: true,
-                        name: "Also save tags",
+                        name: "Also Save Tags",
                         description: "Saves additional text file with all tags with same name"
                     }
                 }
@@ -408,7 +408,7 @@ class ConfigManager {
                     enable: {
                         value: true,
                         name: "Enable",
-                        description: "Enable infinite scroll for gallery page. Refresh to clean page. History works wierd"
+                        description: "Enable infinite scroll for gallery page. Refresh to clean page. History works weird"
                     },
                     threshold: {
                         value: 500,
@@ -417,12 +417,12 @@ class ConfigManager {
                     },
                     paginatorOnTop: {
                         value: true,
-                        name: "Copy paginator on top of gallery",
+                        name: "Copy Paginator on Top of Gallery",
                         description: "Place a copy of paginator on top of gallery to make navigation easier (or just possible with Infinite Scroll)"
                     },
                     goToTop: {
                         value: true,
-                        name: "Go to top button",
+                        name: "Go to Top Button",
                         description: "Display floating 'Go to top' button"
                     }
                 }
@@ -489,7 +489,7 @@ class ConfigManager {
             throw new Error("There is no migrations yet. Something went wrong on packed config loading");
         }
         else {
-            return { preferences: utils.mergeRecursive(this.getDefaultConfig(), json), isShouldBeSaved: false };
+            return { preferences: utils.mergeRecursive(json, this.getDefaultConfig()), isShouldBeSaved: false };
         }
     }
     registerConfigWindow() {
@@ -514,6 +514,7 @@ class ConfigManager {
 
             settingsButton.addEventListener("click", (e) => {
                 settingsElem.classList.remove("go-config-window-hidden");
+                updateInputValues();
             });
             settingsButton.addEventListener("contextmenu", e => {
                 if (e.shiftKey) return;
@@ -698,7 +699,6 @@ class ConfigManager {
                         });
 
                         input.value = String(pref[1].value);
-                        console.log(input.value);
                     } else {
                         input = document.createElement("input");
                         input.type = "text";
@@ -727,12 +727,12 @@ class ConfigManager {
             document.querySelectorAll("#goConfigWindow input:not([type='submit'])").forEach(/** @param {HTMLInputElement} i */ i => {
                 switch (i.type) {
                     case "checkbox":
-                        i.checked = Boolean(confMan.findValueByKey(i.id));
+                        i.checked = Boolean(context.configManager.findValueByKey(i.id));
                         break;
 
                     case "select":
                     case "text":
-                        i.value = String(confMan.findValueByKey(i.id));
+                        i.value = String(context.configManager.findValueByKey(i.id));
                         break;
                 }
             });
@@ -748,7 +748,7 @@ class ConfigManager {
         let value = e.target.type == "checkbox" ? e.target.checked : e.target.value;
         utils.debugLog("Updating prefItem with value", { pref, value });
 
-        pref.value = value;
+        context.configManager.findItemByKey(e.target.id).value = value;
         context.configManager.onUpdate(e.target.id, value);
     }
 }
