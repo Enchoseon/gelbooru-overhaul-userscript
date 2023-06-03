@@ -35,12 +35,6 @@ UPDATING IS ONE WAY: REMOTE SOURCE TO SCRIPT. YOU CANNOT UPDATE YOUR BLACKLISTS 
     // load blacklists
     let blacklists = blacklistNames.map(i => ({ name: i.replace("_", " "), text: GM_getResourceText(i) }));
 
-    // check for forbidden names
-    if (blacklists.some(i => ["go-blacklist", "go-helper-blacklists"].includes(i.name))) {
-        alert(`${GM_info.script.name}:\nFollowing blacklist names are forbidden:\n"go-blacklist", "go-helper-blacklists"`);
-        return;
-    }
-
     // check if there is broken links
     let brokenBlacklists = blacklists.filter(i => i.text == "")
     if (brokenBlacklists.length > 0) {
