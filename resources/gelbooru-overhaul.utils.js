@@ -537,4 +537,16 @@ class utils {
             styleElem.textContent = css
         }
     }
+    /**
+     * Generates hash of a string
+     * @param {string} str
+     * @return {Promise<string>}
+     */
+    static async hash(str) {
+        let enc = new TextEncoder();
+        let buff = await window.crypto.subtle.digest("SHA-1", enc.encode(str));
+        let arr = Array.from(new Uint8Array(buff));
+        let string = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+        return string;
+    }
 }
