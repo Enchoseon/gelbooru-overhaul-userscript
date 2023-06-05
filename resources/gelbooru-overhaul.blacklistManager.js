@@ -66,7 +66,7 @@ class BlacklistManager {
 
         let existingSafeModeIndex = this.blacklistItems.findIndex(i => i.name == safeMode.name);
         let existingNoBlacklistIndex = this.blacklistItems.findIndex(i => i.name == noBlacklist.name);
-        
+
         if (existingSafeModeIndex == -1)
             this.blacklistItems.push(safeMode);
         else if (JSON.stringify(this.blacklistItems[existingSafeModeIndex]) != JSON.stringify(safeMode)) {
@@ -586,13 +586,12 @@ class BlacklistManager {
             this.registerEditWinow();
             this.createSidebar();
 
-            if (this.blacklistItems) {
-                let stored = this.storageGetBlacklist();
-                if (stored && this.blacklistItems.some(i => i.name == stored))
-                    this.selectedBlacklistChanged(stored);
-                else
-                    this.selectedBlacklistChanged(this.blacklistItems[0].name);
-            }
+            let stored = this.storageGetBlacklist();
+            if (stored && this.blacklistItems.some(i => i.name == stored))
+                this.selectedBlacklistChanged(stored);
+            else
+                this.selectedBlacklistChanged(this.blacklistItems[0].name);
+                
             this.updateSidebarSelect();
         } else {
             this.removeSidebar();
