@@ -17,6 +17,7 @@ class BlacklistManager {
      * @property {string} value
      * @property {[boolean]} isReadOnly
      * @property {[boolean]} isUnRemovable
+     * @property {[string]} hash
      */
     /**
      * @type {BlacklistEntry[]}
@@ -113,7 +114,7 @@ class BlacklistManager {
 
         if (index == -1) {
             items.push(item);
-        } else {
+        } else if (!items[index].hash || items[index].hash != item.hash) {
             items[index] = item;
         }
 
@@ -642,7 +643,7 @@ class BlacklistManager {
         if (!storedBlacklistsString) return;
 
         let storedBlacklists = JSON.parse(storedBlacklistsString);
-        if(!storedBlacklists || storedBlacklists.length == 0) return;
+        if (!storedBlacklists || storedBlacklists.length == 0) return;
 
         storedBlacklists.forEach(i => this.addUpdateBlacklist(i));
     }
