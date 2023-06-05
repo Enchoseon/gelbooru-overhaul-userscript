@@ -587,7 +587,8 @@ class BlacklistManager {
             this.createSidebar();
 
             this.checkDefaultBlacklists();
-            this.loadBlacklistsFromLocalStorage();
+
+            setTimeout(() => this.loadBlacklistsFromLocalStorage(), 1000);
 
             let stored = this.storageGetBlacklist();
             if (stored && this.blacklistItems.some(i => i.name == stored))
