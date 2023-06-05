@@ -15,6 +15,8 @@ class BlacklistManager {
      * @type {Object}
      * @property {string} name
      * @property {string} value
+     * @property {[boolean]} isReadOnly
+     * @property {[boolean]} isUnRemovable
      */
     /**
      * @type {BlacklistEntry[]}
@@ -37,12 +39,7 @@ class BlacklistManager {
     orderEntriesByHitCount = false;
 
     constructor() {
-        if (!this.blacklistItems || this.blacklistItems.length == 0) {
-            let item = { name: "Safe mode", value: "rating:q*\nrating:e*" };
-            let item2 = { name: "No blacklist", value: "" };
-
-            this.blacklistItems = [item, item2];
-        }
+        this.checkDefaultBlacklists();
     }
     /**
      * Stores all the dispatch handlers
@@ -59,7 +56,34 @@ class BlacklistManager {
     addAppliedListener(handler) {
         return this.dispatchHandlers.push(handler);
     }
+    /**
+     * Checks for default blacklists
+     */
+    checkDefaultBlacklists() {
+        /** @type {BlacklistItem} */
+        let safeMode = { name: "Safe mode", value: "rating:q*\nrating:e*", isReadOnly: true, isUnRemovable: true };
+        let noBlacklist = { name: "No blacklist", value: "", isReadOnly: true, isUnRemovable: true };
 
+        let existingSafeModeIndex = this.blacklistItems.findIndex(i => i.name == safeMode.name);
+        let existingNoBlacklistIndex = this.blacklistItems.findIndex(i => i.name == noBlacklist.name);
+        
+        if (existingSafeModeIndex == -1)
+            this.blacklistItems.push(safeMode);
+        else if (JSON.stringify(this.blacklistItems[existingSafeModeIndex]) != JSON.stringify(safeMode)) {
+            let newBlacklistItems = this.blacklistItems;
+            newBlacklistItems[existingSafeModeIndex] = safeMode;
+            this.blacklistItems = newBlacklistItems;
+        }
+
+        if (existingNoBlacklistIndex == -1)
+            this.blacklistItems.push(noBlacklist);
+        else if (JSON.stringify(this.blacklistItems[existingNoBlacklistIndex]) != JSON.stringify(noBlacklist)) {
+            let newBlacklistItems = this.blacklistItems;
+            newBlacklistItems[existingNoBlacklistIndex] = noBlacklist;
+            this.blacklistItems = newBlacklistItems;
+        }
+
+    }
     /**
      * @private
      * @returns {BlacklistItem[]} List of available blacklists
@@ -160,6 +184,10 @@ class BlacklistManager {
             textInputDescript.textContent = "Input blacklist entries\nEach item on new line\nSupports wildcards\nSupports AND, comments (//, #), not sensitive to ' ' and '_'";
 
             let textInput = document.createElement("textarea");
+            let submitSave = document.createElement("input");
+            let submitDelete = document.createElement("input");
+            let pReadonly = document.createElement("p");
+            let pUnRemovable = document.createElement("p");
 
             let nameInput = document.createElement("input");
             nameInput.setAttribute("list", "go-advBlacklistListNames");
@@ -167,7 +195,27 @@ class BlacklistManager {
             nameInput.addEventListener("input", e => {
                 let foundItem = scope.blacklistItems.find(i => i.name == nameInput.value);
 
-                if (foundItem) textInput.value = foundItem.value;
+                if (foundItem) {
+                    textInput.value = foundItem.value;
+
+                    if (foundItem.isReadOnly) {
+                        submitSave.disabled = true;
+                        pReadonly.setAttribute("style", "color: red;");
+                    }
+                    else {
+                        submitSave.disabled = false;
+                        pReadonly.setAttribute("style", "display: none;");
+                    }
+
+                    if (foundItem.isUnRemovable) {
+                        submitDelete.disabled = true;
+                        pUnRemovable.setAttribute("style", "color: red;");
+                    }
+                    else {
+                        submitDelete.disabled = false;
+                        pUnRemovable.setAttribute("style", "display: none;");
+                    }
+                }
             });
 
             let nameList = document.createElement("datalist");
@@ -178,6 +226,9 @@ class BlacklistManager {
                 nameList.appendChild(option);
             });
 
+            pReadonly.textContent = "This blacklist is readonly";
+            pUnRemovable.textContent = "This blacklist is unremovable";
+
             nameInputLI.appendChild(nameInputLabel);
             nameInputLI.appendChild(nameInput);
             nameInputLI.appendChild(nameInputDescript);
@@ -185,6 +236,8 @@ class BlacklistManager {
             textInputLI.appendChild(textInputLabel);
             textInputLI.appendChild(textInput);
             textInputLI.appendChild(textInputDescript);
+            textInputLI.appendChild(pReadonly);
+            textInputLI.appendChild(pUnRemovable);
 
             mainContent.appendChild(nameInputLI);
             mainContent.appendChild(textInputLI);
@@ -200,7 +253,7 @@ class BlacklistManager {
                 sDiv.classList.add("go-config-window-hidden");
             });
 
-            let submitSave = document.createElement("input");
+
             submitSave.type = "submit";
             submitSave.className = "searchList";
             submitSave.value = "Save";
@@ -219,7 +272,7 @@ class BlacklistManager {
                 sDiv.classList.add("go-config-window-hidden");
             });
 
-            let submitDelete = document.createElement("input");
+
             submitDelete.type = "submit";
             submitDelete.className = "searchList";
             submitDelete.value = "Delete";
@@ -260,7 +313,7 @@ class BlacklistManager {
         let text = this.selectedBlacklistItem.value;
         let lines = text.split(/[\n|\r\n]/);
         lines = lines.filter((l) => !(["", " ", "\n", "\r\n"].includes(l) || l.startsWith("#") || l.startsWith("//"))); // empty, space or newline, comments
-        
+
 
         // clear inline comments and trim spaces
         lines = lines.map((l) => {
@@ -474,8 +527,8 @@ class BlacklistManager {
 
         if (this.blacklistEntries && this.blacklistEntries.length > 0) {
             let displayEntries = this.blacklistEntries.filter(i => i.hits.length > 0);
-            if(this.orderEntriesByHitCount) displayEntries = displayEntries.sort((e1, e2) => e2.hits.length - e1.hits.length);
-            
+            if (this.orderEntriesByHitCount) displayEntries = displayEntries.sort((e1, e2) => e2.hits.length - e1.hits.length);
+
             displayEntries.forEach(i => entries.appendChild(buildEntryItem(i, this)));
             if (displayEntries.length > 1) entries.appendChild(buildDisableAll(this));
         }
@@ -611,7 +664,7 @@ class BlacklistManager {
                 if (!this.blacklistEntries                                                                   // from all the current blacklist entries
                     .filter(e => !(e.isDisabled || e.hits.length == 0))                     // filter entries that has hits and not disabled
                     .some(e => e.hits.includes(utils.getThumbPostId(t)))) {                 // if there are none entries which also hits current post
-                    
+
                     t.closest(".thumbnail-preview")?.classList.toggle("go-blacklisted", false);             // find img element for given post id
                     t.parentElement.classList.toggle("go-blacklisted", false);                              // disable blacklist class                                           
                 }
