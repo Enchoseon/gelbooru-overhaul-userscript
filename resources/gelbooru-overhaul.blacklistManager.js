@@ -39,7 +39,6 @@ class BlacklistManager {
     orderEntriesByHitCount = false;
 
     constructor() {
-        this.checkDefaultBlacklists();
     }
     /**
      * Stores all the dispatch handlers
@@ -586,12 +585,15 @@ class BlacklistManager {
             this.registerEditWinow();
             this.createSidebar();
 
+            this.checkDefaultBlacklists();
+            this.loadBlacklistsFromLocalStorage();
+
             let stored = this.storageGetBlacklist();
             if (stored && this.blacklistItems.some(i => i.name == stored))
                 this.selectedBlacklistChanged(stored);
             else
                 this.selectedBlacklistChanged(this.blacklistItems[0].name);
-                
+
             this.updateSidebarSelect();
         } else {
             this.removeSidebar();
@@ -632,7 +634,18 @@ class BlacklistManager {
             this.storageSetDisbledEntries("[]");                                    // with no disabled entries
         }
     }
+    /**
+     * Loads blacklists from local storage as readonly items
+     */
+    loadBlacklistsFromLocalStorage() {
+        let storedBlacklistsString = localStorage.getItem("go-helper-blacklists");
+        if (!storedBlacklistsString) return;
 
+        let storedBlacklists = JSON.parse(storedBlacklistsString);
+        if(!storedBlacklists || storedBlacklists.length == 0) return;
+
+        storedBlacklists.forEach(i => this.addUpdateBlacklist(i));
+    }
     async applyBlacklist(thumbs = null) {
         if (!thumbs) {
             thumbs = utils.getThumbnails();
