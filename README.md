@@ -8,7 +8,7 @@ Various toggleable changes to Gelbooru such as enlarging the gallery, removing t
 
 This script uses the Greasemonkey (`GM_*`) API. It has been developed/tested on [Tampermonkey](https://www.tampermonkey.net/) and [Violentmonkey](https://github.com/violentmonkey/violentmonkey).
 
-# Gelbooru Overhaul Blacklist Helper awailable now
+# Gelbooru Overhaul Blacklist Helper Available Now
 
 Use [Installation link](https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.blacklist-helper.user.js) and [Documentation](./doc/HOW%20TO%20MAKE%20YOUR%20BLACKLISTS%20AUTOUPDATABLE.md) to see how to use it.
 
