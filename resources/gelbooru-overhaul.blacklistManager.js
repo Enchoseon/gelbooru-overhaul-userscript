@@ -25,6 +25,11 @@ class BlacklistManager {
      */
     blacklistEntries;
     /**
+     * @type {BlacklistItem[]}
+     * @private
+     */
+    blacklistItems = [];
+    /**
      * @type {BlacklistItem}
      * @private
      */
@@ -40,6 +45,7 @@ class BlacklistManager {
     orderEntriesByHitCount = false;
 
     constructor() {
+        this.checkDefaultBlacklists();
     }
     /**
      * Stores all the dispatch handlers
@@ -523,6 +529,8 @@ class BlacklistManager {
     updateSidebarEntries() {
         let entries = document.querySelector("#go-advBlacklistEntries");
 
+        if(entries == null) return;
+
         while (entries.firstChild) entries.firstChild.remove();
 
         if (this.blacklistEntries && this.blacklistEntries.length > 0) {
@@ -585,8 +593,6 @@ class BlacklistManager {
             this.removeSidebar();
             this.registerEditWinow();
             this.createSidebar();
-
-            this.checkDefaultBlacklists();
 
             setTimeout(() => this.loadBlacklistsFromLocalStorage(), 1000);
 
