@@ -416,7 +416,7 @@ class utils {
                     let post = json.post[0];
 
                     let fileLink = post.file_url;
-                    let highResThumb = fileLink.startsWith("https://video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg") : fileLink;
+                    let highResThumb = fileLink.startsWith("https://video") ? fileLink.replace(new RegExp(/\.([^\.]+)$/, "gm"), ".jpg").replace(/https:\/\/[^\.]+\./, 'https://img3.') : fileLink;
                     let md5 = post.md5;
 
                     if (!highResThumb || !fileLink) throw new Error("Failed to parse url");
