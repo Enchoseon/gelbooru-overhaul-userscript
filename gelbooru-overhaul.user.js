@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gelbooru Overhaul
 // @namespace   https://github.com/Enchoseon/gelbooru-overhaul-userscript/raw/main/gelbooru-overhaul.user.js
-// @version     1.0.0
+// @version     1.1.0
 // @description Various toggleable changes to Gelbooru such as enlarging the gallery, removing the sidebar, and more.
 // @author      Enchoseon
 // @match       https://*.gelbooru.com/*
