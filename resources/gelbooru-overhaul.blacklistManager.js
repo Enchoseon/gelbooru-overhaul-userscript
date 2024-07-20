@@ -470,6 +470,10 @@ class BlacklistManager {
     updateSidebarEntries() {
         let entries = document.querySelector("#go-advBlacklistEntries");
 
+        if (entries == null) {
+            return;
+        }
+
         while (entries.firstChild) entries.firstChild.remove();
 
         if (this.blacklistEntries && this.blacklistEntries.length > 0) {
