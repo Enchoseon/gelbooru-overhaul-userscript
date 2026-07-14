@@ -442,10 +442,31 @@ function applyVariableBlacklist(value) {
 async function setImageHighResSource(e) {
     /** @type {HTMLImageElement} */
     let img = e.target;
-    utils.loadPostItem(Number(/id=([0-9]+)/.exec(img.parentElement.getAttribute("href"))[1]))
-        .then((post) => img.src = post.highResThumb)
-        .catch((error) => utils.debugLog("Failed to load highres image for following element with following error:", { img, error }));
+    let thumbSrc = img.getAttribute("data-thumb-src") || img.src;
 
+    let baseSrc = thumbSrc
+        .replace("/thumbnails/", "/images/")
+        .replace("thumbnail_", "")
+        .replace(/\.jpg$/i, ""); 
+
+    let extensions = [".jpg", ".png", ".jpeg", ".gif", ".webp"];
+    let currentExtIndex = 0;
+
+    let testImg = new Image();
+    testImg.onload = () => {
+        img.src = testImg.src;
+    };
+
+    testImg.onerror = () => {
+        currentExtIndex++;
+        if (currentExtIndex < extensions.length) {
+            testImg.src = baseSrc + extensions[currentExtIndex];
+        } else {
+            utils.debugLog("Failed to resolve high-res image format locally.", { img });
+        }
+    };
+
+    testImg.src = baseSrc + extensions[currentExtIndex];
 }
 /**
  * @param {MouseEvent} e
